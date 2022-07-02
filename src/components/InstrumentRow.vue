@@ -2,9 +2,12 @@
 <template>
 	<div class="instrument w-full">
 		<div class="flex justify-start items-center gap-3">
-			<div class="text-lg">
-				{{ instrument.alias }}
-			</div>
+			<q-input
+				class="text-lg"
+				borderless
+				:model-value="instrument.alias"
+				@update:model-value="emit('update:instrument', Object.assign(instrument, { alias: $event }))"
+			/>
 			<q-btn
 				:icon="mdiPlus"
 				round
@@ -21,7 +24,7 @@
 				:icon="mdiTrashCan"
 				round
 				flat
-				@click="emit('remove')"
+				@click="askDelete()"
 			/>
 			<q-knob
 				:model-value="instrument.vol"
@@ -49,17 +52,18 @@
 			{{ instrument.notes.length }}
 			{{ instrument.notes.length / beatsPerRow }}
 		</div>
-		<div class="gap-10px grid grid-cols-1fr w-full">
+		<div class="gap-10px grid grid-cols-1 w-full">
 			<div
 				v-for="indexRow in Math.ceil(instrument.notes.length / beatsPerRow)"
 				:key="indexRow"
-				class="gap-10px w-full grid grid-cols-[1fr,1fr,1fr,1fr]"
+				class="gap-10px w-full grid grid-cols-1"
+				:class="[`md:grid-cols-${beat.numOfGroups}`]"
 			>
 				<div
 					v-for="(_, indexGroup) in beat.numOfGroups"
 					:key="indexGroup"
 					:style="{gridTemplateColumns: `repeat(${beat.beatsPerBar}, 49px)`}"
-					class="grid"
+					class="grid justify-center"
 				>
 					<Note
 						v-for="(note, indexNote) in instrument.notes.slice(getStartNote(indexRow, indexGroup), getStartNote(indexRow, indexGroup) + beat.beatsPerBar)"
@@ -81,6 +85,7 @@ import { computed, PropType, ref } from 'vue';
 import Note from './NoteBox.vue';
 import { mdiPlus, mdiMinus, mdiTrashCan, mdiVolumeHigh, mdiVolumeMute } from '@quasar/extras/mdi-v6'
 import { useTemplateRefsList } from '@vueuse/core';
+import { useQuasar } from 'quasar';
 
 const props = defineProps({
 	instrument: {
@@ -93,10 +98,20 @@ const props = defineProps({
 	}
 })
 
-let check =() => {
-	console.log('zdsgsdg')
-}
+let $q = useQuasar()
 
+
+let askDelete = ()=> {
+	$q.dialog({
+		message: '¿Estás seguro que quieres eliminar este instrumento?',
+		cancel: true
+	}).onOk(() => {
+
+
+		emit('remove')
+	})
+
+}
 
 const notesRefs = useTemplateRefsList<InstanceType<typeof Note>>()
 
@@ -131,8 +146,7 @@ defineExpose({
 <style>
 .note:first-child {
     @apply rounded-l-lg;
-    @apply bg-gray-200;
-    @apply bg-opacity-30;
+    @apply bg-gray-300;
 }
 .note:last-child {
     @apply rounded-r-lg;

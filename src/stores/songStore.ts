@@ -6,8 +6,10 @@ import { PartialItem, UserItem } from '@directus/sdk';
 
 export const useSongStore = defineStore('song', () => {
 	const bpm = ref(90)
+	const name = ref('Partitura sin nombre')
 
 	const repeat = ref(true)
+	const showNote = ref(false)
 
 	const sections = ref<Section[]>([])
 
@@ -23,11 +25,11 @@ export const useSongStore = defineStore('song', () => {
 				},
 				{
 					icon: mdiClose,
-					howls: new Howl({ src: ['/sounds/alfaia/upperNote.mp3', '/sounds/alfaia/upperNote.wav'], preload: true })
+					howls: new Howl({ src: [new URL('/sounds/alfaia/upperNote.mp3', import.meta.url).href, new URL('/sounds/alfaia/upperNote.wav', import.meta.url).href], preload: true })
 				},
 				{
 					icon: mdiMinus,
-					howls: new Howl({ src: ['/sounds/alfaia/lowerNote.mp3', '/sounds/alfaia/lowerNote.wav'], preload: true })
+					howls: new Howl({ src: [new URL('/sounds/alfaia/lowerNote.mp3', import.meta.url).href, new URL('/sounds/alfaia/lowerNote.wav', import.meta.url).href], preload: true })
 				}
 			]
 		},
@@ -40,11 +42,11 @@ export const useSongStore = defineStore('song', () => {
 				},
 				{
 					icon: mdiClose,
-					howls: new Howl({ src: ['/sounds/caixa/upperNote.mp3', '/sounds/caixa/upperNote.wav'], preload: true })
+					howls: new Howl({ src: [new URL('/sounds/caixa/upperNote.mp3', import.meta.url).href, new URL('/sounds/caixa/upperNote.wav', import.meta.url).href], preload: true })
 				},
 				{
 					icon: mdiMinus,
-					howls: new Howl({ src: ['/sounds/caixa/lowerNote.mp3', '/sounds/caixa/lowerNote.wav'], preload: true })
+					howls: new Howl({ src: [new URL('/sounds/caixa/lowerNote.mp3', import.meta.url).href, new URL('/sounds/caixa/lowerNote.wav', import.meta.url).href], preload: true })
 				}
 			]
 		},
@@ -57,11 +59,11 @@ export const useSongStore = defineStore('song', () => {
 				},
 				{
 					icon: mdiClose,
-					howls: new Howl({ src: ['/sounds/gonge/upperNote.mp3', '/sounds/gonge/upperNote.wav'], preload: true })
+					howls: new Howl({ src: [new URL('/sounds/gonge/upperNote.mp3', import.meta.url).href, new URL('/sounds/gonge/upperNote.wav', import.meta.url).href], preload: true })
 				},
 				{
 					icon: mdiMinus,
-					howls: new Howl({ src: ['/sounds/gonge/lowerNote.mp3', '/sounds/gonge/lowerNote.wav'], preload: true })
+					howls: new Howl({ src: [new URL('/sounds/gonge/lowerNote.mp3', import.meta.url).href, new URL('/sounds/gonge/lowerNote.wav', import.meta.url).href], preload: true })
 				}
 			]
 		},
@@ -74,15 +76,15 @@ export const useSongStore = defineStore('song', () => {
 				},
 				{
 					icon: mdiClose,
-					howls: new Howl({ src: ['/sounds/repique/upperNote.mp3', '/sounds/repique/upperNote.wav'], preload: true })
+					howls: new Howl({ src: [new URL('/sounds/repique/upperNote.mp3', import.meta.url).href, new URL('/sounds/repique/upperNote.wav', import.meta.url).href], preload: true })
 				},
 				{
 					icon: mdiMinus,
-					howls: new Howl({ src: ['/sounds/repique/lowerNote.mp3', '/sounds/repique/lowerNote.wav'], preload: true })
+					howls: new Howl({ src: [new URL('/sounds/repique/lowerNote.mp3', import.meta.url).href, new URL('/sounds/repique/lowerNote.wav', import.meta.url).href], preload: true })
 				},
 				{
 					icon: 'mdiCircleOutline',
-					howls: new Howl({ src: ['/sounds/repique/mediumNote.mp3', '/sounds/repique/mediumNote.wav'], preload: true })
+					howls: new Howl({ src: [new URL('/sounds/repique/mediumNote.mp3', import.meta.url).href, new URL('/sounds/repique/mediumNote.wav', import.meta.url).href], preload: true })
 				}
 			]
 		},
@@ -95,15 +97,15 @@ export const useSongStore = defineStore('song', () => {
 				},
 				{
 					icon: mdiClose,
-					howls: new Howl({ src: ['/sounds/surdo/upperNote.mp3', '/sounds/surdo/upperNote.wav'], preload: true })
+					howls: new Howl({ src: [new URL('/sounds/surdo/upperNote.mp3', import.meta.url).href, new URL('/sounds/surdo/upperNote.wav', import.meta.url).href], preload: true })
 				},
 				{
 					icon: 'mdiCheckboxBlankCircle',
-					howls: new Howl({ src: ['/sounds/surdo/mediumNote.mp3', '/sounds/surdo/mediumNote.wav'], preload: true })
+					howls: new Howl({ src: [new URL('/sounds/surdo/mediumNote.mp3', import.meta.url).href, new URL('/sounds/surdo/mediumNote.wav', import.meta.url).href], preload: true })
 				},
 				{
 					icon: mdiMinus,
-					howls: new Howl({ src: ['/sounds/surdo/lowerNote.mp3', '/sounds/surdo/lowerNote.wav'], preload: true })
+					howls: new Howl({ src: [new URL('/sounds/surdo/lowerNote.mp3', import.meta.url).href, new URL('/sounds/surdo/lowerNote.wav', import.meta.url).href], preload: true })
 				}
 			]
 		},
@@ -116,15 +118,15 @@ export const useSongStore = defineStore('song', () => {
 				},
 				{
 					icon: mdiClose,
-					howls: new Howl({ src: ['/sounds/timba/upperNote.mp3', '/sounds/timba/upperNote.wav'], preload: true })
+					howls: new Howl({ src: [new URL('/sounds/timba/upperNote.mp3', import.meta.url).href, new URL('/sounds/timba/upperNote.wav', import.meta.url).href], preload: true })
 				},
 				{
 					icon: 'mdiCookie',
-					howls: new Howl({ src: ['/sounds/timba/mediumNote.mp3', '/sounds/timba/mediumNote.wav'], preload: true })
+					howls: new Howl({ src: [new URL('/sounds/timba/mediumNote.mp3', import.meta.url).href, new URL('/sounds/timba/mediumNote.wav', import.meta.url).href], preload: true })
 				},
 				{
 					icon: mdiMinus,
-					howls: new Howl({ src: ['/sounds/timba/lowerNote.mp3', '/sounds/timba/lowerNote.wav'], preload: true })
+					howls: new Howl({ src: [new URL('/sounds/timba/lowerNote.mp3', import.meta.url).href, new URL('/sounds/timba/lowerNote.wav', import.meta.url).href], preload: true })
 				}
 			]
 		}
@@ -159,7 +161,9 @@ export const useSongStore = defineStore('song', () => {
 		getIconNoteInstrument,
 		repeat,
 		playing,
-		user
+		user,
+		name,
+		showNote
 	}
 })
 

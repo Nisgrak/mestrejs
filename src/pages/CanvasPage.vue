@@ -1,33 +1,51 @@
 <template>
 	<div>
-		<div class="border-1 flex flex-row items-center gap-3 px-5">
+		<div class="border-1 flex flex-row items-center gap-3 px-5 py-2">
 			<q-btn
 				color="secondary"
 				:disabled="songStore.sections.length == 0"
 				:icon="playing ? mdiStop : mdiPlay"
 				class="w-50px"
+				unelevated
 				@click="playing ? pause() : play()"
 			/>
 
 			<q-btn
-				:color="songStore.repeat ? 'secondary' : 'white'"
-				:text-color="songStore.repeat ? 'white' : 'black'"
+				:text-color="songStore.repeat ? 'secondary' : 'grey'"
 				class="w-50px"
 				:icon="mdiRepeat"
+				outline
 				@click="songStore.repeat = !songStore.repeat"
 			/>
 
 			<q-btn
-				:icon="mdiPlus"
+				:icon="mdiCardPlus"
 				flat
-				round
 				@click="addSection()"
 			/>
 			<q-btn
 				:icon="mdiContentSave"
 				flat
-				round
-				@click="saveSong"
+				@click="saveSong(true)"
+			/>
+			<q-btn
+				:icon="mdiXml"
+				flat
+				@click="insert()"
+			/>
+			<q-btn
+				:icon="mdiDeleteEmpty"
+				flat
+				@click="clearNotes()"
+			/>
+
+			<q-btn
+				:text-color="songStore.showNote ? 'secondary' : 'grey'"
+				unelevated
+				outline
+				class="w-50px"
+				:icon="mdiNumeric"
+				@click="songStore.showNote = !songStore.showNote"
 			/>
 
 			<q-input
@@ -35,13 +53,18 @@
 				label="BPM"
 				type="number"
 			/>
+			<q-input
+				v-model="songStore.name"
+				label="Nombre"
+			/>
 		</div>
-		<div class="w-full p-15 flex flex-col justify-start">
+		<div class="w-full p-5 md:p-15 flex flex-col justify-start">
 			<SongSection
 				v-for="(section, index) in songStore.sections"
 				:key="section.id"
 				:ref="sectionsRefs.set"
 				v-model:section="songStore.sections[index]"
+				@remove="songStore.sections.splice(index, 1)"
 			/>
 		</div>
 	</div>
@@ -54,7 +77,7 @@ import SongSection from 'src/components/SongSection.vue';
 import { useRoute, useRouter } from 'vue-router';
 import { onMounted, ref } from 'vue';
 import { createPartiture, loadPartiture, updatePartiture } from 'src/utils/partiture';
-import { mdiContentSave, mdiPlay, mdiStop, mdiRepeat, mdiPlus } from '@quasar/extras/mdi-v6';
+import { mdiContentSave, mdiPlay, mdiStop, mdiRepeat, mdiXml, mdiCardPlus, mdiDeleteEmpty, mdiNumeric } from '@quasar/extras/mdi-v6';
 import { useTemplateRefsList } from '@vueuse/core';
 
 let playingAll = ref(false);
@@ -98,6 +121,31 @@ let addSection = (instrumentIndex?: number) => {
 	songStore.sections.push(section);
 
 }
+
+let clearNotes = () => {
+	 $q.dialog({
+		title: 'Borrar notas',
+		message: 'Vas a borrar todas las notas, ¿estás seguro?',
+		cancel: true,
+		persistent: true
+	}).onOk(() => {
+
+		for (const section of songStore.sections) {
+			for (const instrument of section.instruments) {
+
+				instrument.notes = Array.from(Array(instrument.notes.length), () => 0);
+
+			}
+		}
+
+	}).onCancel(() => {
+		// console.log('>>>> Cancel')
+	}).onDismiss(() => {
+		// console.log('I am triggered on both OK and Cancel')
+	})
+
+}
+
 
 let play = () => {
 	playingAll.value = true;
@@ -147,6 +195,23 @@ let pause = (fullPause = true) => {
 	}
 }
 
+let insert = () => {
+
+	saveSong(false);
+
+	let text = `<iframe src="${window.location.href}" height="300" width="900"></iframe>`;
+
+	copyToClipboard(text);
+
+	$q.notify({
+		message: 'Código para insertar copiado',
+		color: 'positive',
+		position: 'top-right',
+		timeout: 2000
+	})
+
+
+}
 
 let songStore = useSongStore()
 
@@ -155,7 +220,7 @@ let router = useRouter()
 
 let $q = useQuasar()
 
-let saveSong = async () => {
+let saveSong = async (notify = true) => {
 	if (typeof route.query.id === 'string') {
 
 		await updatePartiture(route.query.id)
@@ -176,19 +241,31 @@ let saveSong = async () => {
 
 	copyToClipboard(window.location.href)
 
-	$q.notify({
-		message: 'Enlace copiado al portapapeles',
-		color: 'positive',
-		position: 'top-right',
-		timeout: 2000
-	})
+	if (notify) {
+
+		$q.notify({
+			message: 'Enlace copiado al portapapeles',
+			color: 'positive',
+			position: 'top-right',
+			timeout: 2000
+		})
+	}
 }
 
 onMounted(async () => {
 	if (typeof route.query.id === 'string') {
 		loadPartiture(route.query.id)
 
-	} else {
+	} else if (typeof route.query.share === 'string') {
+
+
+		let oldFormat = JSON.parse(atob( route.query.share))
+		songStore.bpm = oldFormat.bmp
+		songStore.sections = oldFormat.sections
+
+
+	}else {
+
 		addSection(1);
 	}
 

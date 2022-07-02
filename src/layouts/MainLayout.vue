@@ -17,8 +17,9 @@
 					v-if="!songStore.user"
 				>
 					<q-btn
-						flat
-						label="Login"
+						no-caps
+						outline
+						label="Iniciar sesión"
 						:to="{name: 'LoginPage'}"
 					/>
 				</div>
@@ -27,11 +28,15 @@
 				>
 					<q-btn
 						flat
+						no-caps
+						outline
 						label="Listado"
-						:to="{name: 'LoginPage'}"
+						:to="{name: 'ListPartituresPage'}"
 					/>
 					<q-btn
 						flat
+						no-caps
+						outline
 						label="Logout"
 						@click="logout"
 					/>

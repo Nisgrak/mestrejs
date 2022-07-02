@@ -1,8 +1,8 @@
 <template>
 	<q-page class="row items-center justify-evenly">
-		<div class="border-1 rounded-lg p-5">
-			<div class="text-xl">
-				Login
+		<div class="border-1 rounded-lg p-5 w-9/10 md:w-3/10">
+			<div class="text-xl mb-5 text-center">
+				Inicia sesión
 			</div>
 			<div>
 				<q-form
@@ -24,6 +24,9 @@
 					/>
 
 					<q-btn
+						no-caps
+						color="primary"
+						class="w-full"
 						type="submit"
 					>
 						Login

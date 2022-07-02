@@ -4,20 +4,33 @@
 		class="section w-full border-1 p-5 rounded-lg"
 	>
 		<div class="flex items-center gap-3">
-			<div class="text-xl font-medium">
-				{{ section.name }}
-			</div>
-			<q-btn
-				:icon="mdiPlay"
-				round
-				flat
-				@click="play"
+			<q-input
+				class="text-xl font-medium"
+				borderless
+				:model-value="section.name"
+				@update:model-value="emit('update:section', Object.assign(section, { name: $event }))"
 			/>
+			<q-btn
+				class="self-center"
+				round
+				color="secondary"
+				unelevated
+				:disabled="section.instruments.length == 0"
+				:icon="playing ? mdiStop : mdiPlay"
+				@click="playing ? pause() : play()"
+			/>
+
 			<q-btn
 				:icon="mdiPlus"
 				round
 				flat
 				@click="addInstrument"
+			/>
+			<q-btn
+				:icon="mdiTrashCan"
+				round
+				flat
+				@click="askDelete"
 			/>
 		</div>
 		<div>
@@ -27,6 +40,7 @@
 				:key="instrument.id"
 				:instrument="section.instruments[indexInstrument]"
 				:beat="section.beat"
+				:class="[`beat-${section.beat.name}`]"
 				@update:instrument="emit('update:section', Object.assign(section, { instruments: section.instruments.map((instrument, index) => index === indexInstrument ? $event : instrument)}))"
 				@remove="emit('update:section', Object.assign(section, { instruments: section.instruments.filter((_, index) => index !== indexInstrument)}))"
 			/>
@@ -38,7 +52,7 @@
 import { Section, useSongStore } from 'stores/songStore';
 import InstrumentRow from './InstrumentRow.vue';
 import { PropType, ref } from 'vue';
-import { mdiPlay, mdiPlus } from '@quasar/extras/mdi-v6';
+import { mdiPlay, mdiPlus, mdiStop, mdiTrashCan } from '@quasar/extras/mdi-v6';
 import { useTemplateRefsList } from '@vueuse/core'
 import NoteBoxVue from './NoteBox.vue';
 import SelectInstrumentDialog from './SelectInstrumentDialog.vue';
@@ -57,6 +71,18 @@ let getPlayingLength = ()=> {
 }
 let getTimeOfNote = ()=> {
 	return 60000 / songStore.bpm / props.section.beat.numOfGroups;
+}
+
+let askDelete = ()=> {
+	$q.dialog({
+		message: '¿Estás seguro que quieres eliminar este instrumento?',
+		cancel: true
+	}).onOk(() => {
+
+
+		emit('remove')
+	})
+
 }
 
 let getMaxNote=() => {
@@ -189,6 +215,8 @@ let createInstrument = (indexInstrument: number ) => {
 }
 
 
+
+
 let props = defineProps({
 	section: {
 		type: Object as PropType<Section>,
@@ -196,7 +224,7 @@ let props = defineProps({
 	}
 })
 
-let emit = defineEmits(['update:section'])
+let emit = defineEmits(['update:section', 'remove'])
 
 defineExpose({
 	getPlayingLength,

@@ -1,10 +1,13 @@
 
 <template>
 	<div
-		class="w-50px h-50px border-gray-600 border-1 grid note"
+		class="w-50px h-50px border-gray-600 border-1 grid note relative"
 		:class="{
-			'!border-red-600': actualNotePlaying === true,
-			[`defaultSubnotes-${note?.length}`]: Array.isArray(note)
+			'!border-red-600 z-2': actualNotePlaying === true,
+			[`defaultSubnotes-${note?.length}`]: Array.isArray(note),
+			'unique-note':note?.length === undefined ,
+			'multi-note':note?.length !== undefined,
+			'show-note': songStore.showNote
 		}"
 		@contextmenu="changeNoteType"
 	>
@@ -161,5 +164,46 @@ defineExpose({
 
 .note3 {
     grid-area: note3;
+}
+
+.note.show-note::before {
+   font-weight: 700;
+    text-align: end;
+    position: absolute;
+    right: 4px;
+    color: hsl(0,0%,0%,20%);
+}
+
+.instrument.beat-4\/4 .note.show-note:nth-child(1):after {
+    content: "1";
+}
+.instrument.beat-4\/4 .note.show-note:nth-child(2):before {
+    content: "E";
+}
+.instrument.beat-4\/4 .note.show-note:nth-child(3):before {
+    content: "Y";
+}
+.instrument.beat-4\/4 .note.show-note:nth-child(4):before {
+    content: "A";
+}
+
+
+.instrument.beat-6\/8 .note.show-note:nth-child(1):before {
+    content: "1";
+}
+.instrument.beat-6\/8 .note.show-note:nth-child(2):before {
+    content: "E";
+}
+.instrument.beat-6\/8 .note.show-note:nth-child(3):before {
+    content: "Y";
+}
+.instrument.beat-6\/8 .note.show-note:nth-child(4):before {
+    content: "2";
+}
+.instrument.beat-6\/8 .note.show-note:nth-child(5):before {
+    content: "E";
+}
+.instrument.beat-6\/8 .note.show-note:nth-child(6):before {
+    content: "Y";
 }
 </style>

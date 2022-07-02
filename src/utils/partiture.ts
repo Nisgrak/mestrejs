@@ -1,5 +1,5 @@
 import { useSongStore } from 'src/stores/songStore'
-import directus from './directus'
+import directus, { Partiture } from './directus'
 
 
 // export function savePartiture () {
@@ -9,10 +9,19 @@ import directus from './directus'
 export async function createPartiture () {
 	const songStore = useSongStore()
 
-	const newPartiture = await directus.items('partiture').createOne({
+	const newPartiturePartial: Partial<Partiture> = {
 		'song': songStore.sections,
 		bpm: songStore.bpm,
-	})
+		name: songStore.name,
+	}
+
+	// if (songStore.user === undefined) {
+	// 	const fingerprintLibImport = await import('@fingerprintjs/fingerprintjs')
+	// 	const fingerprintLib = await fingerprintLibImport.load();
+	// 	newPartiturePartial.fingerprint = (await fingerprintLib.get()).visitorId
+	// }
+
+	const newPartiture = await directus.items('partiture').createOne(newPartiturePartial)
 
 	if (typeof newPartiture === 'string') {
 
@@ -27,11 +36,20 @@ export async function createPartiture () {
 export async function updatePartiture (partitureId: string) {
 	const songStore = useSongStore()
 
-
-	await directus.items('partiture').updateOne(partitureId, {
+	const updatedPartiture: Partial<Partiture> = {
 		'song': songStore.sections,
 		bpm: songStore.bpm,
-	})
+		name: songStore.name,
+	}
+
+	// if (songStore.user === undefined) {
+	// 	const fingerprintLibImport = await import('@fingerprintjs/fingerprintjs')
+	// 	const fingerprintLib = await fingerprintLibImport.load();
+	// 	updatedPartiture.fingerprint = (await fingerprintLib.get()).visitorId
+	// }
+
+
+	await directus.items('partiture').updateOne(partitureId, updatedPartiture)
 }
 
 export async function loadPartiture (partitureId: string) {
@@ -42,13 +60,17 @@ export async function loadPartiture (partitureId: string) {
 
 	if (partiture?.bpm) {
 
-		songStore.bpm = partiture?.bpm;
+		songStore.bpm = partiture.bpm;
 	}
 
 	if (partiture?.song) {
 
 		// @ts-expect-error So boring Directus types...
-		songStore.sections = partiture?.song;
+		songStore.sections = partiture.song;
+	}
+	if (partiture?.name) {
+
+		songStore.name = partiture.name
 	}
 
 }

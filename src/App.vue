@@ -21,7 +21,7 @@ $q.iconMapFn = (iconName: string) => {
 };
 
 onMounted(async () => {
-	if (songStore.user === undefined && directus.auth.token !== undefined) {
+	if (songStore.user === undefined && directus.auth.token) {
 		songStore.user = await directus.users.me.read()
 	}
 

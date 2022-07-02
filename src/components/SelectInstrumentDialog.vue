@@ -4,14 +4,24 @@
 		@hide="onDialogHide"
 	>
 		<q-card class="q-dialog-plugin">
-			<div class="flex flex-col justify-center items-center gap-5">
-				<q-btn
-					v-for="(instrument, index) in store.instruments"
-					:key="instrument.name"
-					@click="onOKClick(index)"
-				>
-					{{ instrument.name }}
-				</q-btn>
+			<div class="border-1 rounded-lg p-5">
+				<div class="text-xl mb-5 text-center">
+					Selecciona un instrumento:
+				</div>
+				<div>
+					<div class="grid grid-cols-3 gap-5">
+						<q-btn
+							v-for="(instrument, index) in store.instruments"
+							:key="instrument.name"
+							unelevated
+							outline
+							no-caps
+							@click="onOKClick(index)"
+						>
+							{{ instrument.name }}
+						</q-btn>
+					</div>
+				</div>
 			</div>
 		</q-card>
 	</q-dialog>

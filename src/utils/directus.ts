@@ -9,6 +9,8 @@ export type Partiture = {
 	date_created: string
 	song: Section[]
 	bpm: number
+	name: string
+	fingerprint?: string
 };
 
 export type Collections = {
