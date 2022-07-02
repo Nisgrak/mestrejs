@@ -34,6 +34,7 @@ jobs:
               uses: SpicyPizza/create-envfile@v1.3
               with:
                 envkey_VITE_API_UR: ${{ secrets.VITE_API_UR }}
+				directory: /home/runner/work/mestrejs/mestrejs/
 
             # Construye el proyecto y agrega el archivo .nojekyll para suprimir el comportamiento predeterminado
             - name: Build
