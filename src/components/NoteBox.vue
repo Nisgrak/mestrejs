@@ -168,13 +168,12 @@ defineExpose({
 
 .note.show-note::before {
    font-weight: 700;
-    text-align: end;
     position: absolute;
     right: 4px;
     color: hsl(0,0%,0%,20%);
 }
 
-.instrument.beat-4\/4 .note.show-note:nth-child(1):after {
+.instrument.beat-4\/4 .note.show-note:nth-child(1):before {
     content: "1";
 }
 .instrument.beat-4\/4 .note.show-note:nth-child(2):before {
