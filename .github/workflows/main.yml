@@ -32,6 +32,8 @@ jobs:
 
             # Construye el proyecto y agrega el archivo .nojekyll para suprimir el comportamiento predeterminado
             - name: Build
+              env:
+                VITE_API_URL: ${{ secrets.VITE_API_URL }}
               run: |
                   yarn build
                   touch ./dist/spa/.nojekyll
