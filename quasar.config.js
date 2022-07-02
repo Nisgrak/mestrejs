@@ -67,7 +67,7 @@ module.exports = configure(function (/* ctx */) {
 
 			// rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
 
-			// publicPath: '/',
+			publicPath: '/mestrejs/',
 			// analyze: true,
 			env: {
 				VITE_API_URL: 'http://localhost:8055',
