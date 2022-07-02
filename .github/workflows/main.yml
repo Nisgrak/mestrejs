@@ -1,0 +1,49 @@
+# Flujo de trabajo para compilar y desplegar en tus páginas de GitHub del repositorio.
+
+# Edita los detalles de tu proyecto aquí.
+# ¡Recuerda agregar API_TOKEN_GITHUB en Configuración del repositorio > Secretos también!
+env:
+    githubEmail: eneko.rodriguez99@gmail.com
+    deployToRepo: mestrejs
+
+name: Github Pages
+
+on:
+    # Activa el flujo de trabajo en eventos de push y pull requests, pero solo para la rama principal
+    push:
+        branches: [master]
+    pull_request:
+        branches: [master]
+
+    # Permite ejecutar este flujo de trabajo manualmente desde la pestaña Acciones.
+    workflow_dispatch:
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            # Registra tu repositorio en $GITHUB_WORKSPACE, para que tu trabajo pueda acceder a él.
+            - uses: actions/checkout@v2
+
+            # Instalar dependencias con npm
+            - name: Install dependencies
+              run: yarn install
+
+            # Construye el proyecto y agrega el archivo .nojekyll para suprimir el comportamiento predeterminado
+            - name: Build
+              run: |
+                  yarn build
+                  touch ./dist/spa/.nojekyll
+            # Hace push a tu repositorio de páginas
+            - name: Push to pages repo
+              uses: cpina/github-action-push-to-another-repository@main
+              env:
+                  API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+              with:
+                  source-directory: 'dist/spa'
+                  destination-github-username: ${{ github.actor }}
+                  destination-repository-name: ${{ env.deployToRepo }}
+                  user-email: ${{ env.githubEmail }}
+                  commit-message: Deploy ORIGIN_COMMIT
+                  target-branch: gh-pages
