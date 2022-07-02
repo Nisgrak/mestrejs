@@ -11,6 +11,7 @@
 
 const { configure } = require('quasar/wrappers');
 const path = require('path');
+require('dotenv').config()
 
 module.exports = configure(function (/* ctx */) {
 	return {
@@ -70,7 +71,7 @@ module.exports = configure(function (/* ctx */) {
 			publicPath: '/mestrejs/',
 			// analyze: true,
 			env: {
-				VITE_API_URL: 'http://localhost:8055',
+				VITE_API_URL: process.env.VITE_API_URL,
 			},
 			// rawDefine: {}
 			// ignorePublicFolder: true,
