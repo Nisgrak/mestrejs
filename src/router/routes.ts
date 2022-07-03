@@ -8,6 +8,8 @@ const routes: RouteRecordRaw[] = [
 			{ path: '', redirect: { name: 'Canvas' }, component: () => import('pages/CanvasPage.vue') },
 			{ path: 'canvas', name:'Canvas', component: () => import('pages/CanvasPage.vue') },
 			{ path: 'login', name:'LoginPage', component: () => import('pages/LoginPage.vue') },
+			{ path: 'register', name:'RegisterPage', component: () => import('pages/RegisterPage.vue') },
+			{ path: 'reset-password', name:'ResetPasswordPage', component: () => import('pages/ResetPasswordPage.vue') },
 			{ path: 'partitures', name:'ListPartituresPage', component: () => import('pages/ListPartituresPage.vue') },
 		],
 	},
@@ -16,7 +18,7 @@ const routes: RouteRecordRaw[] = [
 	// but you can also remove it
 	{
 		path: '/:catchAll(.*)*',
-		component: () => import('pages/ErrorNotFound.vue'),
+		redirect: { name: 'Canvas' }
 	},
 ];
 

@@ -2,12 +2,12 @@
 	<q-page class="row items-center justify-evenly">
 		<div class="border-1 rounded-lg p-5 w-9/10 md:w-3/10">
 			<div class="text-xl mb-5 text-center">
-				Inicia sesión
+				Crea tu cuenta
 			</div>
 			<div>
 				<q-form
 					greedy
-					@submit="login"
+					@submit="register"
 				>
 					<q-input
 						v-model="email"
@@ -20,21 +20,8 @@
 						label="Contraseña"
 						autocomplete="password"
 						type="password"
-						class=""
 						:rules="[ val => val && val.length > 0 || 'El campo es obligatorio']"
 					/>
-
-					<q-btn
-						flat
-						unelevated
-						no-caps
-						class="pl-0 mb-2"
-						color="primary"
-						@click="changePassword"
-					>
-						He olvidado la contraseña
-					</q-btn>
-
 
 					<q-btn
 						no-caps
@@ -42,7 +29,7 @@
 						class="w-full"
 						type="submit"
 					>
-						Login
+						Crear cuenta
 					</q-btn>
 				</q-form>
 			</div>
@@ -64,50 +51,19 @@ let $q = useQuasar()
 let router = useRouter()
 let songStore = useSongStore()
 
-function emailBool(value: string): boolean {
-	return /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(value)
-}
-
-let changePassword = () => {
-	$q.dialog({
-		title: 'Cambiar contraseña',
-		message: '¿Cuál es tu email?',
-		prompt: {
-			model: '',
-			type: 'email',
-			isValid: emailBool,
-		},
-		ok: 'Cambiar',
-		cancel: 'Cancelar',
-		persistent: true,
-	}).onOk(async (email) => {
-		let resetPasswordRoute = router
-			.getRoutes()
-			.find((route) => route.name === 'ResetPasswordPage');
-
-		if (resetPasswordRoute) {
-			let changePasswordUrl = window.location.origin;
-			let path = `${process.env.VUE_ROUTER_BASE}${resetPasswordRoute.path}`
-			path = path.replace('//', '/')
-			await directus.auth.password.request(email, changePasswordUrl + path);
-			$q.dialog({
-				title: 'Cambiar contraseña',
-				message:
-					'Recibirás un email con las instrucciones para cambiar tu contraseña',
-				persistent: true,
-			});
-		}
-	});
-};
-
-let login = async ()=> {
+let register = async ()=> {
 	if (email.value !== '' && password.value !== '') {
 		try {
+
+			await directus.users.createOne({
+				email: email.value,
+				password: password.value
+			});
 
 			await directus.auth.login({
 				email: email.value,
 				password: password.value
-			})
+			});
 
 			songStore.user = await directus.users.me.read()
 

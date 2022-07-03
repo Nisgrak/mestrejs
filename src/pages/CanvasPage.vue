@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div class="border-1 flex flex-row items-center gap-3 px-5 py-2">
+		<div class="border-1 flex flex-row items-center justify-center gap-3 px-5 py-2">
 			<q-btn
 				color="secondary"
 				:disabled="songStore.sections.length == 0"
@@ -19,27 +19,6 @@
 			/>
 
 			<q-btn
-				:icon="mdiCardPlus"
-				flat
-				@click="addSection()"
-			/>
-			<q-btn
-				:icon="mdiContentSave"
-				flat
-				@click="saveSong(true)"
-			/>
-			<q-btn
-				:icon="mdiXml"
-				flat
-				@click="insert()"
-			/>
-			<q-btn
-				:icon="mdiDeleteEmpty"
-				flat
-				@click="clearNotes()"
-			/>
-
-			<q-btn
 				:text-color="songStore.showNote ? 'secondary' : 'grey'"
 				unelevated
 				outline
@@ -48,14 +27,43 @@
 				@click="songStore.showNote = !songStore.showNote"
 			/>
 
+			<q-btn-group
+				flat
+				rounded
+				unelevated
+			>
+				<q-btn
+					:icon="mdiCardPlus"
+					flat
+					@click="addSection()"
+				/>
+				<q-btn
+					:icon="mdiContentSave"
+					flat
+					@click="saveSong(true)"
+				/>
+				<q-btn
+					:icon="mdiDeleteEmpty"
+					flat
+					@click="clearNotes()"
+				/>
+				<q-btn
+					:icon="mdiXml"
+					flat
+					@click="insert()"
+				/>
+			</q-btn-group>
+
+
+
+			<q-input
+				v-model="songStore.name"
+				label="Nombre"
+			/>
 			<q-input
 				v-model="songStore.bpm"
 				label="BPM"
 				type="number"
-			/>
-			<q-input
-				v-model="songStore.name"
-				label="Nombre"
 			/>
 		</div>
 		<div class="w-full p-5 md:p-15 flex flex-col justify-start">

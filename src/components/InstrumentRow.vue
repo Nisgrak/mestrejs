@@ -1,31 +1,31 @@
 
 <template>
 	<div class="instrument w-full">
-		<div class="flex justify-start items-center gap-3">
+		<div class="flex <md:justify-center items-center gap-3 mb-3">
 			<q-input
-				class="text-lg"
-				borderless
+				class="text-lg <md:w-full"
+				input-class="<md:text-center"
 				:model-value="instrument.alias"
 				@update:model-value="emit('update:instrument', Object.assign(instrument, { alias: $event }))"
 			/>
-			<q-btn
-				:icon="mdiPlus"
-				round
+			<q-btn-group
 				flat
-				@click="addRow"
-			/>
-			<q-btn
-				:icon="mdiMinus"
-				round
-				flat
-				@click="removeRow"
-			/>
-			<q-btn
-				:icon="mdiTrashCan"
-				round
-				flat
-				@click="askDelete()"
-			/>
+				rounded
+				unelevated
+			>
+				<q-btn
+					:icon="mdiPlus"
+					@click="addRow"
+				/>
+				<q-btn
+					:icon="mdiMinus"
+					@click="removeRow"
+				/>
+				<q-btn
+					:icon="mdiTrashCan"
+					@click="askDelete()"
+				/>
+			</q-btn-group>
 			<q-knob
 				:model-value="instrument.vol"
 				show-value
@@ -47,10 +47,6 @@
 					/>
 				</div>
 			</q-knob>
-
-			{{ (beat.numOfGroups * beat.beatsPerBar) }}
-			{{ instrument.notes.length }}
-			{{ instrument.notes.length / beatsPerRow }}
 		</div>
 		<div class="gap-10px grid grid-cols-1 w-full">
 			<div

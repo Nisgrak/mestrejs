@@ -2,7 +2,10 @@
 	<q-layout view="hHh Lpr lFf">
 		<q-header>
 			<q-toolbar>
-				<q-toolbar-title class="">
+				<q-toolbar-title
+					class="cursor-pointer"
+					@click="router.push({name: 'Canvas'})"
+				>
 					<q-img
 						src="/logo-mestrejs.svg"
 						height="50px"
@@ -15,12 +18,19 @@
 
 				<div
 					v-if="!songStore.user"
+					class="gap-3 flex"
 				>
 					<q-btn
 						no-caps
 						outline
 						label="Iniciar sesión"
 						:to="{name: 'LoginPage'}"
+					/>
+					<q-btn
+						no-caps
+						outline
+						label="Registrate"
+						:to="{name: 'RegisterPage'}"
 					/>
 				</div>
 				<div
@@ -83,8 +93,10 @@ import { mdiMenu } from '@quasar/extras/mdi-v6';
 import { useSongStore } from 'src/stores/songStore';
 import directus from 'src/utils/directus';
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 let songStore = useSongStore()
+let router = useRouter()
 
 let logout = () => {
 	directus.auth.logout()

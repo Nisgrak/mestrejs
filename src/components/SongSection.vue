@@ -3,16 +3,15 @@
 		v-if="section"
 		class="section w-full border-1 p-5 rounded-lg"
 	>
-		<div class="flex items-center gap-3">
+		<div class="flex items-center <md:justify-center gap-3">
 			<q-input
-				class="text-xl font-medium"
-				borderless
+				class="text-xl font-medium <md:w-full"
+				input-class="<md:text-center "
 				:model-value="section.name"
 				@update:model-value="emit('update:section', Object.assign(section, { name: $event }))"
 			/>
 			<q-btn
 				class="self-center"
-				round
 				color="secondary"
 				unelevated
 				:disabled="section.instruments.length == 0"
@@ -20,18 +19,21 @@
 				@click="playing ? pause() : play()"
 			/>
 
-			<q-btn
-				:icon="mdiPlus"
-				round
+			<q-btn-group
 				flat
-				@click="addInstrument"
-			/>
-			<q-btn
-				:icon="mdiTrashCan"
-				round
-				flat
-				@click="askDelete"
-			/>
+				rounded
+				unelevated
+			>
+				<q-btn
+					:icon="mdiPlus"
+					@click="addInstrument"
+				/>
+				<q-btn
+					:icon="mdiTrashCan"
+
+					@click="askDelete"
+				/>
+			</q-btn-group>
 		</div>
 		<div>
 			<InstrumentRow
