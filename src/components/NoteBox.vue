@@ -41,11 +41,8 @@
 
 <script setup lang="ts">
 import { useSongStore } from 'src/stores/songStore';
-import { PropType, ref } from 'vue';
+import { computed, PropType, ref } from 'vue';
 
-let getStartNote = (indexRow: number, indexGroup: number) => {
-	return ((indexRow - 1) * beatsPerRow.value) + (props.beat.beatsPerBar * indexGroup)
-}
 
 const props = defineProps({
 	note: {
@@ -55,7 +52,19 @@ const props = defineProps({
 	instrumentIndex: {
 		type: Number,
 		required: true
+	},
+	index: {
+		type: Number,
+		required: true
 	}
+})
+
+let numberOfNote = computed(() => {
+	return `'${props.index + 1}'`
+})
+
+let numberOfNote2 = computed(() => {
+	return `'${props.index + 2}'`
 })
 
 let incrementNote = (note: number) => {
@@ -174,8 +183,9 @@ defineExpose({
 }
 
 .instrument.beat-4\/4 .note.show-note:nth-child(1):before {
-    content: "1";
+    content: var(--numberOfNote, "1");
 }
+
 .instrument.beat-4\/4 .note.show-note:nth-child(2):before {
     content: "E";
 }
@@ -188,7 +198,7 @@ defineExpose({
 
 
 .instrument.beat-6\/8 .note.show-note:nth-child(1):before {
-    content: "1";
+   content: var(--numberOfNote, "1");
 }
 .instrument.beat-6\/8 .note.show-note:nth-child(2):before {
     content: "E";
@@ -197,12 +207,21 @@ defineExpose({
     content: "Y";
 }
 .instrument.beat-6\/8 .note.show-note:nth-child(4):before {
-    content: "2";
+    content: var(--numberOfNote2, "1");
 }
 .instrument.beat-6\/8 .note.show-note:nth-child(5):before {
     content: "E";
 }
 .instrument.beat-6\/8 .note.show-note:nth-child(6):before {
     content: "Y";
+}
+</style>
+
+<style>
+.note.show-note {
+    --numberOfNote: v-bind(numberOfNote);
+}
+.note.show-note {
+    --numberOfNote2: v-bind(numberOfNote2);
 }
 </style>

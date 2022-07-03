@@ -1,40 +1,78 @@
 <template>
 	<div
 		v-if="section"
-		class="section w-full border-1 p-5 rounded-lg"
+		class="section w-full border-1 p-5 rounded-lg flex flex-col"
 	>
-		<div class="flex items-center <md:justify-center gap-3">
-			<q-input
-				class="text-xl font-medium <md:w-full"
-				input-class="<md:text-center "
-				:model-value="section.name"
-				@update:model-value="emit('update:section', Object.assign(section, { name: $event }))"
-			/>
-			<q-btn
-				class="self-center"
-				color="secondary"
-				unelevated
-				:disabled="section.instruments.length == 0"
-				:icon="playing ? mdiStop : mdiPlay"
-				@click="playing ? pause() : play()"
-			/>
-
-			<q-btn-group
-				flat
-				rounded
-				unelevated
+		<div class="flex flex-nowrap">
+			<div
+				class="flex items-center <md:justify-center gap-3 mb-5"
+				:class="{
+					'sticky left-5 flex-nowrap bg-white z-2': songStore.horizontalView
+				}"
 			>
-				<q-btn
-					:icon="mdiPlus"
-					@click="addInstrument"
+				<q-input
+					class="text-xl font-medium <md:w-full"
+					input-class="<md:text-center "
+					:model-value="section.name"
+					@update:model-value="emit('update:section', Object.assign(section, { name: $event }))"
 				/>
 				<q-btn
-					:icon="mdiTrashCan"
+					class="self-center"
+					color="secondary"
+					unelevated
+					:disabled="section.instruments.length == 0"
+					:icon="playing ? mdiStop : mdiPlay"
+					@click="playing ? pause() : play()"
+				/>
 
-					@click="askDelete"
-				/>
-			</q-btn-group>
+				<q-btn-group
+					flat
+					rounded
+					unelevated
+				>
+					<q-btn
+						:icon="mdiPlus"
+						@click="addInstrument"
+					/>
+					<q-btn
+						:icon="mdiFractionOneHalf"
+					>
+						<q-menu
+							anchor="bottom left"
+							self="top left"
+							transition-show="jump-down"
+							transition-hide="jump-up"
+						>
+							<div class="row q-pa-md q-gutter-sm">
+								<q-btn
+									v-for="(beat, index) in songStore.beats"
+									:key="index"
+									v-close-popup
+									outline
+									unelevated
+									color="secondary"
+									:disabled="section.beat.name === beat.name"
+									@click="changeBeat(beat)"
+								>
+									{{ beat.name }}
+								</q-btn>
+							</div>
+						</q-menu>
+					</q-btn>
+					<q-btn
+						:icon="mdiContentCopy"
+						@click="emit('duplicate')"
+					/>
+					<q-btn
+						:icon="mdiTrashCan"
+
+						@click="askDelete"
+					/>
+				</q-btn-group>
+			</div>
+			<div class="flex-grow" />
 		</div>
+
 		<div>
 			<InstrumentRow
 				v-for="(instrument, indexInstrument) in section.instruments"
@@ -51,10 +89,10 @@
 </template>
 
 <script lang="ts" setup>
-import { Section, useSongStore } from 'stores/songStore';
+import { Beat, Section, useSongStore } from 'stores/songStore';
 import InstrumentRow from './InstrumentRow.vue';
 import { PropType, ref } from 'vue';
-import { mdiPlay, mdiPlus, mdiStop, mdiTrashCan } from '@quasar/extras/mdi-v6';
+import { mdiPlay, mdiPlus, mdiStop, mdiTrashCan, mdiFractionOneHalf, mdiContentCopy } from '@quasar/extras/mdi-v6';
 import { useTemplateRefsList } from '@vueuse/core'
 import NoteBoxVue from './NoteBox.vue';
 import SelectInstrumentDialog from './SelectInstrumentDialog.vue';
@@ -73,6 +111,32 @@ let getPlayingLength = ()=> {
 }
 let getTimeOfNote = ()=> {
 	return 60000 / songStore.bpm / props.section.beat.numOfGroups;
+}
+
+let changeBeat = async (newBeat: Beat) => {
+
+	$q.dialog({
+		message: 'Vas a perder todas las notas de esta sección, ¿estás seguro?',
+		title: 'Cambio de compás',
+		cancel: true,
+	}).onOk(() => {
+
+		emit('update:section', Object.assign(props.section, { beat: newBeat }))
+
+		props.section.instruments.forEach(async instrument => {
+			await (instrument.notes = []);
+			let temp = [];
+
+			for (let index = 0; index < props.section.beat.beatsPerBar * props.section.beat.numOfGroups; index++) {
+				temp.push(0);
+			}
+
+			instrument.notes = temp;
+			instrument.lines = 1;
+		});
+	})
+
+
 }
 
 let askDelete = ()=> {
@@ -226,12 +290,13 @@ let props = defineProps({
 	}
 })
 
-let emit = defineEmits(['update:section', 'remove'])
+let emit = defineEmits(['update:section', 'remove', 'duplicate'])
 
 defineExpose({
 	getPlayingLength,
 	play,
-	pause
+	pause,
+	idSection: () => props.section.id
 })
 </script>
 

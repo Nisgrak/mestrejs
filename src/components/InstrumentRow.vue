@@ -1,7 +1,17 @@
 
 <template>
-	<div class="instrument w-full">
-		<div class="flex <md:justify-center items-center gap-3 mb-3">
+	<div
+		class="instrument w-full"
+		:class="{
+			'grid grid-cols-[500px,6fr]': songStore.horizontalView
+		}"
+	>
+		<div
+			class="flex <md:justify-center items-center gap-3 mb-3"
+			:class="{
+				'sticky left-0 flex-nowrap bg-white z-2 w-full pl-10': songStore.horizontalView
+			}"
+		>
 			<q-input
 				class="text-lg <md:w-full"
 				input-class="<md:text-center"
@@ -48,12 +58,21 @@
 				</div>
 			</q-knob>
 		</div>
-		<div class="gap-10px grid grid-cols-1 w-full">
+		<div
+			class="gap-10px w-full"
+			:class="{
+				'grid grid-cols-1': !songStore.horizontalView,
+				'flex flex-nowrap': songStore.horizontalView
+			}"
+		>
 			<div
 				v-for="indexRow in Math.ceil(instrument.notes.length / beatsPerRow)"
 				:key="indexRow"
-				class="gap-10px w-full grid grid-cols-1"
-				:class="[`md:grid-cols-${beat.numOfGroups}`]"
+				class="gap-10px w-full "
+				:class="[
+					`md:grid-cols-${beat.numOfGroups}`,
+					songStore.horizontalView ? 'flex flex-nowrap': 'grid grid-cols-1'
+				]"
 			>
 				<div
 					v-for="(_, indexGroup) in beat.numOfGroups"
@@ -67,6 +86,7 @@
 						:ref="notesRefs.set"
 						:key="indexNote"
 						:note="instrument.notes[getStartNote(indexRow, indexGroup) + indexNote]"
+						:index="(getStartNote(indexRow, indexGroup) / beat.beatsPerBar) * (beat.name === '6/8'? 2: 1)"
 						:instrument-index="instrument.type"
 						@update:note="emit('update:instrument', Object.assign(instrument, { notes: instrument.notes.map((note, index) => index === (getStartNote(indexRow, indexGroup) + indexNote) ? $event : note)}))"
 					/>
@@ -76,7 +96,7 @@
 	</div>
 </template>
 <script setup lang="ts">
-import { Beat, Instrument } from 'stores/songStore';
+import { Beat, Instrument, useSongStore } from 'stores/songStore';
 import { computed, PropType, ref } from 'vue';
 import Note from './NoteBox.vue';
 import { mdiPlus, mdiMinus, mdiTrashCan, mdiVolumeHigh, mdiVolumeMute } from '@quasar/extras/mdi-v6'
@@ -134,6 +154,8 @@ let getStartNote = (indexRow: number, indexGroup: number) => {
 	return ((indexRow - 1) * beatsPerRow.value) + (props.beat.beatsPerBar * indexGroup)
 }
 
+let songStore = useSongStore()
+
 defineExpose({
 	notesRefs
 })
@@ -144,6 +166,12 @@ defineExpose({
     @apply rounded-l-lg;
     @apply bg-gray-300;
 }
+
+.instrument.beat-6\/8 .note.show-note:nth-child(4) {
+    @apply bg-gray-100;
+
+}
+
 .note:last-child {
     @apply rounded-r-lg;
 }

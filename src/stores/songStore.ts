@@ -8,8 +8,23 @@ export const useSongStore = defineStore('song', () => {
 	const bpm = ref(90)
 	const name = ref('Partitura sin nombre')
 
+	const beats: readonly Beat[] = [
+	 {
+			name: '4/4',
+			beatsPerBar: 4,
+			numOfGroups: 4
+		},
+	 {
+			name: '6/8',
+			beatsPerBar: 6,
+			numOfGroups: 2
+		},
+
+	] as const
+
 	const repeat = ref(true)
 	const showNote = ref(false)
+	const horizontalView = ref(false)
 
 	const sections = ref<Section[]>([])
 
@@ -163,7 +178,9 @@ export const useSongStore = defineStore('song', () => {
 		playing,
 		user,
 		name,
-		showNote
+		showNote,
+		horizontalView,
+		beats
 	}
 })
 

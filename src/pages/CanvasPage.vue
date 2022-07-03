@@ -1,91 +1,112 @@
 <template>
 	<div>
-		<div class="border-1 flex flex-row items-center justify-center gap-3 px-5 py-2">
-			<q-btn
-				color="secondary"
-				:disabled="songStore.sections.length == 0"
-				:icon="playing ? mdiStop : mdiPlay"
-				class="w-50px"
-				unelevated
-				@click="playing ? pause() : play()"
-			/>
-
-			<q-btn
-				:text-color="songStore.repeat ? 'secondary' : 'grey'"
-				class="w-50px"
-				:icon="mdiRepeat"
-				outline
-				@click="songStore.repeat = !songStore.repeat"
-			/>
-
-			<q-btn
-				:text-color="songStore.showNote ? 'secondary' : 'grey'"
-				unelevated
-				outline
-				class="w-50px"
-				:icon="mdiNumeric"
-				@click="songStore.showNote = !songStore.showNote"
-			/>
-
-			<q-btn-group
-				flat
-				rounded
-				unelevated
-			>
+		<q-page-sticky
+			position="top"
+			expand
+			class="z-5 bg-white"
+		>
+			<div class="border-1 flex flex-row items-center justify-center gap-3 px-5 py-2 sticky left-0 top-0 w-full bg-white h-full z-5">
 				<q-btn
-					:icon="mdiCardPlus"
-					flat
-					@click="addSection()"
+					color="secondary"
+					:disabled="songStore.sections.length == 0"
+					:icon="playing ? mdiStop : mdiPlay"
+					class="w-50px"
+					unelevated
+					@click="playing ? pause() : play()"
+				/>
+
+				<q-btn
+					:text-color="songStore.repeat ? 'secondary' : 'grey'"
+					class="w-50px"
+					:icon="mdiRepeat"
+					outline
+					@click="songStore.repeat = !songStore.repeat"
+				/>
+
+				<q-btn
+					:text-color="songStore.showNote ? 'secondary' : 'grey'"
+					unelevated
+					outline
+					class="w-50px"
+					:icon="mdiNumeric"
+					@click="songStore.showNote = !songStore.showNote"
 				/>
 				<q-btn
-					:icon="mdiContentSave"
-					flat
-					@click="saveSong(true)"
+					:text-color="songStore.horizontalView ? 'secondary' : 'grey'"
+					unelevated
+					outline
+					class="w-50px"
+					:icon="mdiViewDashboard"
+					@click="songStore.horizontalView = !songStore.horizontalView"
 				/>
-				<q-btn
-					:icon="mdiDeleteEmpty"
+
+				<q-btn-group
 					flat
-					@click="clearNotes()"
-				/>
-				<q-btn
-					:icon="mdiXml"
-					flat
-					@click="insert()"
-				/>
-			</q-btn-group>
+					rounded
+					unelevated
+				>
+					<q-btn
+						:icon="mdiCardPlus"
+						flat
+						@click="addSection()"
+					/>
+					<q-btn
+						:icon="mdiContentSave"
+						flat
+						@click="saveSong(true)"
+					/>
+					<q-btn
+						:icon="mdiDeleteEmpty"
+						flat
+						@click="clearNotes()"
+					/>
+					<q-btn
+						:icon="mdiXml"
+						flat
+						@click="insert()"
+					/>
+				</q-btn-group>
 
 
 
-			<q-input
-				v-model="songStore.name"
-				label="Nombre"
-			/>
-			<q-input
-				v-model="songStore.bpm"
-				label="BPM"
-				type="number"
-			/>
-		</div>
-		<div class="w-full p-5 md:p-15 flex flex-col justify-start">
+				<q-input
+					v-model="songStore.name"
+					label="Nombre"
+				/>
+				<q-input
+					v-model="songStore.bpm"
+					label="BPM"
+					type="number"
+				/>
+			</div>
+		</q-page-sticky>
+
+		<div
+			class="w-full p-5 mt-40 md:mt-10 md:p-15 flex flex-col justify-start"
+			:class="{
+				'min-w-max !pl-0': songStore.horizontalView
+			}"
+		>
 			<SongSection
 				v-for="(section, index) in songStore.sections"
 				:key="section.id"
 				:ref="sectionsRefs.set"
 				v-model:section="songStore.sections[index]"
 				@remove="songStore.sections.splice(index, 1)"
+				@duplicate="duplicateSection(index)"
 			/>
 		</div>
 	</div>
 </template>
 
 <script lang="ts" setup>
-import { copyToClipboard, uid, useQuasar } from 'quasar';
+import { copyToClipboard, uid, useQuasar, extend  } from 'quasar';
 import { Section, useSongStore } from 'src/stores/songStore';
 import SongSection from 'src/components/SongSection.vue';
 import { useRoute, useRouter } from 'vue-router';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, toRaw } from 'vue';
 import { createPartiture, loadPartiture, updatePartiture } from 'src/utils/partiture';
-import { mdiContentSave, mdiPlay, mdiStop, mdiRepeat, mdiXml, mdiCardPlus, mdiDeleteEmpty, mdiNumeric } from '@quasar/extras/mdi-v6';
+import { mdiContentSave, mdiPlay, mdiStop, mdiRepeat, mdiXml, mdiCardPlus, mdiDeleteEmpty, mdiNumeric, mdiViewDashboard } from '@quasar/extras/mdi-v6';
 import { useTemplateRefsList } from '@vueuse/core';
 
 let playingAll = ref(false);
@@ -93,15 +114,15 @@ let playing = ref(false);
 let sectionsRefs = useTemplateRefsList<InstanceType<typeof SongSection>>()
 let instrumentsSoundsList =ref<ReturnType<typeof setTimeout>[]>([])
 
+let duplicateSection = (index: number) => {
+	let deepCopy = JSON.parse(JSON.stringify(toRaw(songStore.sections[index])))
+	deepCopy.id = uid()
+	songStore.sections.splice(index, 0, deepCopy)
+}
+
 let addSection = (instrumentIndex?: number) => {
 	let id = uid();
-	let beat = {
-		name: '4/4', //TODO utilizar la anterior seccion
-		beatsPerBar: 4,
-		numOfGroups: 4
-	};
-
-	// songStore.sections.forEach(section => section.id >= id ? id = section.id + 1 : null);
+	let beat = songStore.beats[0]
 
 	if (songStore.sections.length != 0) {
 		beat = songStore.sections[songStore.sections.length - 1].beat;
@@ -159,14 +180,22 @@ let play = () => {
 	playingAll.value = true;
 	playing.value = true;
 	let accTime = 0;
-	for (let index = 0; index < sectionsRefs.value.length; index++) {
-		let playingLength = sectionsRefs.value[index].getPlayingLength();
+	for (let index = 0; index < songStore.sections.length; index++) {
+		let section = sectionsRefs.value.find(section => section.idSection() === songStore.sections[index].id);
+		if (section === undefined) {
+			return
+		}
+
+		let playingLength = section.getPlayingLength();
 		accTime += playingLength;
 
 		let playTime = sectionsRefs.value.slice(0, index).reduce((acc, section) => acc + section.getPlayingLength(), 0);
 
 		instrumentsSoundsList.value.push(setTimeout(() => {
-			sectionsRefs.value[index].play(false);
+			if (section === undefined) {
+				return
+			}
+			section.play(false);
 		}, playTime));
 
 		if (index + 1 == sectionsRefs.value.length) {
@@ -272,7 +301,7 @@ onMounted(async () => {
 		songStore.sections = oldFormat.sections
 
 
-	}else {
+	}else if (songStore.sections.length === 0) {
 
 		addSection(1);
 	}
