@@ -5,7 +5,7 @@
 			expand
 			class="z-5 bg-white"
 		>
-			<div class="border-1 flex flex-row items-center justify-center gap-3 px-5 py-2 sticky left-0 top-0 w-full bg-white h-full z-5">
+			<div class="border-1 flex flex-row items-center md:justify-center overflow-auto flex-nowrap gap-3 px-5 py-2 sticky left-0 top-0 w-full bg-white h-full z-5">
 				<q-btn
 					color="secondary"
 					:disabled="songStore.sections.length == 0"
@@ -82,7 +82,7 @@
 		</q-page-sticky>
 
 		<div
-			class="w-full p-5 mt-40 md:mt-10 md:p-15 flex flex-col justify-start"
+			class="w-full p-5 mt-15 md:p-15 flex flex-col justify-start"
 			:class="{
 				'min-w-max !pl-0': songStore.horizontalView
 			}"
