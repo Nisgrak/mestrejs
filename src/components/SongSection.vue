@@ -109,8 +109,8 @@ const instrumentsRefs = useTemplateRefsList<InstanceType<typeof InstrumentRow>>(
 let getPlayingLength = ()=> {
 	return getTimeOfNote() * getMaxNote();
 }
-let getTimeOfNote = ()=> {
-	return 60000 / songStore.bpm / props.section.beat.numOfGroups;
+let getTimeOfNote = (groups = props.section.beat.numOfGroups)=> {
+	return 60000 / songStore.bpm / groups;
 }
 
 let changeBeat = async (newBeat: Beat) => {
@@ -170,42 +170,55 @@ let play = (internalPlay = true) => {
 	songStore.playing = true;
 	// this.$emit("playing");
 
-	let time = getTimeOfNote();
 	for (let indexInstrument = 0; indexInstrument < props.section.instruments.length; indexInstrument++) {
 		let instrument = props.section.instruments[indexInstrument];
 		let howls = songStore.getPossibleNotes(instrument.type);
-		let notesPerLine = instrument.notes.length / instrument.lines;
+		let accTime = 0
+		for (let indexLine = 0; indexLine < instrument.noteLines.length; indexLine++) {
+			let noteInLine = 0
+			for (let indexGroup = 0; indexGroup < instrument.noteLines[indexLine].length; indexGroup++) {
+				let timeOfgroup = getTimeOfNote(instrument.noteLines[indexLine][indexGroup].length)
+				for (let indexNote = 0; indexNote < instrument.noteLines[indexLine][indexGroup].length; indexNote++) {
+					const note =  instrument.noteLines[indexLine][indexGroup][indexNote]
 
-		for (let indexNote = 0; indexNote < instrument.notes.length; indexNote++) {
-			let actualLine = Math.floor(indexNote / notesPerLine);
-			let noteInLine = indexNote - (actualLine * notesPerLine);
-			let boxElement = instrumentsRefs.value[indexInstrument].notesRefs[noteInLine];
+					let boxElement = instrumentsRefs.value[indexInstrument].notesRefs[noteInLine];
 
-			let note = instrument.notes[indexNote];
 
-			// Nota con subidivisiones
-			if (Array.isArray(note)) {
-				for (let indexSubNote = 0; indexSubNote < note.length; indexSubNote++) {
+					// Nota con subidivisiones
+					if (Array.isArray(note)) {
+						let noteLong = timeOfgroup / note.length
 
-					let noteTime = time * (indexNote + ((1 / note.length) * indexSubNote));
-					let sound = howls[note[indexSubNote]].howls;
+						for (let indexSubNote = 0; indexSubNote < note.length; indexSubNote++) {
 
-					playNote(noteTime, sound, instrument.vol, boxElement, time, indexSubNote);
+							let noteTime = accTime + noteLong;
+							let sound = howls[note[indexSubNote]].howls;
+
+							playNote(noteTime, sound, instrument.vol, boxElement, noteLong, indexSubNote);
+							accTime = noteTime
+
+						}
+
+					} else { // Nota sin subdivision
+						let noteTime = accTime + timeOfgroup;
+						let sound = howls[note].howls;
+
+						playNote(noteTime, sound, instrument.vol, boxElement, timeOfgroup);
+						accTime = noteTime
+					}
+
+					noteInLine++
 				}
 
-			} else { // Nota sin subdivision
-				let noteTime = time * indexNote;
-				let sound = howls[note].howls;
-
-				playNote(noteTime, sound, instrument.vol, boxElement, time);
 			}
+
+
 		}
 	}
 	if (internalPlay && songStore.repeat) {
 		instrumentsSoundsList.value.push(
 			setTimeout(() => {
 				play();
-			}, time * getMaxNote())
+			}, getTimeOfNote() * getMaxNote())
 		);
 	} else {
 		instrumentsSoundsList.value.push(
@@ -216,7 +229,7 @@ let play = (internalPlay = true) => {
 
 				// this.$emit('pauseRepeat');
 
-			}, time * getMaxNote() - 10)
+			}, getTimeOfNote() * getMaxNote() - 10)
 		);
 	}
 }

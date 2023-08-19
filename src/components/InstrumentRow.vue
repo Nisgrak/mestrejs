@@ -66,7 +66,7 @@
 			}"
 		>
 			<div
-				v-for="indexRow in Math.ceil(instrument.notes.length / beatsPerRow)"
+				v-for="noteLine, indexRow in instrument.noteLines"
 				:key="indexRow"
 				class="gap-10px w-full "
 				:class="[
@@ -75,20 +75,20 @@
 				]"
 			>
 				<div
-					v-for="(_, indexGroup) in beat.numOfGroups"
+					v-for="(group, indexGroup) in noteLine"
 					:key="indexGroup"
 					:style="{gridTemplateColumns: `repeat(${beat.beatsPerBar}, 49px)`}"
 					class="grid justify-center"
 				>
 					<Note
-						v-for="(note, indexNote) in instrument.notes.slice(getStartNote(indexRow, indexGroup), getStartNote(indexRow, indexGroup) + beat.beatsPerBar)"
+						v-for="(note, indexNote) in group"
 
 						:ref="notesRefs.set"
 						:key="indexNote"
-						:note="instrument.notes[getStartNote(indexRow, indexGroup) + indexNote]"
-						:index="(getStartNote(indexRow, indexGroup) / beat.beatsPerBar) * (beat.name === '6/8'? 2: 1)"
+						:note="note"
+						:index="(0 / beat.beatsPerBar) * (beat.name === '6/8'? 2: 1)"
 						:instrument-index="instrument.type"
-						@update:note="emit('update:instrument', Object.assign(instrument, { notes: instrument.notes.map((note, index) => index === (getStartNote(indexRow, indexGroup) + indexNote) ? $event : note)}))"
+						@update:note="updateInstrument(indexRow, indexGroup, indexNote, $event)"
 					/>
 				</div>
 			</div>
@@ -155,6 +155,16 @@ let getStartNote = (indexRow: number, indexGroup: number) => {
 }
 
 let songStore = useSongStore()
+
+function updateInstrument(indexRow: number, indexGroup: number, indexNote: number, newNote: number) {
+	let temp = props.instrument.noteLines
+	temp[indexRow][indexGroup][indexNote] = newNote;
+
+	console.log(props.instrument.noteLines);
+	console.log(indexGroup, indexNote, newNote);
+
+	emit('update:instrument', Object.assign(props.instrument, { noteLine: temp }))
+}
 
 defineExpose({
 	notesRefs

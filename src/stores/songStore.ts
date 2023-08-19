@@ -9,12 +9,12 @@ export const useSongStore = defineStore('song', () => {
 	const name = ref('Partitura sin nombre')
 
 	const beats: readonly Beat[] = [
-	 {
+		{
 			name: '4/4',
 			beatsPerBar: 4,
 			numOfGroups: 4
 		},
-	 {
+		{
 			name: '6/8',
 			beatsPerBar: 6,
 			numOfGroups: 2
@@ -30,7 +30,7 @@ export const useSongStore = defineStore('song', () => {
 
 	const user = ref<PartialItem<UserItem> | undefined>(undefined)
 
-	const instruments =  [
+	const instruments = [
 		{
 			name: 'Alfaia',
 			possibleNotes: [
@@ -156,7 +156,7 @@ export const useSongStore = defineStore('song', () => {
 
 	function getNameIntrument(index: number) {
 
-	 return instruments[index].name;
+		return instruments[index].name;
 
 	}
 
@@ -171,7 +171,8 @@ export const useSongStore = defineStore('song', () => {
 	const playing = ref(false)
 
 
-	return { bpm, sections, instruments, getPossibleNotes,
+	return {
+		bpm, sections, instruments, getPossibleNotes,
 		getNameIntrument,
 		getIconNoteInstrument,
 		repeat,
@@ -185,25 +186,26 @@ export const useSongStore = defineStore('song', () => {
 })
 
 export interface Section {
-  id: string;
-  name: string;
-  instruments: Instrument[];
-  beat: Beat;
+	id: string;
+	name: string;
+	instruments: Instrument[];
+	beat: Beat;
 }
 
 export interface Beat {
-  name: string;
-  beatsPerBar: number;
-  numOfGroups: number;
+	name: string;
+	beatsPerBar: number;
+	numOfGroups: number;
 }
 
 export interface Instrument {
-  id: string
-  type: number;
-  alias: string;
-  lines: number;
-  vol: number;
-  notes: Note[];
+	id: string
+	type: number;
+	alias: string;
+	lines: number;
+	vol: number;
+	notes: Note[];
+	noteLines: Note[][][]
 }
 
 export type Note = number[] | number;

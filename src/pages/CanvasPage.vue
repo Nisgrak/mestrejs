@@ -306,6 +306,30 @@ onMounted(async () => {
 		addSection(1);
 	}
 
+
+	songStore.sections[0].instruments.push({
+		alias: 'test',
+		id: uid(),
+		lines: 1,
+		notes: [],
+		type: 2,
+		vol: 1,
+		noteLines:[
+			[[1, 0, 0, 0], [1,1,1,1], [1,1,1,1], [0,0,0,0]]
+		]
+	})
+
+	songStore.sections[0].instruments[0].noteLines = [
+		[[1, 0, 0, 0], [[1,1,1],0,[1,1,1]], [1,1,1,1], [0,0,0,0]]
+	]
+
+	addSection(1);
+
+	songStore.sections[1].instruments[0].noteLines = [
+		[[2,2,2,2], [1,1,1], [2,2,2,2], [2,2,2,2]]
+	]
+
+
 })
 
 </script>
