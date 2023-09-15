@@ -204,7 +204,6 @@ export interface Instrument {
 	alias: string;
 	lines: number;
 	vol: number;
-	notes: Note[];
 	noteLines: Note[][][]
 }
 

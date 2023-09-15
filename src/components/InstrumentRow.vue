@@ -35,6 +35,10 @@
 					:icon="mdiTrashCan"
 					@click="askDelete()"
 				/>
+				<q-btn
+					:icon="mdiFractionOneHalf"
+					@click="showDialogNotes = true"
+				/>
 			</q-btn-group>
 			<q-knob
 				:model-value="instrument.vol"
@@ -93,15 +97,70 @@
 				</div>
 			</div>
 		</div>
+		<q-dialog
+			v-model="showDialogNotes"
+		>
+			<q-card>
+				<q-card-section>
+					<div class="text-h6">
+						Cambio de compases
+					</div>
+				</q-card-section>
+
+				<q-card-section class="q-pt-none">
+					<q-banner
+						class="bg-negative text-white mb-5"
+						rounded
+					>
+						<template #avatar>
+							<q-icon
+								:name="mdiAlert"
+							/>
+						</template>
+						Estos cambios son permanentes, no se pueden deshacer
+					</q-banner>
+					<div
+						v-for="(noteLine,index) in instrument.noteLines"
+						:key="index"
+					>
+						Línea {{ index + 1 }}
+						<div class="grid grid-cols-4 gap-5">
+							<div
+								v-for="(group, indexGroup) in noteLine"
+								:key="indexGroup"
+							>
+								<q-input
+									:label="`Grupo ${indexGroup + 1}`"
+									:model-value="group.length"
+									type="number"
+									debounce="500"
+									@update:model-value="$event === null ? null: parseInt($event as string) > group.length ? group.push(...(new Array(parseInt($event as string) - group.length).fill(0))): group.splice(group.length - (group.length - parseInt($event as string)), group.length - parseInt($event as string))"
+								/>
+							</div>
+						</div>
+					</div>
+				</q-card-section>
+
+				<q-card-actions align="right">
+					<q-btn
+						v-close-popup
+						flat
+						label="OK"
+						color="primary"
+					/>
+				</q-card-actions>
+			</q-card>
+		</q-dialog>
 	</div>
 </template>
 <script setup lang="ts">
 import { Beat, Instrument, useSongStore } from 'stores/songStore';
 import { computed, PropType, ref } from 'vue';
 import Note from './NoteBox.vue';
-import { mdiPlus, mdiMinus, mdiTrashCan, mdiVolumeHigh, mdiVolumeMute } from '@quasar/extras/mdi-v6'
+import { mdiPlus, mdiMinus, mdiTrashCan, mdiVolumeHigh, mdiVolumeMute, mdiFractionOneHalf, mdiAlert } from '@quasar/extras/mdi-v6'
 import { useTemplateRefsList } from '@vueuse/core';
 import { useQuasar } from 'quasar';
+import { generateNewLine } from 'src/utils/lines';
 
 const props = defineProps({
 	instrument: {
@@ -129,21 +188,22 @@ let askDelete = ()=> {
 
 }
 
+let showDialogNotes = ref(false)
+
 const notesRefs = useTemplateRefsList<InstanceType<typeof Note>>()
 
 const emit = defineEmits(['update:instrument', 'remove'])
 
 let addRow = () => {
-	let temp = (new Array(props.beat.numOfGroups * props.beat.beatsPerBar)).fill(0);
 
-	emit('update:instrument', { ...props.instrument, notes: props.instrument.notes.concat(temp) })
+	emit('update:instrument', { ...props.instrument, noteLines: [...props.instrument.noteLines, generateNewLine(props.beat.numOfGroups, props.beat.beatsPerBar)] })
 }
 let removeRow = () => {
-	let temp = props.instrument.notes;
+	let temp = props.instrument.noteLines;
 
-	temp.splice(-(props.beat.numOfGroups * props.beat.beatsPerBar))
+	temp.pop()
 
-	emit('update:instrument', { ...props.instrument, notes: temp })
+	emit('update:instrument', { ...props.instrument, noteLines: temp })
 }
 
 let beatsPerRow = computed(() => {

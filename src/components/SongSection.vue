@@ -99,6 +99,7 @@ import SelectInstrumentDialog from './SelectInstrumentDialog.vue';
 import { Howl } from 'howler';
 import { uid, useQuasar } from 'quasar';
 import { store } from 'quasar/wrappers';
+import { generateNewLine } from '../utils/lines'
 
 let songStore= useSongStore()
 let playing = ref(false)
@@ -109,7 +110,7 @@ const instrumentsRefs = useTemplateRefsList<InstanceType<typeof InstrumentRow>>(
 let getPlayingLength = ()=> {
 	return getTimeOfNote() * getMaxNote();
 }
-let getTimeOfNote = (groups = props.section.beat.numOfGroups)=> {
+let getTimeOfNote = (groups = props.section.beat.beatsPerBar)=> {
 	return 60000 / songStore.bpm / groups;
 }
 
@@ -123,17 +124,12 @@ let changeBeat = async (newBeat: Beat) => {
 
 		emit('update:section', Object.assign(props.section, { beat: newBeat }))
 
-		props.section.instruments.forEach(async instrument => {
-			await (instrument.notes = []);
-			let temp = [];
+		for (const instrumentIndex in props.section.instruments) {
 
-			for (let index = 0; index < props.section.beat.beatsPerBar * props.section.beat.numOfGroups; index++) {
-				temp.push(0);
-			}
+			let instrument = props.section.instruments[instrumentIndex];
 
-			instrument.notes = temp;
-			instrument.lines = 1;
-		});
+			instrument.noteLines = [generateNewLine(props.section.beat.numOfGroups, props.section.beat.beatsPerBar)];
+		}
 	})
 
 
@@ -157,10 +153,13 @@ let getMaxNote=() => {
 	for (let indexInstrument = 0; indexInstrument < props.section.instruments.length; indexInstrument++) {
 		let instrument = props.section.instruments[indexInstrument];
 
-		if (instrument.notes.length > maxNote) {
-			maxNote = instrument.notes.length;
+		let lineNotes = instrument.noteLines.length * props.section.beat.beatsPerBar * props.section.beat.numOfGroups
+
+		if (lineNotes > maxNote) {
+			maxNote = lineNotes;
 		}
 	}
+	console.log(maxNote);
 	return maxNote;
 }
 
@@ -174,6 +173,7 @@ let play = (internalPlay = true) => {
 		let instrument = props.section.instruments[indexInstrument];
 		let howls = songStore.getPossibleNotes(instrument.type);
 		let accTime = 0
+		let noteInInstrument = 0
 		for (let indexLine = 0; indexLine < instrument.noteLines.length; indexLine++) {
 			let noteInLine = 0
 			for (let indexGroup = 0; indexGroup < instrument.noteLines[indexLine].length; indexGroup++) {
@@ -181,7 +181,7 @@ let play = (internalPlay = true) => {
 				for (let indexNote = 0; indexNote < instrument.noteLines[indexLine][indexGroup].length; indexNote++) {
 					const note =  instrument.noteLines[indexLine][indexGroup][indexNote]
 
-					let boxElement = instrumentsRefs.value[indexInstrument].notesRefs[noteInLine];
+					let boxElement = instrumentsRefs.value[indexInstrument].notesRefs[noteInInstrument];
 
 
 					// Nota con subidivisiones
@@ -207,6 +207,7 @@ let play = (internalPlay = true) => {
 					}
 
 					noteInLine++
+					noteInInstrument++
 				}
 
 			}
@@ -277,6 +278,7 @@ let addInstrument = () => {
 }
 
 let createInstrument = (indexInstrument: number ) => {
+
 	emit('update:section', Object.assign(props.section, {
 		instruments: [
 			...props.section.instruments, {
@@ -285,7 +287,7 @@ let createInstrument = (indexInstrument: number ) => {
 				lines: 1,
 				vol: 1,
 				type: indexInstrument,
-				notes:  (new Array(props.section.beat.numOfGroups * props.section.beat.beatsPerBar)).fill(0)
+				noteLines: [generateNewLine(props.section.beat.numOfGroups, props.section.beat.beatsPerBar)]
 
 			}
 		]

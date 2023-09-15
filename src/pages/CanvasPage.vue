@@ -143,7 +143,7 @@ let addSection = (instrumentIndex?: number) => {
 			alias: newInstrument.name,
 			lines: 1,
 			vol: 1,
-			notes: (new Array(beat.numOfGroups * beat.beatsPerBar)).fill(0)
+			noteLines: [],
 		});
 	}
 
@@ -162,7 +162,11 @@ let clearNotes = () => {
 		for (const section of songStore.sections) {
 			for (const instrument of section.instruments) {
 
-				instrument.notes = Array.from(Array(instrument.notes.length), () => 0);
+				for (const noteLineIndex in instrument.noteLines) {
+					for (const noteIndex in instrument.noteLines[noteLineIndex]) {
+						instrument.noteLines[noteLineIndex][noteIndex] = instrument.noteLines[noteLineIndex][noteIndex].map(() => 0);
+					}
+				}
 
 			}
 		}
@@ -311,7 +315,6 @@ onMounted(async () => {
 		alias: 'test',
 		id: uid(),
 		lines: 1,
-		notes: [],
 		type: 2,
 		vol: 1,
 		noteLines:[
