@@ -3,13 +3,13 @@
 	<div
 		class="instrument w-full"
 		:class="{
-			'grid grid-cols-[500px,6fr]': songStore.horizontalView
+			'grid grid-cols-[500px,6fr] gap-x-4 items-center': songStore.horizontalView
 		}"
 	>
 		<div
 			class="flex <md:justify-center items-center gap-3 mb-3"
 			:class="{
-				'sticky left-0 flex-nowrap bg-white z-2 w-full pl-10': songStore.horizontalView
+				'sticky left-0 flex-nowrap bg-white z-2 w-full pl-10 mb-0': songStore.horizontalView
 			}"
 		>
 			<q-input
@@ -32,12 +32,12 @@
 					@click="removeRow"
 				/>
 				<q-btn
-					:icon="mdiTrashCan"
-					@click="askDelete()"
+					:icon="mdiCog"
+					@click="showDialogNotes = true"
 				/>
 				<q-btn
-					:icon="mdiFractionOneHalf"
-					@click="showDialogNotes = true"
+					:icon="mdiTrashCan"
+					@click="askDelete()"
 				/>
 			</q-btn-group>
 			<q-knob
@@ -75,14 +75,16 @@
 				class="gap-10px w-full "
 				:class="[
 					`md:grid-cols-${beat.numOfGroups}`,
-					songStore.horizontalView ? 'flex flex-nowrap': 'grid grid-cols-1'
+					songStore.horizontalView ? 'flex flex-nowrap ': 'grid grid-cols-1 justify-items-center'
 				]"
 			>
 				<div
 					v-for="(group, indexGroup) in noteLine"
 					:key="indexGroup"
-					:style="{gridTemplateColumns: `repeat(${beat.beatsPerBar}, 49px)`}"
-					class="grid justify-center"
+					class="flex justify-center gap-0px stack"
+					:style="{
+						width: `${beat.beatsPerBar * 49}px`
+					}"
 				>
 					<Note
 						v-for="(note, indexNote) in group"
@@ -157,7 +159,7 @@
 import { Beat, Instrument, useSongStore } from 'stores/songStore';
 import { computed, PropType, ref } from 'vue';
 import Note from './NoteBox.vue';
-import { mdiPlus, mdiMinus, mdiTrashCan, mdiVolumeHigh, mdiVolumeMute, mdiFractionOneHalf, mdiAlert } from '@quasar/extras/mdi-v6'
+import { mdiPlus, mdiMinus, mdiTrashCan, mdiVolumeHigh, mdiVolumeMute, mdiFractionOneHalf, mdiAlert, mdiTableRow, mdiCog } from '@quasar/extras/mdi-v6'
 import { useTemplateRefsList } from '@vueuse/core';
 import { useQuasar } from 'quasar';
 import { generateNewLine } from 'src/utils/lines';
@@ -248,5 +250,18 @@ defineExpose({
 
 .q-knob--editable:focus:before {
 	box-shadow: none !important;
+}
+
+.stack {
+  --gap: -1px;
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: calc(-1 * var(--gap));
+  margin-left: calc(-1 * var(--gap));
+}
+
+.stack > * {
+  margin-bottom: var(--gap);
+  margin-left: var(--gap);
 }
 </style>
