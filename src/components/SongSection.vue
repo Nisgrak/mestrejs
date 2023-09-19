@@ -190,20 +190,19 @@ let play = (internalPlay = true) => {
 
 						for (let indexSubNote = 0; indexSubNote < note.length; indexSubNote++) {
 
-							let noteTime = accTime + noteLong;
 							let sound = howls[note[indexSubNote]].howls;
 
-							playNote(noteTime, sound, instrument.vol, boxElement, noteLong, indexSubNote);
-							accTime = noteTime
+							playNote(accTime, sound, instrument.vol, boxElement, noteLong, indexSubNote);
+							accTime += noteLong
 
 						}
 
 					} else { // Nota sin subdivision
-						let noteTime = accTime + timeOfgroup;
+
 						let sound = howls[note].howls;
 
-						playNote(noteTime, sound, instrument.vol, boxElement, timeOfgroup);
-						accTime = noteTime
+						playNote(accTime, sound, instrument.vol, boxElement, timeOfgroup);
+						accTime += timeOfgroup
 					}
 
 					noteInLine++
