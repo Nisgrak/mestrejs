@@ -31,8 +31,8 @@
 						class="pl-0 mb-2"
 						color="primary"
 						@click="changePassword"
+						label="He olvidado la contraseña"
 					>
-						He olvidado la contraseña
 					</q-btn>
 
 
@@ -41,8 +41,8 @@
 						color="primary"
 						class="w-full"
 						type="submit"
+						label="Login"
 					>
-						Login
 					</q-btn>
 				</q-form>
 			</div>

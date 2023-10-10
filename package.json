@@ -14,6 +14,7 @@
     "@types/howler": "^2.2.9",
     "@unocss/nuxt": "latest",
     "@unocss/transformer-directives": "^0.56.0",
+    "@vite-pwa/nuxt": "^0.1.1",
     "nuxt": "^3.7.3",
     "nuxt-directus": "^5.5.0",
     "nuxt-quasar-ui": "^2.0.5",

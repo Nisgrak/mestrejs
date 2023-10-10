@@ -11,9 +11,10 @@
 						height="50px"
 						width="50px"
 						square
+						loading="eager"
 					/>
-					<span class="font-light">Mestre</span>
-					<span class="font-medium">JS</span>
+					<span class="font-light text-black">Mestre</span>
+					<span class="font-medium text-black">JS</span>
 				</q-toolbar-title>
 
 				<div
@@ -24,12 +25,14 @@
 						no-caps
 						outline
 						label="Iniciar sesión"
+						color="dark"
 						:to="{name: 'LoginPage'}"
 					/>
 					<q-btn
 						no-caps
 						outline
 						label="Registrate"
+						color="dark"
 						:to="{name: 'RegisterPage'}"
 					/>
 				</div>
@@ -42,12 +45,14 @@
 						outline
 						label="Listado"
 						:to="{name: 'ListPartituresPage'}"
+						color="dark"
 					/>
 					<q-btn
 						flat
 						no-caps
 						outline
 						label="Logout"
+						color="dark"
 						@click="logout"
 					/>
 				</div>

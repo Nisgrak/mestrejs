@@ -1,7 +1,8 @@
 <template>
+	<VitePwaManifest />
 	<NuxtLayout>
-    <NuxtPage />
-  </NuxtLayout>
+		<NuxtPage />
+	</NuxtLayout>
 </template>
 
 
@@ -9,6 +10,14 @@
 import { useQuasar } from 'quasar';
 import { onMounted } from 'vue';
 import { migratePartiture } from './utils/migrateVersions';
+
+useServerSeoMeta({
+  title: "MestreJS",
+  description: "The place where brazilian music born",
+  ogTitle: "MestreJS",
+  ogDescription: "The place where brazilian music born",
+  themeColor: "#E47C44"
+})
 
 let $q = useQuasar()
 let songStore = useSongStore()

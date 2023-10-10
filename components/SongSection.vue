@@ -12,9 +12,10 @@
 			>
 				<q-input
 					class="text-xl font-medium lt-md:w-full"
-					input-class="lt-md:text-center "
+					input-class="lt-md:text-center"
 					:model-value="section.name"
 					@update:model-value="emit('update:section', Object.assign(section, { name: $event }))"
+					aria-label="Nombre de la sección"
 				/>
 				<q-btn
 					class="self-center"
@@ -23,6 +24,7 @@
 					:disabled="section.instruments.length == 0"
 					:icon="playing ? mdiStop : mdiPlay"
 					@click="playing ? pause() : play()"
+					:aria-label="playing ? 'Pausar reproducción' : 'Reproducir sección'"
 				/>
 
 				<q-btn-group
@@ -33,9 +35,11 @@
 					<q-btn
 						:icon="mdiPlus"
 						@click="addInstrument"
+						aria-label="Añadir instrumento"
 					/>
 					<q-btn
 						:icon="mdiFractionOneHalf"
+						aria-label="Cambiar compás"
 					>
 						<q-menu
 							anchor="bottom left"
@@ -53,6 +57,7 @@
 									color="secondary"
 									:disabled="section.beat.name === beat.name"
 									@click="changeBeat(beat)"
+									:aria-label="`Cambiar compás a ${ beat.name}`"
 								>
 									{{ beat.name }}
 								</q-btn>
@@ -62,11 +67,12 @@
 					<q-btn
 						:icon="mdiContentCopy"
 						@click="emit('duplicate')"
+						aria-label="Duplicar sección"
 					/>
 					<q-btn
 						:icon="mdiTrashCan"
-
 						@click="askDelete"
+						aria-label="Borrar sección"
 					/>
 				</q-btn-group>
 			</div>

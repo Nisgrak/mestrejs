@@ -17,6 +17,8 @@
 							outline
 							no-caps
 							@click="onOKClick(index)"
+							:aria-label="`Añadir ${ instrument.name}`"
+
 						>
 							{{ instrument.name }}
 						</q-btn>

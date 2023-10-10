@@ -17,6 +17,8 @@
 				input-class="lt-md:text-center"
 				:model-value="instrument.alias"
 				@update:model-value="emit('update:instrument', Object.assign(instrument, { alias: $event }))"
+				aria-label="Nombre del instrumento"
+
 			/>
 			<q-btn-group
 				flat
@@ -26,18 +28,22 @@
 				<q-btn
 					:icon="mdiPlus"
 					@click="addRow"
+					aria-label="Añadir fila"
 				/>
 				<q-btn
 					:icon="mdiMinus"
 					@click="removeRow"
+					aria-label="Borrar fila"
 				/>
 				<q-btn
 					:icon="mdiCog"
 					@click="showDialogNotes = true"
+					aria-label="Configurar notas"
 				/>
 				<q-btn
 					:icon="mdiTrashCan"
 					@click="askDelete()"
+					aria-label="Borrar instrumento"
 				/>
 			</q-btn-group>
 			<q-knob
@@ -52,6 +58,7 @@
 				:max="1"
 				:step="0.01"
 				@drag-value="emit('update:instrument', Object.assign(instrument, { vol: $event }))"
+				aria-label="Volumen"
 			>
 				<div
 					@click.stop.prevent="emit('update:instrument', Object.assign(instrument, { vol: 0 }))"

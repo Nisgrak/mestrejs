@@ -13,6 +13,7 @@
 					class="w-50px"
 					unelevated
 					@click="playing ? pause() : play()"
+					:aria-label="playing ? 'Pausar reproducción' : 'Reproducir canción'"
 				/>
 
 				<q-btn
@@ -21,6 +22,7 @@
 					:icon="mdiRepeat"
 					outline
 					@click="songStore.repeat = !songStore.repeat"
+					:aria-label="songStore.repeat ? 'Desactivar repetición' : 'Activar repetición'"
 				/>
 
 				<q-btn
@@ -30,6 +32,7 @@
 					class="w-50px"
 					:icon="mdiNumeric"
 					@click="songStore.showNote = !songStore.showNote"
+					:aria-label="songStore.showNote ? 'Ocultar notas' : 'Mostrar notas'"
 				/>
 				<q-btn
 					:text-color="songStore.horizontalView ? 'secondary' : 'grey'"
@@ -38,6 +41,7 @@
 					class="w-50px"
 					:icon="mdiViewDashboard"
 					@click="songStore.horizontalView = !songStore.horizontalView"
+					:aria-label="songStore.horizontalView ? 'Vista vertical' : 'Vista horizontal'"
 				/>
 
 				<q-btn-group
@@ -49,21 +53,25 @@
 						:icon="mdiCardPlus"
 						flat
 						@click="addSection()"
+						aria-label="Añadir sección"
 					/>
 					<q-btn
 						:icon="mdiContentSave"
 						flat
 						@click="saveSong(true)"
+						aria-label="Guardar canción"
 					/>
 					<q-btn
 						:icon="mdiDeleteEmpty"
 						flat
 						@click="clearNotes()"
+						aria-label="Borrar notas"
 					/>
 					<q-btn
 						:icon="mdiXml"
 						flat
 						@click="insert()"
+						aria-label="Insertar canción"
 					/>
 				</q-btn-group>
 
