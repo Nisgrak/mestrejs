@@ -47,6 +47,10 @@ export default defineNuxtConfig({
 			theme_color: "#E47C44",
 			icons: [
 				{
+					src: "logo-mestrejs.svg",
+					sizes: "any",
+				},
+				{
 					src: "icons/icon-128x128.png",
 					sizes: "128x128",
 					type: "image/png"
@@ -71,54 +75,52 @@ export default defineNuxtConfig({
 					sizes: "512x512",
 					type: "image/png"
 				},
-
-
 				{
-					src: "icons/maskable_icon_x512.png ",
+					src: "icons/maskable_icon_x512.png",
 					sizes: "512x512",
 					type: "image/png",
-					porpose: "any maskable"
+					purpose: "maskable"
 				},
 				{
-					src: "icons/maskable_icon_x384.png ",
+					src: "icons/maskable_icon_x384.png",
 					sizes: "384x384",
 					type: "image/png",
-					porpose: "any maskable"
+					purpose: "maskable"
 				},
 				{
-					src: "icons/maskable_icon_x192.png ",
+					src: "icons/maskable_icon_x192.png",
 					sizes: "192x192",
 					type: "image/png",
-					porpose: "any maskable"
+					purpose: "maskable"
 				},
 				{
-					src: "icons/maskable_icon_x128.png ",
+					src: "icons/maskable_icon_x128.png",
 					sizes: "128x128",
 					type: "image/png",
-					porpose: "any maskable"
+					purpose: "maskable"
 				},
 				{
-					src: "icons/maskable_icon_x96.png ",
+					src: "icons/maskable_icon_x96.png",
 					sizes: "96x96",
 					type: "image/png",
-					porpose: "any maskable"
+					purpose: "maskable"
 				},
 				{
-					src: "icons/maskable_icon_x72.png ",
+					src: "icons/maskable_icon_x72.png",
 					sizes: "72x72",
 					type: "image/png",
-					porpose: "any maskable"
+					purpose: "maskable"
 				},
 				{
-					src: "icons/maskable_icon_x48.png ",
+					src: "icons/maskable_icon_x48.png",
 					sizes: "48x48",
 					type: "image/png",
-					porpose: "any maskable"
+					purpose: "maskable"
 				},
 				{
 					src: "icons/maskable_icon.png",
 					type: "image/png",
-					porpose: "any maskable"
+					purpose: "maskable"
 				},
 			]
 
