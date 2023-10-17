@@ -25,7 +25,13 @@ export default defineNuxtConfig({
 	imports: {
 		dirs: ['./stores'],
 	},
-
+	app: {
+		head: {
+			link: [
+				{ rel: 'apple-touch-icon', href: 'icons/apple-touch-icon.png' },
+			],
+		}
+	},
 	modules: ["nuxt-quasar-ui", '@pinia/nuxt', "@unocss/nuxt", "nuxt-directus", "@vite-pwa/nuxt"],
 	pwa: {
 		registerWebManifestInRouteRules: true,
