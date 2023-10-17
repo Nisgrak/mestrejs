@@ -81,7 +81,7 @@
 				:key="indexRow"
 				class="gap-10px w-full "
 				:class="[
-					`md:grid-cols-${beat.numOfGroups}`,
+					`lg:grid-cols-${beat.numOfGroups}`,
 					songStore.horizontalView ? 'flex flex-nowrap ': 'grid grid-cols-1 justify-items-center'
 				]"
 			>
