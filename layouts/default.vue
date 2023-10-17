@@ -3,7 +3,7 @@
 		<q-header>
 			<q-toolbar>
 				<q-toolbar-title
-					class="cursor-pointer"
+					class="cursor-pointer text-black flex no-wrap items-center"
 					@click="navigateTo({name: 'Canvas'})"
 				>
 					<img
