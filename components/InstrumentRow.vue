@@ -88,7 +88,7 @@
 				<div
 					v-for="(group, indexGroup) in noteLine"
 					:key="indexGroup"
-					class="flex justify-center gap-0px stack"
+					class="flex justify-center stack"
 					:style="{
 						width: `${beat.beatsPerBar * 49}px`
 					}"
@@ -262,7 +262,6 @@ defineExpose({
 .stack {
   --gap: -1px;
   display: flex;
-  flex-wrap: wrap;
   margin-bottom: calc(-1 * var(--gap));
   margin-left: calc(-1 * var(--gap));
 }
