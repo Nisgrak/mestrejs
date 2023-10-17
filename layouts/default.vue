@@ -6,11 +6,12 @@
 					class="cursor-pointer"
 					@click="navigateTo({name: 'Canvas'})"
 				>
-					<q-img
+					<img
 						src="/logo-mestrejs.svg"
 						height="50px"
 						width="50px"
 						square
+						alt="MestreJS Logo"
 						loading="eager"
 					/>
 					<span class="font-light text-black">Mestre</span>
