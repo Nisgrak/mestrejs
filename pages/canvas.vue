@@ -305,11 +305,16 @@ let saveSong = async (notify = true) => {
 }
 
 onMounted(async () => {
+	let possibleShare = route.query.share
+	if (route.query.share === undefined && window.location.hash.includes("share")) {
+		possibleShare = (new URL(window.location.href.replace("#/", "")).searchParams.get("share"))
+	}
+
 	if (typeof route.query.id === 'string') {
 		loadPartiture(route.query.id)
 
-	} else if (typeof route.query.share === 'string') {
-		let oldFormat = JSON.parse(atob( route.query.share))
+	} else if (typeof possibleShare === 'string') {
+		let oldFormat = JSON.parse(atob( possibleShare))
 
 		let version = oldFormat.beat ? 1 : 2
 		let newFormat = migratePartiture({version, ...oldFormat})
