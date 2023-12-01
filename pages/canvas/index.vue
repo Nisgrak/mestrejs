@@ -205,10 +205,60 @@ let route = useRoute()
 
 let $q = useQuasar()
 
-let saveSong = async (notify = true) => {
-	if (typeof route.query.id === 'string') {
+let saveSong = async (notify = true, forceAskClone = false) => {
 
-		await updatePartiture(route.query.id)
+	let forceCreate = await new Promise<boolean | undefined>((resolve, reject) => {
+		if (songStore.user === undefined || forceAskClone) {
+			$q.dialog({
+				title: 'Crear nueva copia',
+				message: 'Vas a crear una nueva copia de la canción, ¿estás seguro?',
+				cancel: {
+					label: 'Cancelar',
+					flat: true
+				},
+				ok: {
+					label: 'Duplicar',
+					unelevated: true,
+					color: 'primary'
+				},
+				persistent: true
+			}).onOk(() => {
+				resolve(true)
+			}).onCancel(() => {
+				resolve(undefined)
+			}).onDismiss(() => {
+				resolve(undefined)
+			})
+		} else {
+			resolve(false)
+		}
+
+	});
+
+	if (forceCreate === undefined) {
+		return
+	}
+
+
+	if (!forceCreate && (typeof route.query.id === 'string' || typeof route.params.id === "string")) {
+		let partiture = ""
+
+		if (typeof route.query.id === 'string') {
+			partiture = route.query.id
+		} else if (typeof route.params.id === "string") {
+			partiture = route.params.id
+		}
+
+		try {
+
+			await updatePartiture(partiture)
+		} catch (error) {
+
+			if ((error as any)?.cause?.data?.errors?.[0]?.extensions?.code === "FORBIDDEN") {
+				return await saveSong(notify, true)
+			}
+		}
+
 
 	} else {
 		let createdPartiture = await createPartiture()
@@ -269,10 +319,6 @@ onMounted(async () => {
 		addSection(1);
 	}
 
-	// let test = migratePartiture()
-	// songStore.sections = test.song
-	// songStore.bpm = test.bpm
-	// console.log(songStore.sections);
 
 
 })
