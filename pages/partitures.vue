@@ -31,7 +31,7 @@
 
 <script lang="ts" setup>
 import { mdiMagnify, mdiTrashCan } from '@quasar/extras/mdi-v6';
-import { QTableColumn } from 'quasar';
+import { type QTableColumn } from 'quasar';
 
 const { getItems } = useDirectusItems();
 

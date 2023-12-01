@@ -5,30 +5,13 @@
 				Crea tu cuenta
 			</div>
 			<div>
-				<q-form
-					greedy
-					@submit="register"
-				>
-					<q-input
-						v-model="email"
-						label="Email"
-						autocomplete="email"
-						:rules="[ val => val && val.length > 0 || 'El campo es obligatorio']"
-					/>
-					<q-input
-						v-model="password"
-						label="Contraseña"
-						autocomplete="password"
-						type="password"
-						:rules="[ val => val && val.length > 0 || 'El campo es obligatorio']"
-					/>
+				<q-form greedy @submit="register">
+					<q-input v-model="email" label="Email" autocomplete="email"
+						:rules="[val => val && val.length > 0 || 'El campo es obligatorio']" />
+					<q-input v-model="password" label="Contraseña" autocomplete="password" type="password"
+						:rules="[val => val && val.length > 0 || 'El campo es obligatorio']" />
 
-					<q-btn
-						no-caps
-						color="primary"
-						class="w-full"
-						type="submit"
-					>
+					<q-btn no-caps color="primary" class="w-full" type="submit">
 						Crear cuenta
 					</q-btn>
 				</q-form>
@@ -44,7 +27,7 @@ import { useSongStore } from '../stores/songStore';
 import { ref } from 'vue';
 
 definePageMeta({
-  name: "RegisterPage"
+	name: "RegisterPage"
 })
 
 let email = ref('')
@@ -53,13 +36,13 @@ let $q = useQuasar()
 let songStore = useSongStore()
 const { createUser, login } = useDirectusAuth();
 
-let register = async ()=> {
+let register = async () => {
 	if (email.value !== '' && password.value !== '') {
 		try {
 
 			await createUser({
 				email: email.value,
-				password: password.value,
+				password: password.value
 			});
 
 			await login({

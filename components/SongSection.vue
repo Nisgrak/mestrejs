@@ -95,9 +95,9 @@
 </template>
 
 <script lang="ts" setup>
-import { Beat, Section } from '../stores/songStore';
+import { type Beat, type Section } from '../stores/songStore';
 import InstrumentRow from './InstrumentRow.vue';
-import { PropType, ref } from 'vue';
+import { type PropType, ref } from 'vue';
 import { mdiPlay, mdiPlus, mdiStop, mdiTrashCan, mdiFractionOneHalf, mdiContentCopy } from '@quasar/extras/mdi-v6';
 import { useTemplateRefsList } from '@vueuse/core'
 import NoteBoxVue from './NoteBox.vue';

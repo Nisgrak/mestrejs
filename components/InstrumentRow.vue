@@ -163,8 +163,8 @@
 	</div>
 </template>
 <script setup lang="ts">
-import { Beat, Instrument } from '../stores/songStore';
-import { computed, PropType, ref } from 'vue';
+import { type Beat, type Instrument } from '../stores/songStore';
+import { computed, type PropType, ref } from 'vue';
 import Note from './NoteBox.vue';
 import { mdiPlus, mdiMinus, mdiTrashCan, mdiVolumeHigh, mdiVolumeMute, mdiFractionOneHalf, mdiAlert, mdiTableRow, mdiCog } from '@quasar/extras/mdi-v6'
 import { useTemplateRefsList } from '@vueuse/core';

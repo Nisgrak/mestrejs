@@ -1,5 +1,4 @@
-import { DirectusUser } from "nuxt-directus/dist/runtime/types";
-import { LAST_VERSION, StateV4 } from "./migrateVersions";
+import { LAST_VERSION, type StateV4 } from "./migrateVersions";
 
 export type Partiture = StateV4
 

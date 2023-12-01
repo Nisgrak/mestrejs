@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { Howl } from 'howler';
 import { mdiCheckboxBlankCircle, mdiCircleOutline, mdiClose, mdiCookie, mdiMinus } from '@quasar/extras/mdi-v6'
-import { DirectusUser } from 'nuxt-directus/dist/runtime/types';
+import { type DirectusUser } from 'nuxt-directus/dist/runtime/types';
 
 export const useSongStore = defineStore('song', () => {
 	const bpm = ref(90)

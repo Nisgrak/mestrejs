@@ -1,7 +1,7 @@
-import { DirectusUser } from "nuxt-directus/dist/runtime/types";
+import type { DirectusUser } from "nuxt-directus/dist/runtime/types";
 import { createMigration, createMigrator } from "yuppee";
-import { Partiture } from "./partiture";
-import { Section } from "../stores/songStore"
+import type { Partiture } from "./partiture";
+import type { Section } from "../stores/songStore";
 import { uid } from "quasar";
 
 export const LAST_VERSION = 4

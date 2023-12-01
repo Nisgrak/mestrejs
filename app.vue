@@ -12,11 +12,11 @@ import { onMounted } from 'vue';
 import { migratePartiture } from './utils/migrateVersions';
 
 useServerSeoMeta({
-  title: "MestreJS",
-  description: "The place where brazilian music born",
-  ogTitle: "MestreJS",
-  ogDescription: "The place where brazilian music born",
-  themeColor: "#E47C44"
+	title: "MestreJS",
+	description: "The place where brazilian music born",
+	ogTitle: "MestreJS",
+	ogDescription: "The place where brazilian music born",
+	themeColor: "#E47C44"
 })
 
 let $q = useQuasar()
@@ -42,9 +42,9 @@ onMounted(async () => {
 
 <style>
 * {
- box-sizing: border-box;
-    border-width: 0;
-    border-style: solid;
-    border-color: #e5e7eb
+	box-sizing: border-box;
+	border-width: 0;
+	border-style: solid;
+	border-color: #e5e7eb
 }
 </style>
