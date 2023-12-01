@@ -32,8 +32,10 @@ $q.iconMapFn = (iconName: string) => {
 onMounted(async () => {
 
 	const { token } = useDirectusToken();
+	const { fetchUser } = useDirectusAuth();
 
 	if (songStore.user === undefined && token) {
+		await fetchUser();
 		songStore.user = (await useDirectusUser()).value
 	}
 
