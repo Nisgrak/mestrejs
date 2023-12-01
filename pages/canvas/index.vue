@@ -1,130 +1,63 @@
 <template>
 	<div>
-		<q-page-sticky
-			position="top"
-			expand
-			class="z-5 bg-white"
-		>
-			<div class="border-1 flex flex-row items-center md:justify-center overflow-auto flex-nowrap gap-3 px-5 py-2 sticky left-0 top-0 w-full bg-white h-full z-5">
-				<q-btn
-					color="secondary"
-					:disabled="songStore.sections.length == 0"
-					:icon="playing ? mdiStop : mdiPlay"
-					class="w-50px"
-					unelevated
-					@click="playing ? pause() : play()"
-					:aria-label="playing ? 'Pausar reproducción' : 'Reproducir canción'"
-				/>
+		<q-page-sticky position="top" expand class="z-5 bg-white">
+			<div
+				class="border-1 flex flex-row items-center md:justify-center overflow-auto flex-nowrap gap-3 px-5 py-2 sticky left-0 top-0 w-full bg-white h-full z-5">
+				<q-btn color="secondary" :disabled="songStore.sections.length == 0" :icon="playing ? mdiStop : mdiPlay"
+					class="w-50px" unelevated @click="playing ? pause() : play()"
+					:aria-label="playing ? 'Pausar reproducción' : 'Reproducir canción'" />
 
-				<q-btn
-					:text-color="songStore.repeat ? 'secondary' : 'grey'"
-					class="w-50px"
-					:icon="mdiRepeat"
-					outline
+				<q-btn :text-color="songStore.repeat ? 'secondary' : 'grey'" class="w-50px" :icon="mdiRepeat" outline
 					@click="songStore.repeat = !songStore.repeat"
-					:aria-label="songStore.repeat ? 'Desactivar repetición' : 'Activar repetición'"
-				/>
+					:aria-label="songStore.repeat ? 'Desactivar repetición' : 'Activar repetición'" />
 
-				<q-btn
-					:text-color="songStore.showNote ? 'secondary' : 'grey'"
-					unelevated
-					outline
-					class="w-50px"
-					:icon="mdiNumeric"
-					@click="songStore.showNote = !songStore.showNote"
-					:aria-label="songStore.showNote ? 'Ocultar notas' : 'Mostrar notas'"
-				/>
-				<q-btn
-					:text-color="songStore.horizontalView ? 'secondary' : 'grey'"
-					unelevated
-					outline
-					class="w-50px"
-					:icon="mdiViewDashboard"
-					@click="songStore.horizontalView = !songStore.horizontalView"
-					:aria-label="songStore.horizontalView ? 'Vista vertical' : 'Vista horizontal'"
-				/>
+				<q-btn :text-color="songStore.showNote ? 'secondary' : 'grey'" unelevated outline class="w-50px"
+					:icon="mdiNumeric" @click="songStore.showNote = !songStore.showNote"
+					:aria-label="songStore.showNote ? 'Ocultar notas' : 'Mostrar notas'" />
+				<q-btn :text-color="songStore.horizontalView ? 'secondary' : 'grey'" unelevated outline class="w-50px"
+					:icon="mdiViewDashboard" @click="songStore.horizontalView = !songStore.horizontalView"
+					:aria-label="songStore.horizontalView ? 'Vista vertical' : 'Vista horizontal'" />
 
-				<q-btn-group
-					flat
-					rounded
-					unelevated
-				>
-					<q-btn
-						:icon="mdiCardPlus"
-						flat
-						@click="addSection()"
-						aria-label="Añadir sección"
-					/>
-					<q-btn
-						:icon="mdiContentSave"
-						flat
-						@click="saveSong(true)"
-						aria-label="Guardar canción"
-					/>
-					<q-btn
-						:icon="mdiDeleteEmpty"
-						flat
-						@click="clearNotes()"
-						aria-label="Borrar notas"
-					/>
-					<q-btn
-						:icon="mdiXml"
-						flat
-						@click="insert()"
-						aria-label="Insertar canción"
-					/>
+				<q-btn-group flat rounded unelevated>
+					<q-btn :icon="mdiCardPlus" flat @click="addSection()" aria-label="Añadir sección" />
+					<q-btn :icon="mdiContentSave" flat @click="saveSong(true)" aria-label="Guardar canción" />
+					<q-btn :icon="mdiDeleteEmpty" flat @click="clearNotes()" aria-label="Borrar notas" />
+					<q-btn :icon="mdiXml" flat @click="insert()" aria-label="Insertar canción" />
 				</q-btn-group>
 
 
 
-				<q-input
-					v-model="songStore.name"
-					label="Nombre"
-				/>
-				<q-input
-					v-model="songStore.bpm"
-					label="BPM"
-					type="number"
-				/>
+				<q-input v-model="songStore.name" label="Nombre" />
+				<q-input v-model="songStore.bpm" label="BPM" type="number" />
 			</div>
 		</q-page-sticky>
 
-		<div
-			class="w-full p-5 mt-15 md:p-15 flex flex-col justify-start"
-			:class="{
-				'min-w-max !pl-0': songStore.horizontalView
-			}"
-		>
-			<SongSection
-				v-for="(section, index) in songStore.sections"
-				:key="section.id"
-				:ref="sectionsRefs.set"
-				v-model:section="songStore.sections[index]"
-				@remove="songStore.sections.splice(index, 1)"
-				@duplicate="duplicateSection(index)"
-			/>
+		<div class="w-full p-5 mt-15 md:p-15 flex flex-col justify-start" :class="{
+			'min-w-max !pl-0': songStore.horizontalView
+		}">
+			<SongSection v-for="(section, index) in songStore.sections" :key="section.id" :ref="sectionsRefs.set"
+				v-model:section="songStore.sections[index]" @remove="songStore.sections.splice(index, 1)"
+				@duplicate="duplicateSection(index)" />
 		</div>
 	</div>
 </template>
 
 <script lang="ts" setup>
-import { copyToClipboard, uid, useQuasar, extend  } from 'quasar';
-import { Section } from '../stores/songStore';
-import SongSection from '../components/SongSection.vue';
+import { copyToClipboard, uid, useQuasar, extend } from 'quasar';
 import { useRoute } from 'vue-router';
 import { onMounted, ref, toRaw } from 'vue';
-import { createPartiture, loadPartiture, updatePartiture } from '../utils/partiture';
 import { mdiContentSave, mdiPlay, mdiStop, mdiRepeat, mdiXml, mdiCardPlus, mdiDeleteEmpty, mdiNumeric, mdiViewDashboard } from '@quasar/extras/mdi-v6';
 import { useTemplateRefsList } from '@vueuse/core';
+import type { SongSection } from '#build/components';
 
 definePageMeta({
-  name: "Canvas"
+	name: "Canvas"
 })
 
 let playingAll = ref(false);
 let playing = ref(false);
 let sectionsRefs = useTemplateRefsList<InstanceType<typeof SongSection>>()
-let instrumentsSoundsList =ref<ReturnType<typeof setTimeout>[]>([])
+let instrumentsSoundsList = ref<ReturnType<typeof setTimeout>[]>([])
 
 let duplicateSection = (index: number) => {
 	let deepCopy = JSON.parse(JSON.stringify(toRaw(songStore.sections[index])))
@@ -164,7 +97,7 @@ let addSection = (instrumentIndex?: number) => {
 }
 
 let clearNotes = () => {
-	 $q.dialog({
+	$q.dialog({
 		title: 'Borrar notas',
 		message: 'Vas a borrar todas las notas, ¿estás seguro?',
 		cancel: true,
@@ -283,8 +216,8 @@ let saveSong = async (notify = true) => {
 		if (createdPartiture) {
 
 			await navigateTo({
-				name: 'Canvas',
-				query: {
+				name: 'Partiture',
+				params: {
 					id: createdPartiture
 				}
 			})
@@ -310,17 +243,25 @@ onMounted(async () => {
 		possibleShare = (new URL(window.location.href.replace("#/", "")).searchParams.get("share"))
 	}
 
-	if (typeof route.query.id === 'string') {
-		loadPartiture(route.query.id)
+	if (typeof route.query.id === 'string' || typeof route.params.id === "string") {
+		let partiture = ""
+
+		if (typeof route.query.id === 'string') {
+			partiture = route.query.id
+		} else if (typeof route.params.id === "string") {
+			partiture = route.params.id
+		}
+
+		loadPartiture(partiture)
 
 	} else if (typeof possibleShare === 'string') {
-		let oldFormat = JSON.parse(atob( possibleShare))
+		let oldFormat = JSON.parse(atob(possibleShare))
 
 		let version = oldFormat.beat ? 1 : 2
-		let newFormat = migratePartiture({version, ...oldFormat})
-		 songStore.sections = newFormat.song
-		 songStore.bpm = newFormat.bpm
-		 songStore.name = newFormat.name
+		let newFormat = migratePartiture({ version, ...oldFormat })
+		songStore.sections = newFormat.song
+		songStore.bpm = newFormat.bpm
+		songStore.name = newFormat.name
 
 
 	} else if (songStore.sections.length === 0) {
@@ -338,5 +279,4 @@ onMounted(async () => {
 
 </script>
 
-<style>
-</style>
+<style></style>
