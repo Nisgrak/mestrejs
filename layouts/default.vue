@@ -87,7 +87,9 @@
 				/>
 			</q-list>
 		</q-drawer> -->
-
+		<q-page-sticky position="bottom-left" :offset="[18, 18]" v-show="route.name !== 'Contact'">
+			<q-btn round color="primary" :icon="mdiHelp" :to="{ name: 'Contact' }" />
+		</q-page-sticky>
 		<q-page-container>
 			<slot />
 		</q-page-container>
@@ -95,10 +97,13 @@
 </template>
 
 <script lang="ts" setup>
+import { mdiHelp } from '@quasar/extras/mdi-v6';
 import { ref } from 'vue';
 
 let songStore = useSongStore()
 const { logout: logoutDirectus } = useDirectusAuth();
+
+let route = useRoute()
 
 let logout = () => {
 	logoutDirectus()

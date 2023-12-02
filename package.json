@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "@nuxt/devtools": "latest",
+    "@nuxtjs/turnstile": "^0.6.3",
     "@types/howler": "^2.2.11",
     "@unocss/nuxt": "latest",
     "@unocss/transformer-directives": "^0.57.7",

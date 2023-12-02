@@ -32,7 +32,7 @@ export default defineNuxtConfig({
 			],
 		}
 	},
-	modules: ["nuxt-quasar-ui", '@pinia/nuxt', "@unocss/nuxt", "nuxt-directus", "@vite-pwa/nuxt"],
+	modules: ["nuxt-quasar-ui", '@pinia/nuxt', "@unocss/nuxt", "nuxt-directus", "@vite-pwa/nuxt", "@nuxtjs/turnstile"],
 	pwa: {
 		registerWebManifestInRouteRules: true,
 		registerType: "autoUpdate",
