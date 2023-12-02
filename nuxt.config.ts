@@ -19,7 +19,7 @@ export default defineNuxtConfig({
 		typeCheck: true
 	},
 	directus: {
-		autoFetch: false
+		autoFetch: true
 	},
 
 	imports: {
