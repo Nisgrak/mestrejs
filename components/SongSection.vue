@@ -1,95 +1,43 @@
 <template>
-	<div
-		v-if="section"
-		class="section w-full border-1 p-5 rounded-lg flex flex-col"
-	>
+	<div v-if="section" class="section w-full border-1 p-5 rounded-lg flex flex-col">
 		<div class="flex flex-nowrap">
-			<div
-				class="flex items-center lt-md:justify-center gap-3 mb-5"
-				:class="{
-					'sticky left-5 flex-nowrap bg-white z-2': songStore.horizontalView
-				}"
-			>
-				<q-input
-					class="text-xl font-medium lt-md:w-full"
-					input-class="lt-md:text-center"
+			<div class="flex items-center lt-md:justify-center gap-3 mb-5" :class="{
+				'sticky left-5 flex-nowrap bg-white z-2': songStore.horizontalView
+			}">
+				<q-input class="text-xl font-medium lt-md:w-full" input-class="lt-md:text-center"
 					:model-value="section.name"
 					@update:model-value="emit('update:section', Object.assign(section, { name: $event }))"
-					aria-label="Nombre de la sección"
-				/>
-				<q-btn
-					class="self-center"
-					color="secondary"
-					unelevated
-					:disabled="section.instruments.length == 0"
-					:icon="playing ? mdiStop : mdiPlay"
-					@click="playing ? pause() : play()"
-					:aria-label="playing ? 'Pausar reproducción' : 'Reproducir sección'"
-				/>
+					aria-label="Nombre de la sección" />
+				<q-btn class="self-center" color="secondary" unelevated :disabled="section.instruments.length == 0"
+					:icon="playing ? mdiStop : mdiPlay" @click="playing ? pause() : play()"
+					:aria-label="playing ? 'Pausar reproducción' : 'Reproducir sección'" />
 
-				<q-btn-group
-					flat
-					rounded
-					unelevated
-				>
-					<q-btn
-						:icon="mdiPlus"
-						@click="addInstrument"
-						aria-label="Añadir instrumento"
-					/>
-					<q-btn
-						:icon="mdiFractionOneHalf"
-						aria-label="Cambiar compás"
-					>
-						<q-menu
-							anchor="bottom left"
-							self="top left"
-							transition-show="jump-down"
-							transition-hide="jump-up"
-						>
+				<q-btn-group flat rounded unelevated>
+					<q-btn :icon="mdiPlus" @click="addInstrument" aria-label="Añadir instrumento" />
+					<q-btn :icon="mdiFractionOneHalf" aria-label="Cambiar compás">
+						<q-menu anchor="bottom left" self="top left" transition-show="jump-down" transition-hide="jump-up">
 							<div class="row q-pa-md q-gutter-sm">
-								<q-btn
-									v-for="(beat, index) in songStore.beats"
-									:key="index"
-									v-close-popup
-									outline
-									unelevated
-									color="secondary"
-									:disabled="section.beat.name === beat.name"
-									@click="changeBeat(beat)"
-									:aria-label="`Cambiar compás a ${ beat.name}`"
-								>
+								<q-btn v-for="(beat, index) in songStore.beats" :key="index" v-close-popup outline
+									unelevated color="secondary" :disabled="section.beat.name === beat.name"
+									@click="changeBeat(beat)" :aria-label="`Cambiar compás a ${beat.name}`">
 									{{ beat.name }}
 								</q-btn>
 							</div>
 						</q-menu>
 					</q-btn>
-					<q-btn
-						:icon="mdiContentCopy"
-						@click="emit('duplicate')"
-						aria-label="Duplicar sección"
-					/>
-					<q-btn
-						:icon="mdiTrashCan"
-						@click="askDelete"
-						aria-label="Borrar sección"
-					/>
+					<q-btn :icon="mdiContentCopy" @click="emit('duplicate')" aria-label="Duplicar sección" />
+					<q-btn :icon="mdiTrashCan" @click="askDelete" aria-label="Borrar sección" />
 				</q-btn-group>
 			</div>
 			<div class="flex-grow" />
 		</div>
 
 		<div>
-			<InstrumentRow
-				v-for="(instrument, indexInstrument) in section.instruments"
-				:ref="instrumentsRefs.set"
-				:key="instrument.id"
-				:instrument="section.instruments[indexInstrument]"
-				:beat="section.beat"
+			<InstrumentRow v-for="(instrument, indexInstrument) in section.instruments" :ref="instrumentsRefs.set"
+				:key="instrument.id" :instrument="section.instruments[indexInstrument]" :beat="section.beat"
 				:class="[`beat-${section.beat.name}`]"
-				@update:instrument="emit('update:section', Object.assign(section, { instruments: section.instruments.map((instrument, index) => index === indexInstrument ? $event : instrument)}))"
-				@remove="emit('update:section', Object.assign(section, { instruments: section.instruments.filter((_, index) => index !== indexInstrument)}))"
-			/>
+				@update:instrument="emit('update:section', Object.assign(section, { instruments: section.instruments.map((instrument, index) => index === indexInstrument ? $event : instrument) }))"
+				@remove="emit('update:section', Object.assign(section, { instruments: section.instruments.filter((_, index) => index !== indexInstrument) }))" />
 		</div>
 	</div>
 </template>
@@ -106,16 +54,16 @@ import { Howl } from 'howler';
 import { uid, useQuasar } from 'quasar';
 import { generateNewLine } from '../utils/lines'
 
-let songStore= useSongStore()
+let songStore = useSongStore()
 let playing = ref(false)
 
 let $q = useQuasar()
 const instrumentsRefs = useTemplateRefsList<InstanceType<typeof InstrumentRow>>()
 
-let getPlayingLength = ()=> {
+let getPlayingLength = () => {
 	return getTimeOfNote() * getMaxNote();
 }
-let getTimeOfNote = (groups = props.section.beat.beatsPerBar)=> {
+let getTimeOfNote = (groups = props.section.beat.beatsPerBar) => {
 	return 60000 / songStore.bpm / groups;
 }
 
@@ -140,7 +88,7 @@ let changeBeat = async (newBeat: Beat) => {
 
 }
 
-let askDelete = ()=> {
+let askDelete = () => {
 	$q.dialog({
 		message: '¿Estás seguro que quieres eliminar este instrumento?',
 		cancel: true
@@ -152,7 +100,7 @@ let askDelete = ()=> {
 
 }
 
-let getMaxNote=() => {
+let getMaxNote = () => {
 	let maxNote = 0;
 
 	for (let indexInstrument = 0; indexInstrument < props.section.instruments.length; indexInstrument++) {
@@ -164,7 +112,7 @@ let getMaxNote=() => {
 			maxNote = lineNotes;
 		}
 	}
-	console.log(maxNote);
+
 	return maxNote;
 }
 
@@ -184,7 +132,7 @@ let play = (internalPlay = true) => {
 			for (let indexGroup = 0; indexGroup < instrument.noteLines[indexLine].length; indexGroup++) {
 				let timeOfgroup = getTimeOfNote(instrument.noteLines[indexLine][indexGroup].length)
 				for (let indexNote = 0; indexNote < instrument.noteLines[indexLine][indexGroup].length; indexNote++) {
-					const note =  instrument.noteLines[indexLine][indexGroup][indexNote]
+					const note = instrument.noteLines[indexLine][indexGroup][indexNote]
 
 					let boxElement = instrumentsRefs.value[indexInstrument].notesRefs[noteInInstrument];
 
@@ -239,7 +187,7 @@ let play = (internalPlay = true) => {
 	}
 }
 
-let playNote = (time: number, sound: Howl | undefined, volume: number, element: InstanceType<typeof NoteBoxVue>, lightTime: number, subNote: number | undefined = undefined) =>{
+let playNote = (time: number, sound: Howl | undefined, volume: number, element: InstanceType<typeof NoteBoxVue>, lightTime: number, subNote: number | undefined = undefined) => {
 	instrumentsSoundsList.value.push(setTimeout(() => {
 		if (sound) {
 			sound.volume(volume);
@@ -249,7 +197,7 @@ let playNote = (time: number, sound: Howl | undefined, volume: number, element: 
 		element.changeColor(lightTime, subNote);
 	}, time));
 }
-let pause = ()=> {
+let pause = () => {
 	instrumentsSoundsList.value.forEach(instrument => clearTimeout(instrument));
 
 	instrumentsSoundsList.value = [];
@@ -262,7 +210,7 @@ let pause = ()=> {
 
 
 
-let instrumentsSoundsList = ref< ReturnType<typeof setTimeout>[]>([])
+let instrumentsSoundsList = ref<ReturnType<typeof setTimeout>[]>([])
 let addInstrument = () => {
 	$q.dialog({
 		component: SelectInstrumentDialog,
@@ -281,7 +229,7 @@ let addInstrument = () => {
 	})
 }
 
-let createInstrument = (indexInstrument: number ) => {
+let createInstrument = (indexInstrument: number) => {
 
 	emit('update:section', Object.assign(props.section, {
 		instruments: [
@@ -319,5 +267,4 @@ defineExpose({
 })
 </script>
 
-<style>
-</style>
+<style></style>

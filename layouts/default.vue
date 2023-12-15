@@ -2,60 +2,21 @@
 	<q-layout view="hHh Lpr lFf">
 		<q-header>
 			<q-toolbar>
-				<q-toolbar-title
-					class="cursor-pointer text-black flex no-wrap items-center"
-					@click="navigateTo({name: 'Canvas'})"
-				>
-					<img
-						src="/logo-mestrejs.svg"
-						height="50px"
-						width="50px"
-						square
-						alt="MestreJS Logo"
-						loading="eager"
-					/>
+				<q-toolbar-title class="cursor-pointer text-black flex no-wrap items-center"
+					@click="navigateTo({ name: 'Canvas' })">
+					<img src="/logo-mestrejs.svg" height="50px" width="50px" square alt="MestreJS Logo" loading="eager" />
 					<span class="font-light text-black">Mestre</span>
 					<span class="font-medium text-black">JS</span>
 				</q-toolbar-title>
 
-				<div
-					v-if="!songStore.user"
-					class="gap-3 flex"
-				>
-					<q-btn
-						no-caps
-						outline
-						label="Iniciar sesión"
-						color="dark"
-						:to="{name: 'LoginPage'}"
-					/>
-					<q-btn
-						no-caps
-						outline
-						label="Registrate"
-						color="dark"
-						:to="{name: 'RegisterPage'}"
-					/>
+				<div v-if="!songStore.user" class="gap-3 flex">
+					<q-btn no-caps outline label="Iniciar sesión" color="dark" :to="{ name: 'LoginPage' }" />
+					<q-btn no-caps outline label="Registrate" color="dark" :to="{ name: 'RegisterPage' }" />
 				</div>
-				<div
-					v-else
-				>
-					<q-btn
-						flat
-						no-caps
-						outline
-						label="Listado"
-						:to="{name: 'ListPartituresPage'}"
-						color="dark"
-					/>
-					<q-btn
-						flat
-						no-caps
-						outline
-						label="Logout"
-						color="dark"
-						@click="logout"
-					/>
+				<div v-else>
+					<q-btn flat no-caps outline label="Listado" :to="{ name: 'ListPartituresPage' }" color="dark" />
+					<q-btn flat no-caps outline label="Páginas" :to="{ name: 'ListPublicPages' }" color="dark" />
+					<q-btn flat no-caps outline label="Logout" color="dark" @click="logout" />
 				</div>
 				<!-- <q-btn
 					flat

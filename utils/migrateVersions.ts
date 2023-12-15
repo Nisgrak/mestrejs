@@ -148,7 +148,6 @@ export function migratePartiture(oldFormat: any) {
 							lines: instrument.lines,
 							vol: instrument.vol,
 							noteLines: instrument.notes.reduce((acc, note, index) => {
-								console.log(instrument.notes);
 								if (acc.length === 0) {
 									acc.push([[]]);
 								}
