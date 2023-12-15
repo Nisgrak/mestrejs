@@ -9,7 +9,7 @@
 <script lang="ts" setup>
 import { useQuasar } from 'quasar';
 import { onMounted } from 'vue';
-import { migratePartiture } from './utils/migrateVersions';
+import unmuteAudio from "unmute-ios-audio";
 
 useServerSeoMeta({
 	title: "MestreJS",
@@ -30,6 +30,8 @@ $q.iconMapFn = (iconName: string) => {
 };
 
 onMounted(async () => {
+
+	unmuteAudio();
 
 	const { token } = useDirectusToken();
 	const { fetchUser } = useDirectusAuth();

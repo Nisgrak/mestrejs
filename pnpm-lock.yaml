@@ -23,6 +23,9 @@ dependencies:
   quasar:
     specifier: ^2.14.1
     version: 2.14.1
+  unmute-ios-audio:
+    specifier: ^3.3.0
+    version: 3.3.0
   yuppee:
     specifier: ^0.3.0
     version: 0.3.0
@@ -8225,6 +8228,10 @@ packages:
     resolution: {integrity: sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==}
     engines: {node: '>= 10.0.0'}
     dev: true
+
+  /unmute-ios-audio@3.3.0:
+    resolution: {integrity: sha512-MmoCOrsS2gn3wLT2tT+hF56Q4V4kksIKn2LHrwAtX6umzQwQHDWSh1slMzH+0WuxTZ62s3w8/wsfIII1FQ7ACg==}
+    dev: false
 
   /unocss@0.57.7(@unocss/webpack@0.57.7)(postcss@8.4.31)(rollup@2.79.1)(vite@4.5.0):
     resolution: {integrity: sha512-Z99ZZPkbkjIUXEM7L+K/7Y5V5yqUS0VigG7ZIFzLf/npieKmXHKlrPyvQWFQaf3OqooMFuKBQivh75TwvSOkcQ==}
