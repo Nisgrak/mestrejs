@@ -15,7 +15,7 @@
 				</div>
 				<div v-else>
 					<q-btn flat no-caps outline label="Listado" :to="{ name: 'ListPartituresPage' }" color="dark" />
-					<q-btn flat no-caps outline label="Páginas" :to="{ name: 'ListPublicPages' }" color="dark" />
+					<!-- <q-btn flat no-caps outline label="Páginas" :to="{ name: 'ListPublicPages' }" color="dark" /> -->
 					<q-btn flat no-caps outline label="Logout" color="dark" @click="logout" />
 				</div>
 				<!-- <q-btn

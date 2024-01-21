@@ -67,7 +67,7 @@ let pages = ref<Page[]>([])
 let partitures = ref<Partiture[]>([])
 let filteredPartitures = ref<Partiture[]>([])
 
-let showDialogCreate = ref(true)
+let showDialogCreate = ref(false)
 
 let loadedPage = ref<Partial<Page>>({
 	name: "",
@@ -102,6 +102,10 @@ async function createNewPage() {
 			}
 		],
 	})
+
+	showDialogCreate.value = false
+
+	await loadPages()
 
 }
 

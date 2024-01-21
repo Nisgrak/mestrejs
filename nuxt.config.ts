@@ -2,6 +2,10 @@
 export default defineNuxtConfig({
 	devtools: { enabled: true },
 
+	ignore: [
+		"pages/pages.vue",
+	],
+
 	hooks: {
 		'pages:extend'(pages) {
 			// add a route
