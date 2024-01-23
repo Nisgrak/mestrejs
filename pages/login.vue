@@ -5,44 +5,18 @@
 				Inicia sesión
 			</div>
 			<div>
-				<q-form
-					greedy
-					@submit="login"
-				>
-					<q-input
-						v-model="email"
-						label="Email"
-						autocomplete="email"
-						:rules="[ val => val && val.length > 0 || 'El campo es obligatorio']"
-					/>
-					<q-input
-						v-model="password"
-						label="Contraseña"
-						autocomplete="password"
-						type="password"
-						class=""
-						:rules="[ val => val && val.length > 0 || 'El campo es obligatorio']"
-					/>
+				<q-form greedy @submit="login">
+					<q-input v-model="email" label="Email" autocomplete="email"
+						:rules="[val => val && val.length > 0 || 'El campo es obligatorio']" />
+					<q-input v-model="password" label="Contraseña" autocomplete="password" type="password" class=""
+						:rules="[val => val && val.length > 0 || 'El campo es obligatorio']" />
 
-					<q-btn
-						flat
-						unelevated
-						no-caps
-						class="pl-0 mb-2"
-						color="primary"
-						@click="changePassword"
-						label="He olvidado la contraseña"
-					>
+					<q-btn flat unelevated no-caps class="pl-0 mb-2" color="primary" @click="changePassword"
+						label="He olvidado la contraseña">
 					</q-btn>
 
 
-					<q-btn
-						no-caps
-						color="primary"
-						class="w-full"
-						type="submit"
-						label="Login"
-					>
+					<q-btn no-caps color="primary" class="w-full" type="submit" label="Login">
 					</q-btn>
 				</q-form>
 			</div>
@@ -59,7 +33,7 @@ import { useRouter } from 'vue-router';
 const { login: loginDirectus, requestPasswordReset } = useDirectusAuth();
 
 definePageMeta({
-  name: "LoginPage"
+	name: "LoginPage"
 })
 
 let email = ref('')
@@ -91,9 +65,9 @@ let changePassword = () => {
 
 		if (resetPasswordRoute) {
 			let changePasswordUrl = window.location.origin;
-			let path = `${process.env.VUE_ROUTER_BASE}${resetPasswordRoute.path}`
+			let path = `${process.env.VUE_ROUTER_BASE || ""}${resetPasswordRoute.path}`
 			path = path.replace('//', '/')
-			await requestPasswordReset({ email,reset_url: changePasswordUrl + path });
+			await requestPasswordReset({ email, reset_url: changePasswordUrl + path });
 			$q.dialog({
 				title: 'Cambiar contraseña',
 				message:
@@ -104,7 +78,7 @@ let changePassword = () => {
 	});
 };
 
-let login = async ()=> {
+let login = async () => {
 	if (email.value !== '' && password.value !== '') {
 		try {
 
