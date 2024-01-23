@@ -293,7 +293,25 @@ onMounted(async () => {
 		possibleShare = (new URL(window.location.href.replace("#/", "")).searchParams.get("share"))
 	}
 
-	if (typeof route.query.id === 'string' || typeof route.params.id === "string") {
+	if (typeof route.params.id === "string") {
+		try {
+			atob(route.params.id)
+			possibleShare = route.params.id
+		} catch {
+		}
+	}
+
+	if (typeof possibleShare === 'string') {
+		let oldFormat = JSON.parse(atob(possibleShare))
+
+		let version = oldFormat.beat ? 1 : 2
+		let newFormat = migratePartiture({ version, ...oldFormat })
+		songStore.sections = newFormat.song
+		songStore.bpm = newFormat.bpm
+		songStore.name = newFormat.name
+
+
+	} else if (typeof route.query.id === 'string' || typeof route.params.id === "string") {
 		let partiture = ""
 
 		if (typeof route.query.id === 'string') {
@@ -303,16 +321,6 @@ onMounted(async () => {
 		}
 
 		loadPartiture(partiture)
-
-	} else if (typeof possibleShare === 'string') {
-		let oldFormat = JSON.parse(atob(possibleShare))
-
-		let version = oldFormat.beat ? 1 : 2
-		let newFormat = migratePartiture({ version, ...oldFormat })
-		songStore.sections = newFormat.song
-		songStore.bpm = newFormat.bpm
-		songStore.name = newFormat.name
-
 
 	} else if (songStore.sections.length === 0) {
 
