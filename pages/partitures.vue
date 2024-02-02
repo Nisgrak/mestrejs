@@ -1,26 +1,11 @@
 <template>
 	<q-page class="row items-center justify-evenly">
 		<div class="border-1 rounded-lg p-5 w-9/10 md:w-5/10">
-			<q-table
-				title="Partituras"
-				:rows="partitures"
-				:columns="columns"
-				row-key="name"
-				unelevated
-				flat
-				hide-pagination
-			>
-				<template #body-cell-actions="{row}">
+			<q-table title="Partituras" :rows="partitures" :columns="columns" row-key="name" unelevated flat>
+				<template #body-cell-actions="{ row }">
 					<td>
-						<q-btn
-							flat
-							:to="{name: 'Canvas', query: {id: row.id}}"
-							:icon="mdiMagnify"
-						/>
-						<q-btn
-							flat
-							:icon="mdiTrashCan"
-						/>
+						<q-btn flat :to="{ name: 'Canvas', query: { id: row.id } }" :icon="mdiMagnify" />
+						<q-btn flat @click="deletePartiture(row.id)" :icon="mdiTrashCan" />
 					</td>
 				</template>
 			</q-table>
@@ -33,10 +18,11 @@
 import { mdiMagnify, mdiTrashCan } from '@quasar/extras/mdi-v6';
 import { type QTableColumn } from 'quasar';
 
-const { getItems } = useDirectusItems();
+const { getItems, deleteItems } = useDirectusItems();
+let $q = useQuasar();
 
 definePageMeta({
-  name: "ListPartituresPage"
+	name: "ListPartituresPage"
 })
 
 let partitures = ref<Partiture[]>([])
@@ -45,7 +31,7 @@ let columns: QTableColumn<Partiture>[] = [
 	{
 		field: 'name',
 		label: 'Nombre',
-		name:'name',
+		name: 'name',
 		align: 'left'
 	},
 	{
@@ -58,23 +44,38 @@ let columns: QTableColumn<Partiture>[] = [
 	{
 		field: 'bpm',
 		label: 'BPM',
-		name:'bpm',
+		name: 'bpm',
 		align: 'left'
 	},
 	{
 		field: 'id',
 		label: 'Acciones',
-		name:'actions',
+		name: 'actions',
 		align: 'left'
 	},
 ]
 
-onMounted(async () => {
-	let temp = await getItems<Partiture>({collection:'partiture', params: {
-		filter: {
-					user_created: '$CURRENT_USER'
-				}
-	}})
+function deletePartiture(id: string) {
+
+	$q.dialog({
+		message: '¿Estás seguro que quieres eliminar esta partitura?',
+		cancel: true
+	}).onOk(async () => {
+
+		await deleteItems({ collection: "partiture", items: [id] })
+
+		await refresh()
+	})
+}
+
+async function refresh() {
+	let temp = await getItems<Partiture>({
+		collection: 'partiture', params: {
+			filter: {
+				user_created: '$CURRENT_USER'
+			}
+		}
+	})
 
 	if (!temp || temp.length === 0) {
 		return
@@ -82,6 +83,10 @@ onMounted(async () => {
 
 	partitures.value.length = 0
 	partitures.value.push(...temp)
+}
+
+onMounted(async () => {
+	await refresh()
 
 })
 

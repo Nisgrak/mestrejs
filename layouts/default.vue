@@ -48,7 +48,7 @@
 				/>
 			</q-list>
 		</q-drawer> -->
-		<q-page-sticky position="bottom-left" :offset="[18, 18]" v-show="route.name !== 'Contact'">
+		<q-page-sticky position="bottom-left" :offset="[18, 18]" v-show="route.name !== 'Contact'" class="z-5000">
 			<q-btn round color="primary" :icon="mdiHelp" :to="{ name: 'Contact' }" />
 		</q-page-sticky>
 		<q-page-container>

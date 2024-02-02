@@ -141,6 +141,7 @@ export default defineNuxtConfig({
 		}
 	},
 	quasar: {
+		lang: "es",
 		iconSet: "svg-mdi-v6",
 		plugins: [
 			"Notify",
