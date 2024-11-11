@@ -4,6 +4,7 @@
 			<div class="flex items-center lt-md:justify-center gap-3 mb-5" :class="{
 				'sticky left-5 flex-nowrap bg-white z-2': songStore.horizontalView
 			}">
+				<q-icon :name="mdiDrag" class="song-section-handle" aria-label="Arrastrar sección" />
 				<q-input class="text-xl font-medium lt-md:w-full" input-class="lt-md:text-center"
 					:model-value="section.name"
 					@update:model-value="emit('update:section', Object.assign(section, { name: $event }))"
@@ -15,7 +16,8 @@
 				<q-btn-group flat rounded unelevated>
 					<q-btn :icon="mdiPlus" @click="addInstrument" aria-label="Añadir instrumento" />
 					<q-btn :icon="mdiFractionOneHalf" aria-label="Cambiar compás">
-						<q-menu anchor="bottom left" self="top left" transition-show="jump-down" transition-hide="jump-up">
+						<q-menu anchor="bottom left" self="top left" transition-show="jump-down"
+							transition-hide="jump-up">
 							<div class="row q-pa-md q-gutter-sm">
 								<q-btn v-for="(beat, index) in songStore.beats" :key="index" v-close-popup outline
 									unelevated color="secondary" :disabled="section.beat.name === beat.name"
@@ -32,7 +34,7 @@
 			<div class="flex-grow" />
 		</div>
 
-		<div>
+		<div ref="parentRef">
 			<InstrumentRow v-for="(instrument, indexInstrument) in section.instruments" :ref="instrumentsRefs.set"
 				:key="instrument.id" :instrument="section.instruments[indexInstrument]" :beat="section.beat"
 				:class="[`beat-${section.beat.name}`]"
@@ -46,13 +48,14 @@
 import { type Beat, type Section } from '../stores/songStore';
 import InstrumentRow from './InstrumentRow.vue';
 import { type PropType, ref } from 'vue';
-import { mdiPlay, mdiPlus, mdiStop, mdiTrashCan, mdiFractionOneHalf, mdiContentCopy } from '@quasar/extras/mdi-v6';
+import { mdiPlay, mdiPlus, mdiStop, mdiTrashCan, mdiFractionOneHalf, mdiContentCopy, mdiDrag } from '@quasar/extras/mdi-v6';
 import { useTemplateRefsList } from '@vueuse/core'
 import NoteBoxVue from './NoteBox.vue';
 import SelectInstrumentDialog from './SelectInstrumentDialog.vue';
 import { Howl } from 'howler';
 import { uid, useQuasar } from 'quasar';
 import { generateNewLine } from '../utils/lines'
+import { dragAndDrop } from '@formkit/drag-and-drop/vue';
 
 let songStore = useSongStore()
 let playing = ref(false)
@@ -257,7 +260,21 @@ let props = defineProps({
 	}
 })
 
+let instruments = computed({
+	get: () => props.section.instruments,
+	set: (value) => emit('update:section', Object.assign(props.section, { instruments: value }))
+})
+
 let emit = defineEmits(['update:section', 'remove', 'duplicate'])
+
+let parentRef = ref<HTMLElement | undefined>(undefined)
+
+dragAndDrop({
+	parent: parentRef,
+	values: instruments,
+	dragHandle: ".instrument-handle",
+})
+
 
 defineExpose({
 	getPlayingLength,

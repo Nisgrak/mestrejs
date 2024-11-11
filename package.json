@@ -1,35 +1,37 @@
 {
-  "name": "nuxt-app",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "build": "nuxt build",
-    "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
-  },
-  "devDependencies": {
-    "@nuxt/devtools": "latest",
-    "@nuxtjs/turnstile": "^0.6.3",
-    "@types/howler": "^2.2.11",
-    "@unocss/nuxt": "latest",
-    "@unocss/transformer-directives": "^0.57.7",
-    "@vite-pwa/nuxt": "^0.3.2",
-    "nuxt": "^3.8.2",
-    "nuxt-directus": "^5.6.0",
-    "nuxt-quasar-ui": "^2.0.6",
-    "typescript": "^5.3.2",
-    "vue-tsc": "^1.8.24"
-  },
-  "dependencies": {
-    "@fingerprintjs/fingerprintjs": "^4.2.1",
-    "@pinia/nuxt": "^0.5.1",
-    "@quasar/extras": "^1.16.9",
-    "@vueuse/core": "^10.6.1",
-    "howler": "^2.2.4",
-    "quasar": "^2.14.1",
-    "unmute-ios-audio": "^3.3.0",
-    "yuppee": "^0.3.0"
-  }
+	"name": "nuxt-app",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "nuxt build",
+		"dev": "nuxt dev",
+		"generate": "nuxt generate",
+		"preview": "nuxt preview",
+		"postinstall": "nuxt prepare"
+	},
+	"devDependencies": {
+		"@nuxt/devtools": "latest",
+		"@nuxtjs/turnstile": "^0.6.3",
+		"@types/howler": "^2.2.11",
+		"@unocss/nuxt": "latest",
+		"@unocss/transformer-directives": "^0.57.7",
+		"@vite-pwa/nuxt": "^0.3.2",
+		"nuxt": "^3.8.2",
+		"nuxt-directus": "^5.6.0",
+		"nuxt-quasar-ui": "^2.0.6",
+		"typescript": "^5.3.2",
+		"vue-tsc": "^1.8.24"
+	},
+	"dependencies": {
+		"@fingerprintjs/fingerprintjs": "^4.2.1",
+		"@formkit/drag-and-drop": "^0.2.5",
+		"@pinia/nuxt": "^0.5.1",
+		"@quasar/extras": "^1.16.9",
+		"@vueuse/core": "^10.6.1",
+		"howler": "^2.2.4",
+		"quasar": "^2.14.1",
+		"unmute-ios-audio": "^3.3.0",
+		"yuppee": "^0.3.0"
+	},
+	"packageManager": "pnpm@9.12.3"
 }

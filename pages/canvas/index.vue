@@ -34,7 +34,7 @@
 
 		<div class="w-full p-5 mt-15 md:p-15 flex flex-col justify-start" :class="{
 			'min-w-max !pl-0': songStore.horizontalView
-		}">
+		}" ref="parentRef">
 			<SongSection v-for="(section, index) in songStore.sections" :key="section.id" :ref="sectionsRefs.set"
 				v-model:section="songStore.sections[index]" @remove="songStore.sections.splice(index, 1)"
 				@duplicate="duplicateSection(index)" />
@@ -49,6 +49,7 @@ import { onMounted, ref, toRaw } from 'vue';
 import { mdiContentSave, mdiPlay, mdiStop, mdiRepeat, mdiXml, mdiCardPlus, mdiDeleteEmpty, mdiNumeric, mdiViewDashboard } from '@quasar/extras/mdi-v6';
 import { useTemplateRefsList } from '@vueuse/core';
 import type { SongSection } from '#build/components';
+import { dragAndDrop } from '@formkit/drag-and-drop/vue';
 
 definePageMeta({
 	name: "Canvas"
@@ -287,6 +288,9 @@ let saveSong = async (notify = true, forceAskClone = false) => {
 	}
 }
 
+let parentRef = ref<HTMLElement | undefined>(undefined)
+
+
 onMounted(async () => {
 	let possibleShare = route.query.share
 	if (route.query.share === undefined && window.location.hash.includes("share")) {
@@ -320,7 +324,7 @@ onMounted(async () => {
 			partiture = route.params.id
 		}
 
-		loadPartiture(partiture)
+		await loadPartiture(partiture)
 
 	} else if (songStore.sections.length === 0) {
 
@@ -328,8 +332,22 @@ onMounted(async () => {
 	}
 
 
+	let sections = computed({
+		get: () => songStore.sections,
+		set: (value) => songStore.sections = value
+	})
+
+
+	dragAndDrop({
+		parent: parentRef,
+		values: sections,
+		dragHandle: ".song-section-handle",
+	})
+
 
 })
+
+
 
 </script>
 

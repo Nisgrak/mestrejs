@@ -1,4 +1,3 @@
-
 <template>
 	<div class="instrument w-full" :class="{
 		'grid grid-cols-[500px_6fr] gap-x-4 items-center': songStore.horizontalView
@@ -6,6 +5,7 @@
 		<div class="flex lt-md:justify-center items-center gap-3 mb-3" :class="{
 			'sticky left-0 flex-nowrap bg-white z-2 w-full pl-10 !mb-0': songStore.horizontalView
 		}">
+			<q-icon :name="mdiDrag" class="instrument-handle" aria-label="Arrastrar instrumento" />
 			<q-input class="text-lg lt-md:w-full" input-class="lt-md:text-center" :model-value="instrument.alias"
 				@update:model-value="emit('update:instrument', Object.assign(instrument, { alias: $event }))"
 				aria-label="Nombre del instrumento" />
@@ -17,7 +17,8 @@
 			</q-btn-group>
 			<q-knob :model-value="instrument.vol" show-value font-size="16px" size="40px" :thickness="0.25"
 				track-color="grey-3" instant-feedback :min="0" :max="1" :step="0.01"
-				@drag-value="emit('update:instrument', Object.assign(instrument, { vol: $event }))" aria-label="Volumen">
+				@drag-value="emit('update:instrument', Object.assign(instrument, { vol: $event }))"
+				aria-label="Volumen">
 				<div @click.stop.prevent="emit('update:instrument', Object.assign(instrument, { vol: 0 }))">
 					<q-icon :name="instrument.vol !== 0 ? mdiVolumeHigh : mdiVolumeMute" />
 				</div>
@@ -35,7 +36,8 @@
 					width: `${beat.beatsPerBar * 49}px`
 				}">
 					<Note v-for="(note, indexNote) in group" :ref="notesRefs.set" :key="indexNote" :note="note"
-						:index="(0 / beat.beatsPerBar) * (beat.name === '6/8' ? 2 : 1)" :instrument-index="instrument.type"
+						:index="(0 / beat.beatsPerBar) * (beat.name === '6/8' ? 2 : 1)"
+						:instrument-index="instrument.type"
 						@update:note="updateInstrument(indexRow, indexGroup, indexNote, $event)" />
 				</div>
 			</div>
@@ -78,7 +80,7 @@
 import { type Beat, type Instrument } from '../stores/songStore';
 import { computed, type PropType, ref } from 'vue';
 import Note from './NoteBox.vue';
-import { mdiPlus, mdiMinus, mdiTrashCan, mdiVolumeHigh, mdiVolumeMute, mdiFractionOneHalf, mdiAlert, mdiTableRow, mdiCog } from '@quasar/extras/mdi-v6'
+import { mdiPlus, mdiMinus, mdiTrashCan, mdiVolumeHigh, mdiVolumeMute, mdiAlert, mdiCog, mdiDrag } from '@quasar/extras/mdi-v6'
 import { useTemplateRefsList } from '@vueuse/core';
 import { useQuasar } from 'quasar';
 import { generateNewLine } from '../utils/lines';
