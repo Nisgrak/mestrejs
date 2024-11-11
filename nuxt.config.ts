@@ -2,6 +2,13 @@
 export default defineNuxtConfig({
 	devtools: { enabled: true },
 
+	runtimeConfig: {
+		public: {
+			posthogPublicKey: 'phc_ikxvi8Bsk2BQBVeTlPhFDAJgEG6iO1YV4zy1ONKnqhE',
+			posthogHost: 'https://eu.i.posthog.com'
+		}
+	},
+
 	ignore: [
 		"pages/pages.vue",
 	],

@@ -29,6 +29,7 @@
 		"@quasar/extras": "^1.16.9",
 		"@vueuse/core": "^10.6.1",
 		"howler": "^2.2.4",
+		"posthog-js": "^1.181.0",
 		"quasar": "^2.14.1",
 		"unmute-ios-audio": "^3.3.0",
 		"yuppee": "^0.3.0"

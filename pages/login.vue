@@ -26,6 +26,7 @@
 
 
 <script lang="ts" setup>
+import posthog from 'posthog-js';
 import { useQuasar } from 'quasar';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -88,6 +89,8 @@ let login = async () => {
 			})
 
 			songStore.user = (await useDirectusUser()).value
+			posthog.identify(songStore.user?.id, { email: songStore.user?.email })
+
 
 			await navigateTo({
 				name: 'Canvas'

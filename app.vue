@@ -10,6 +10,7 @@
 import { useQuasar } from 'quasar';
 import { onMounted } from 'vue';
 import unmuteAudio from "unmute-ios-audio";
+import posthog from 'posthog-js';
 
 useServerSeoMeta({
 	title: "MestreJS",
@@ -38,6 +39,7 @@ onMounted(async () => {
 
 	if (songStore.user === undefined && token) {
 		songStore.user = (await useDirectusUser()).value
+		posthog.identify(songStore.user?.id, { email: songStore.user?.email })
 	}
 
 })
