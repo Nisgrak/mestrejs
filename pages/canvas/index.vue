@@ -338,11 +338,11 @@ onMounted(async () => {
 	})
 
 
-	dragAndDrop({
-		parent: parentRef,
-		values: sections,
-		dragHandle: ".song-section-handle",
-	})
+	// dragAndDrop({
+	// 	parent: parentRef,
+	// 	values: sections,
+	// 	dragHandle: ".song-section-handle",
+	// })
 
 
 })

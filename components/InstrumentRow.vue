@@ -5,7 +5,7 @@
 		<div class="flex lt-md:justify-center items-center gap-3 mb-3" :class="{
 			'sticky left-0 flex-nowrap bg-white z-2 w-full pl-10 !mb-0': songStore.horizontalView
 		}">
-			<q-icon :name="mdiDrag" class="instrument-handle" aria-label="Arrastrar instrumento" />
+			<!-- <q-icon :name="mdiDrag" class="instrument-handle" aria-label="Arrastrar instrumento" /> -->
 			<q-input class="text-lg lt-md:w-full" input-class="lt-md:text-center" :model-value="instrument.alias"
 				@update:model-value="emit('update:instrument', Object.assign(instrument, { alias: $event }))"
 				aria-label="Nombre del instrumento" />

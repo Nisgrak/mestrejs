@@ -4,7 +4,7 @@
 			<div class="flex items-center lt-md:justify-center gap-3 mb-5" :class="{
 				'sticky left-5 flex-nowrap bg-white z-2': songStore.horizontalView
 			}">
-				<q-icon :name="mdiDrag" class="song-section-handle" aria-label="Arrastrar sección" />
+				<!-- <q-icon :name="mdiDrag" class="song-section-handle" aria-label="Arrastrar sección" /> -->
 				<q-input class="text-xl font-medium lt-md:w-full" input-class="lt-md:text-center"
 					:model-value="section.name"
 					@update:model-value="emit('update:section', Object.assign(section, { name: $event }))"
@@ -269,11 +269,11 @@ let emit = defineEmits(['update:section', 'remove', 'duplicate'])
 
 let parentRef = ref<HTMLElement | undefined>(undefined)
 
-dragAndDrop({
-	parent: parentRef,
-	values: instruments,
-	dragHandle: ".instrument-handle",
-})
+// dragAndDrop({
+// 	parent: parentRef,
+// 	values: instruments,
+// 	dragHandle: ".instrument-handle",
+// })
 
 
 defineExpose({
