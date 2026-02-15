@@ -2,24 +2,28 @@
 	<div
 		v-if="section"
 		class="section flex w-full flex-col rounded-lg border-1 p-5"
+		:class="horizontalView ? 'md:w-max' : ''"
 	>
 		<div class="flex flex-wrap">
 			<div
 				class="mb-5 flex w-full flex-wrap items-center gap-2 md:gap-3"
 				:class="{
-					'flex-nowrap overflow-x-auto bg-white py-2 md:sticky md:left-0 md:z-30 md:w-[560px] md:flex-nowrap': horizontalView,
+					'flex-nowrap overflow-hidden bg-white py-2 md:sticky md:left-0 md:z-30 md:w-[600px] md:flex-nowrap md:overflow-x-auto': horizontalView,
 					'flex-wrap': !horizontalView
 				}"
 			>
 				<UInput
-					class="w-full font-medium"
-					:class="horizontalView ? 'w-52 shrink-0 text-base md:w-44 md:flex-none' : 'text-xl md:w-72'"
+					class="font-medium"
+					:class="horizontalView ? 'min-w-0 flex-1 text-base md:w-44 md:flex-none md:shrink-0' : 'w-full text-xl md:w-72'"
 					:model-value="section.name"
 					@update:model-value="emit('update:section', Object.assign(section, { name: $event }))"
 					aria-label="Nombre de la seccion"
 				/>
 
-				<div class="flex h-9 w-full items-center gap-0 overflow-hidden rounded-md border border-slate-200 md:w-auto md:shrink-0">
+				<div
+					class="flex h-9 items-center gap-0 overflow-hidden rounded-md border border-slate-200 md:shrink-0"
+					:class="horizontalView ? 'w-auto shrink-0' : 'w-full md:w-auto'"
+				>
 					<UTooltip :text="playing ? 'Pausar reproduccion' : 'Reproducir seccion'">
 						<UButton
 							class="h-full rounded-none rounded-l-md"
@@ -80,7 +84,7 @@
 				:instrument="section.instruments[indexInstrument]"
 				:beat="section.beat"
 				:horizontal-view="horizontalView"
-				:class="[`beat-${section.beat.name}`]"
+				:class="[`beat-${section.beat.name}`, 'mb-2 last:mb-0']"
 				@update:instrument="emit('update:section', Object.assign(section, { instruments: section.instruments.map((instrument, index) => index === indexInstrument ? $event : instrument) }))"
 				@remove="emit('update:section', Object.assign(section, { instruments: section.instruments.filter((_, index) => index !== indexInstrument) }))"
 			/>

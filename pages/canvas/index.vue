@@ -119,11 +119,11 @@
 			</div>
 		</div>
 
-		<div :class="effectiveHorizontalView ? 'w-full overflow-x-auto' : 'w-full'">
+		<div :class="effectiveHorizontalView ? 'w-full md:overflow-x-auto' : 'w-full'">
 			<div
 				class="mt-3 flex w-full flex-col justify-start gap-4 p-5 md:p-15"
 				:class="{
-					'min-w-max md:pl-0': effectiveHorizontalView
+					'md:min-w-max md:pl-0': effectiveHorizontalView
 				}"
 				ref="parentRef"
 			>
@@ -200,7 +200,10 @@ function updateResponsiveMode() {
 		return
 	}
 
-	isMobileViewport.value = window.matchMedia('(max-width: 767px)').matches
+	const isSmallViewport = window.matchMedia('(max-width: 767px)').matches
+	const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches
+
+	isMobileViewport.value = isSmallViewport || isTouchDevice
 	isLandscapeOrientation.value = window.matchMedia('(orientation: landscape)').matches
 }
 

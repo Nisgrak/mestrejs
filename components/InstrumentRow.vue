@@ -1,27 +1,28 @@
 <template>
 	<div
 		class="instrument w-full"
-		:class="{ 'md:grid md:grid-cols-[560px_minmax(0,1fr)] md:items-start md:gap-x-3': horizontalView }"
+		:class="{ 'md:grid md:w-max md:grid-cols-[600px_max-content] md:items-start md:gap-x-3': horizontalView }"
 	>
-		<div
-			:class="[
-				'mb-3 flex w-full items-center gap-2 md:gap-3',
-				horizontalView
-					? 'min-h-11 flex-nowrap overflow-x-auto md:sticky md:left-0 md:z-30 md:!mb-0 md:w-[560px] md:bg-white md:px-3 md:py-2'
-					: 'flex-wrap'
-			]"
-		>
+		<div :class="[
+			'mb-2 flex w-full items-center gap-2 md:gap-3',
+			horizontalView
+				? 'min-h-11 flex-nowrap overflow-hidden md:flex-nowrap md:overflow-x-auto md:sticky md:left-0 md:z-30 md:!mb-0 md:w-[600px] md:bg-white md:px-3 md:py-2'
+				: 'flex-wrap'
+		]">
 			<UInput
-				class="w-full text-base md:w-48"
-				:class="horizontalView ? 'w-52 shrink-0' : ''"
+				class="text-base"
+				:class="horizontalView ? 'w-32 shrink-0 md:w-52 md:flex-none md:shrink-0' : 'w-full md:w-48'"
 				:model-value="instrument.alias"
 				@update:model-value="emit('update:instrument', Object.assign(instrument, { alias: $event }))"
 				aria-label="Nombre del instrumento"
 			/>
-			<div class="flex h-9 w-full items-center gap-1 rounded-md border border-slate-200 px-1 md:w-auto" :class="horizontalView ? 'w-auto shrink-0' : ''">
+			<div
+				class="flex h-8 items-center gap-1 rounded-md border border-slate-200 px-1 md:h-9"
+				:class="horizontalView ? 'w-auto shrink-0' : 'w-full md:w-auto'"
+			>
 				<UTooltip text="Anadir fila">
 					<UButton
-						class="h-9 px-2"
+						class="h-8 px-1.5 md:h-9 md:px-2"
 						icon="i-lucide-plus"
 						variant="ghost"
 						@click="addRow"
@@ -30,7 +31,7 @@
 				</UTooltip>
 				<UTooltip text="Borrar fila">
 					<UButton
-						class="h-9 px-2"
+						class="h-8 px-1.5 md:h-9 md:px-2"
 						icon="i-lucide-minus"
 						variant="ghost"
 						@click="removeRow"
@@ -39,7 +40,7 @@
 				</UTooltip>
 				<UTooltip text="Configurar notas">
 					<UButton
-						class="h-9 px-2"
+						class="h-8 px-1.5 md:h-9 md:px-2"
 						icon="i-lucide-sliders-horizontal"
 						variant="ghost"
 						@click="showDialogNotes = true"
@@ -48,7 +49,7 @@
 				</UTooltip>
 				<UTooltip text="Borrar instrumento">
 					<UButton
-						class="h-9 px-2"
+						class="h-8 px-1.5 md:h-9 md:px-2"
 						icon="i-lucide-trash-2"
 						variant="ghost"
 						color="error"
@@ -57,10 +58,13 @@
 					/>
 				</UTooltip>
 			</div>
-			<div class="flex w-full items-center gap-2 md:w-auto md:min-w-0" :class="horizontalView ? 'w-auto shrink-0' : ''">
+			<div
+				class="flex items-center gap-1.5 md:min-w-0 md:gap-2"
+				:class="horizontalView ? 'w-28 shrink-0 md:w-auto' : 'w-full md:w-auto'"
+			>
 				<UTooltip :text="instrument.vol !== 0 ? 'Silenciar instrumento' : 'Activar sonido'">
 					<UButton
-						class="h-9 px-2"
+						class="h-8 px-1.5 md:h-9 md:px-2"
 						:icon="instrument.vol !== 0 ? 'i-lucide-volume-2' : 'i-lucide-volume-x'"
 						variant="ghost"
 						:aria-label="instrument.vol !== 0 ? 'Silenciar instrumento' : 'Activar sonido'"
@@ -76,23 +80,23 @@
 					aria-label="Volumen"
 					@update:model-value="onVolumeInput"
 				/>
-				<span class="w-10 text-xs">{{ Math.round(instrument.vol * 100) }}</span>
+				<span class="w-7 text-right text-xs">{{ Math.round(instrument.vol * 100) }}</span>
 			</div>
 		</div>
 		<div
 			class="w-full gap-10px"
-			:class="{ 'grid grid-cols-1': !horizontalView, 'grid grid-cols-1 overflow-x-auto md:flex md:flex-nowrap': horizontalView }"
+			:class="{ 'grid grid-cols-1': !horizontalView, 'flex flex-nowrap overflow-x-auto md:overflow-visible': horizontalView }"
 		>
 			<div
 				v-for="(noteLine, indexRow) in instrument.noteLines"
 				:key="indexRow"
-				class="w-full gap-10px"
-				:class="[`lg:grid-cols-${beat.numOfGroups}`, horizontalView ? 'flex w-max flex-nowrap md:w-auto' : 'grid grid-cols-1 justify-items-center']"
+				class="gap-10px"
+				:class="[`lg:grid-cols-${beat.numOfGroups}`, horizontalView ? 'flex shrink-0 flex-nowrap' : 'grid w-full grid-cols-1 justify-items-center']"
 			>
 				<div
 					v-for="(group, indexGroup) in noteLine"
 					:key="indexGroup"
-					class="stack flex justify-center"
+					class="stack flex shrink-0 justify-center"
 					:style="{ width: `${beat.beatsPerBar * 49}px` }"
 				>
 					<Note
