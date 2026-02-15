@@ -250,7 +250,7 @@ import { useTemplateRefsList } from '@vueuse/core';
 import type { SongSection } from '#build/components';
 import { dragAndDrop } from '@formkit/drag-and-drop/vue';
 import type { Section } from '@/stores/songStore';
-import { buildArrangementFromLibrary, hasValidCompositionData } from '@/utils/composition';
+import { buildCompositionFromLegacySong, normalizeCompositionData } from '@/utils/composition';
 import { createId } from '@/utils/id';
 
 definePageMeta({
@@ -272,6 +272,7 @@ const isLandscapeOrientation = ref(false)
 const selectedSectionId = ref('')
 const selectedArrangementItemId = ref('')
 const activeArrangementItemId = ref('')
+const currentPartitureId = ref<string | undefined>(undefined)
 let songStore = useSongStore()
 
 const effectiveHorizontalView = computed(() => {
@@ -604,47 +605,41 @@ let insert = () => {
 let route = useRoute()
 const toast = useToast()
 
+function isForbiddenError(error: unknown): boolean {
+	const code = (error as any)?.cause?.data?.errors?.[0]?.extensions?.code
+	const status = (error as any)?.statusCode || (error as any)?.cause?.statusCode
+	const message = String((error as any)?.message || '')
+
+	return code === 'FORBIDDEN' || status === 403 || message.includes('FORBIDDEN')
+}
+
 let saveSong = async (notify = true, forceAskClone = false) => {
+	const hasCurrentPartiture = typeof currentPartitureId.value === 'string'
+	let shouldCreateCopy = !hasCurrentPartiture
 
-	let forceCreate: boolean | undefined
-	if (songStore.user === undefined || forceAskClone) {
-		forceCreate = await requestConfirmation('Crear copia', 'Vas a crear una nueva copia de la cancion, ¿estás seguro?')
-		if (!forceCreate) {
-			forceCreate = undefined
+	if (!shouldCreateCopy && (songStore.user === undefined || forceAskClone)) {
+		const confirmed = await requestConfirmation('Crear copia', 'Vas a crear una nueva copia de la cancion, ¿estás seguro?')
+		if (!confirmed) {
+			return
 		}
-	} else {
-		forceCreate = false
+		shouldCreateCopy = true
 	}
 
-	if (forceCreate === undefined) {
-		return
-	}
-
-
-	if (!forceCreate && (typeof route.query.id === 'string' || typeof route.params.id === "string")) {
-		let partiture = ""
-
-		if (typeof route.query.id === 'string') {
-			partiture = route.query.id
-		} else if (typeof route.params.id === "string") {
-			partiture = route.params.id
-		}
-
+	if (!shouldCreateCopy && typeof currentPartitureId.value === 'string') {
 		try {
-
-			await updatePartiture(partiture)
+			await updatePartiture(currentPartitureId.value)
 		} catch (error) {
-
-			if ((error as any)?.cause?.data?.errors?.[0]?.extensions?.code === "FORBIDDEN") {
+			if (isForbiddenError(error)) {
 				return await saveSong(notify, true)
 			}
+
+			return await saveSong(notify, true)
 		}
-
-
 	} else {
 		let createdPartiture = await createPartiture()
 
 		if (createdPartiture) {
+			currentPartitureId.value = createdPartiture
 
 			await navigateTo({
 				name: 'Partiture',
@@ -708,13 +703,15 @@ onMounted(async () => {
 
 		let version = typeof oldFormat.version === 'number' ? oldFormat.version : (oldFormat.beat ? 1 : 2)
 		let newFormat = migratePartiture({ version, ...oldFormat })
+		const normalizedComposition = normalizeCompositionData(newFormat.sectionLibrary, newFormat.arrangement)
 
-		if (hasValidCompositionData(newFormat.sectionLibrary, newFormat.arrangement)) {
-			songStore.applyComposition(newFormat.sectionLibrary, newFormat.arrangement)
+		if (normalizedComposition) {
+			songStore.applyComposition(normalizedComposition.sectionLibrary, normalizedComposition.arrangement)
 		} else {
-			const library = newFormat.song
-			songStore.applyComposition(library, buildArrangementFromLibrary(library))
+			const fallbackComposition = buildCompositionFromLegacySong(newFormat.song)
+			songStore.applyComposition(fallbackComposition.sectionLibrary, fallbackComposition.arrangement)
 		}
+		currentPartitureId.value = undefined
 		songStore.bpm = newFormat.bpm
 		songStore.name = newFormat.name
 
@@ -729,11 +726,14 @@ onMounted(async () => {
 		}
 
 		await loadPartiture(partiture)
+		currentPartitureId.value = partiture
 
 	} else if (songStore.sectionLibrary.length === 0) {
 
 		addSection(1);
+		currentPartitureId.value = undefined
 	} else {
+		currentPartitureId.value = undefined
 		syncLegacySongSnapshot()
 	}
 

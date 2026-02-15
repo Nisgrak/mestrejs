@@ -1,5 +1,5 @@
 import type { ArrangementItem, Section } from '@/stores/songStore'
-import { buildArrangementFromLibrary, buildLegacySongFromComposition, hasValidCompositionData } from './composition'
+import { buildCompositionFromLegacySong, buildLegacySongFromComposition, normalizeCompositionData } from './composition'
 import { LAST_VERSION, type StateV5 } from './migrateVersions'
 
 export type Partiture = StateV5
@@ -80,13 +80,15 @@ export async function loadPartiture(partitureId: string) {
 	const migratedPartiture = migratePartiture(partiture)
 	let sectionLibrary: Section[]
 	let arrangement: ArrangementItem[]
+	const normalizedComposition = normalizeCompositionData(migratedPartiture.sectionLibrary, migratedPartiture.arrangement)
 
-	if (hasValidCompositionData(migratedPartiture.sectionLibrary, migratedPartiture.arrangement)) {
-		sectionLibrary = migratedPartiture.sectionLibrary
-		arrangement = migratedPartiture.arrangement
+	if (normalizedComposition) {
+		sectionLibrary = normalizedComposition.sectionLibrary
+		arrangement = normalizedComposition.arrangement
 	} else {
-		sectionLibrary = migratedPartiture.song
-		arrangement = buildArrangementFromLibrary(sectionLibrary)
+		const fallbackComposition = buildCompositionFromLegacySong(migratedPartiture.song)
+		sectionLibrary = fallbackComposition.sectionLibrary
+		arrangement = fallbackComposition.arrangement
 	}
 
 	const legacySong = buildLegacySongFromComposition(sectionLibrary, arrangement)
