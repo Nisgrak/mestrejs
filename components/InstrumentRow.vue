@@ -8,7 +8,9 @@
 			horizontalView
 				? 'min-h-11 flex-nowrap overflow-hidden md:flex-nowrap md:overflow-x-auto md:sticky md:left-0 md:z-30 md:!mb-0 md:w-[600px] md:bg-white md:px-3 md:py-2'
 				: 'flex-wrap'
-		]">
+		]"
+		ref="controlsContainerRef"
+		>
 			<UInput
 				class="text-base"
 				:class="horizontalView ? 'w-32 shrink-0 md:w-52 md:flex-none md:shrink-0' : 'w-full md:w-48'"
@@ -215,6 +217,7 @@ let showDialogNotes = ref(false)
 let showDeleteInstrumentModal = ref(false)
 const notesRefs = useTemplateRefsList<InstanceType<typeof Note>>()
 const notesScrollContainerRef = ref<HTMLElement | null>(null)
+const controlsContainerRef = ref<HTMLElement | null>(null)
 const emit = defineEmits(['update:instrument', 'remove', 'notes-scroll'])
 const syncingScroll = ref(false)
 
@@ -300,7 +303,7 @@ function setNotesScrollLeft(scrollLeft: number) {
 	})
 }
 
-function scrollToNote(noteIndex: number, syncFollowers = false) {
+function scrollToNote(noteIndex: number, syncFollowers = false, force = false) {
 	if (!notesScrollContainerRef.value) {
 		return
 	}
@@ -317,7 +320,7 @@ function scrollToNote(noteIndex: number, syncFollowers = false) {
 		? notesScrollContainerRef.value
 		: (desktopScrollRoot ?? notesScrollContainerRef.value)
 	const visibleLeft = container.scrollLeft
-	const visibleRight = visibleLeft + container.clientWidth
+	const visibleRight = container.scrollLeft + container.clientWidth
 	const containerRect = container.getBoundingClientRect()
 	const noteRect = noteElement.getBoundingClientRect()
 	const noteLeft = noteRect.left - containerRect.left + container.scrollLeft
@@ -325,10 +328,17 @@ function scrollToNote(noteIndex: number, syncFollowers = false) {
 	const padding = 24
 	let nextScrollLeft = visibleLeft
 
-	if (noteLeft < visibleLeft + padding) {
-		nextScrollLeft = Math.max(0, noteLeft - padding)
-	} else if (noteRight > visibleRight - padding) {
-		nextScrollLeft = Math.max(0, noteRight - container.clientWidth + padding)
+	if (force) {
+		const leadSpace = props.syncNotesScroll ? padding : ((controlsContainerRef.value?.clientWidth ?? 0) + padding)
+		nextScrollLeft = Math.max(0, noteLeft - leadSpace)
+	}
+
+	if (!force) {
+		if (noteLeft < visibleLeft + padding) {
+			nextScrollLeft = Math.max(0, noteLeft - padding)
+		} else if (noteRight > visibleRight - padding) {
+			nextScrollLeft = Math.max(0, noteRight - container.clientWidth + padding)
+		}
 	}
 
 	const maxScrollLeft = Math.max(0, container.scrollWidth - container.clientWidth)

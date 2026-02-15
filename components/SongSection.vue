@@ -246,6 +246,11 @@ let play = (internalPlay = true) => {
 		let accTime = 0
 		let noteInInstrument = 0
 		const shouldFollowScroll = props.horizontalView && indexInstrument === 0
+
+		if (shouldFollowScroll && instrumentRow && typeof instrumentRow.scrollToNote === 'function') {
+			instrumentRow.scrollToNote(0, props.syncNotesScroll, true)
+		}
+
 		for (let indexLine = 0; indexLine < instrument.noteLines.length; indexLine++) {
 			let noteInLine = 0
 			for (let indexGroup = 0; indexGroup < instrument.noteLines[indexLine].length; indexGroup++) {
