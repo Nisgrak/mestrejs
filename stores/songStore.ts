@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { Howl } from 'howler';
+import { buildArrangementFromLibrary, buildLegacySongFromComposition } from '@/utils/composition'
 
 type DirectusUser = Record<string, any>
 
@@ -27,6 +28,17 @@ export const useSongStore = defineStore('song', () => {
 	const horizontalView = ref(false)
 
 	const sections = ref<Section[]>([])
+	const sectionLibrary = ref<Section[]>([])
+	const arrangement = ref<ArrangementItem[]>([])
+	const hasCompositionModel = computed(() => sectionLibrary.value.length > 0 || arrangement.value.length > 0)
+
+	const resolvedSections = computed(() => {
+		if (!hasCompositionModel.value) {
+			return sections.value
+		}
+
+		return buildLegacySongFromComposition(sectionLibrary.value, arrangement.value)
+	})
 
 	const user = ref<DirectusUser | undefined>(undefined)
 
@@ -170,6 +182,31 @@ export const useSongStore = defineStore('song', () => {
 
 	const playing = ref(false)
 
+	function initializeCompositionFromLegacy() {
+		if (sections.value.length === 0) {
+			sectionLibrary.value = []
+			arrangement.value = []
+			return
+		}
+
+		sectionLibrary.value = JSON.parse(JSON.stringify(sections.value)) as Section[]
+		arrangement.value = buildArrangementFromLibrary(sectionLibrary.value)
+	}
+
+	function applyComposition(newSectionLibrary: Section[], newArrangement: ArrangementItem[]) {
+		sectionLibrary.value = JSON.parse(JSON.stringify(newSectionLibrary)) as Section[]
+		arrangement.value = JSON.parse(JSON.stringify(newArrangement)) as ArrangementItem[]
+		sections.value = buildLegacySongFromComposition(sectionLibrary.value, arrangement.value)
+	}
+
+	function syncLegacySectionsFromComposition() {
+		if (!hasCompositionModel.value) {
+			return
+		}
+
+		sections.value = buildLegacySongFromComposition(sectionLibrary.value, arrangement.value)
+	}
+
 
 	return {
 		bpm, sections, instruments, getPossibleNotes,
@@ -181,7 +218,13 @@ export const useSongStore = defineStore('song', () => {
 		name,
 		showNote,
 		horizontalView,
-		beats
+		beats,
+		sectionLibrary,
+		arrangement,
+		resolvedSections,
+		initializeCompositionFromLegacy,
+		applyComposition,
+		syncLegacySectionsFromComposition
 	}
 })
 
@@ -200,6 +243,12 @@ export interface Beat {
 	name: string;
 	beatsPerBar: number;
 	numOfGroups: number;
+}
+
+export interface ArrangementItem {
+	id: string
+	sectionId: string
+	repeats: number
 }
 
 export interface Page {

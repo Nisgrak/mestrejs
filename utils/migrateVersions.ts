@@ -1,11 +1,11 @@
 import { createMigration, createMigrator } from "yuppee";
-import type { Partiture } from "./partiture";
-import type { Section } from "../stores/songStore";
+import type { ArrangementItem, Section } from "../stores/songStore";
 import { createId } from "./id";
+import { buildArrangementFromLibrary, buildLegacySongFromComposition } from "./composition";
 
 type DirectusUser = Record<string, any>
 
-export const LAST_VERSION = 4
+export const LAST_VERSION = 5
 
 type StateV1 = {
 	version: 1,
@@ -86,12 +86,27 @@ export type StateV4 = {
 	fingerprint?: string
 }
 
+export type StateV5 = {
+	version: 5,
+	id: string;
+	user_created?: DirectusUser | string
+	user_updated?: DirectusUser | string
+	date_updated?: string
+	date_created?: string
+	song: Section[]
+	sectionLibrary: Section[]
+	arrangement: ArrangementItem[]
+	bpm: number
+	name: string
+	fingerprint?: string
+}
+
 
 export function migratePartiture(oldFormat: any) {
 
 	const store = useSongStore()
 
-	const migrate = createMigrator<Partiture, StateV1 | StateV2 | StateV3>({
+	const migrate = createMigrator<StateV5, StateV1 | StateV2 | StateV3 | StateV4>({
 		init: () => ({ bpm: 20, beat: "4/4", instruments: [] }),
 		migrations: [
 			createMigration<StateV1, StateV2>({
@@ -172,10 +187,27 @@ export function migratePartiture(oldFormat: any) {
 					}))
 				})
 			})
+			,
+			createMigration<StateV4, StateV5>({
+				from: 4,
+				to: 5,
+				migrate: (state) => {
+					const sectionLibrary = state.song.map((section) => ({
+						...section,
+						id: `${section.id}`
+					}))
+					const arrangement = buildArrangementFromLibrary(sectionLibrary)
+
+					return {
+						...state,
+						sectionLibrary,
+						arrangement,
+						song: buildLegacySongFromComposition(sectionLibrary, arrangement)
+					}
+				}
+			})
 		]
 	});
 
 	return migrate(oldFormat)
 }
-
-

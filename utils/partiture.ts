@@ -1,6 +1,8 @@
-import { LAST_VERSION, type StateV4 } from "./migrateVersions";
+import type { ArrangementItem, Section } from '@/stores/songStore'
+import { buildArrangementFromLibrary, buildLegacySongFromComposition, hasValidCompositionData } from './composition'
+import { LAST_VERSION, type StateV5 } from './migrateVersions'
 
-export type Partiture = StateV4
+export type Partiture = StateV5
 
 // export function savePartiture () {
 
@@ -10,9 +12,15 @@ export async function createPartiture() {
 	const songStore = useSongStore()
 
 	const { createItems } = useDirectusItems();
+	if (songStore.sectionLibrary.length === 0 && songStore.sections.length > 0) {
+		songStore.initializeCompositionFromLegacy()
+	}
+	songStore.syncLegacySectionsFromComposition()
 
 	const newPartiturePartial: Partial<Partiture> = {
 		'song': songStore.sections,
+		sectionLibrary: songStore.sectionLibrary,
+		arrangement: songStore.arrangement,
 		bpm: songStore.bpm,
 		name: songStore.name,
 		version: LAST_VERSION
@@ -39,9 +47,15 @@ export async function createPartiture() {
 export async function updatePartiture(partitureId: string) {
 	const songStore = useSongStore()
 	const { updateItem } = useDirectusItems();
+	if (songStore.sectionLibrary.length === 0 && songStore.sections.length > 0) {
+		songStore.initializeCompositionFromLegacy()
+	}
+	songStore.syncLegacySectionsFromComposition()
 
 	const updatedPartiture: Partial<Partiture> = {
 		'song': songStore.sections,
+		sectionLibrary: songStore.sectionLibrary,
+		arrangement: songStore.arrangement,
 		bpm: songStore.bpm,
 		name: songStore.name,
 		version: LAST_VERSION
@@ -64,10 +78,24 @@ export async function loadPartiture(partitureId: string) {
 	const partiture = await getItemById<Partiture>({ collection: 'partiture', id: partitureId });
 
 	const migratedPartiture = migratePartiture(partiture)
+	let sectionLibrary: Section[]
+	let arrangement: ArrangementItem[]
+
+	if (hasValidCompositionData(migratedPartiture.sectionLibrary, migratedPartiture.arrangement)) {
+		sectionLibrary = migratedPartiture.sectionLibrary
+		arrangement = migratedPartiture.arrangement
+	} else {
+		sectionLibrary = migratedPartiture.song
+		arrangement = buildArrangementFromLibrary(sectionLibrary)
+	}
+
+	const legacySong = buildLegacySongFromComposition(sectionLibrary, arrangement)
 
 
 	songStore.bpm = migratedPartiture.bpm;
-	songStore.sections = migratedPartiture.song;
+	songStore.sectionLibrary = sectionLibrary
+	songStore.arrangement = arrangement
+	songStore.sections = legacySong;
 	songStore.name = migratedPartiture.name
 
 
