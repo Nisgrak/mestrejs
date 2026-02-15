@@ -1,96 +1,81 @@
 <template>
-	<q-page class="row items-center justify-evenly">
-		<div class="border-1 rounded-lg p-5 w-9/10 md:w-5/10">
-			<q-table title="Páginas públicas" :rows="pages" :columns="columns" row-key="name" unelevated flat
-				hide-pagination>
-				<template v-slot:top="props">
-					<div class="col-2 q-table__title">Páginas públicas</div>
+	<div class="mx-auto w-full max-w-5xl px-4 py-8">
+		<div class="rounded-lg border border-slate-200 bg-white/80 p-5">
+			<div class="mb-4 flex items-center justify-between">
+				<h2 class="text-xl font-semibold">Paginas publicas</h2>
+				<UButton color="neutral" variant="outline" @click="showDialogCreate = true">Crear</UButton>
+			</div>
 
-					<q-space />
-
-					<q-btn no-caps outline label="Crear" color="dark" @click="showDialogCreate = !showDialogCreate" />
-				</template>
-				<template #body-cell-actions="{ row }">
-					<td>
-						<q-btn flat :to="{ name: 'Canvas', query: { id: row.id } }" :icon="mdiMagnify" />
-						<q-btn flat
-							@click="row.password = undefined; loadedPage = JSON.parse(JSON.stringify(row)); showDialogCreate = true"
-							:icon="mdiPencil" />
-						<q-btn flat :icon="mdiTrashCan" />
-					</td>
-				</template>
-			</q-table>
+			<div class="overflow-x-auto">
+				<table class="w-full border-collapse text-left">
+					<thead>
+						<tr class="border-b border-slate-200">
+							<th class="py-2">Nombre</th>
+							<th class="py-2">Acciones</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr v-for="row in pages" :key="row.id" class="border-b border-slate-100">
+							<td class="py-2">{{ row.name }}</td>
+							<td class="py-2">
+							<UTooltip text="Ver pagina">
+								<UButton color="neutral" variant="ghost" square icon="i-lucide-eye" aria-label="Ver pagina" :to="{ name: 'Canvas', query: { id: row.id } }" />
+							</UTooltip>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</div>
 
-		<q-dialog v-model="showDialogCreate">
-
-			<q-card class="my-card">
-				<q-form @submit="createNewPage" class="q-gutter-md">
-
-
-					<q-card-section class="grid gap-sm">
-						<q-input filled v-model="loadedPage.name" label="Nombre *" lazy-rules
-							:rules="[val => val && val.length > 0 || 'Campo obligatorio']" />
-
-						<q-input filled v-model="loadedPage.password" label="Contraseña" />
-
-						<q-select filled v-model="loadedPage.partitures" use-input use-chips multiple input-debounce="0"
-							:options="partitures" @filter="filterFn" option-label="name" option-value="id" />
-
-					</q-card-section>
-					<q-separator />
-
-					<q-card-actions align="right">
-						<q-btn label="Guardar" type="submit" color="primary" unelevated />
-						<q-btn label="Cancelar" @click="showDialogCreate = false" unelevated />
-					</q-card-actions>
-				</q-form>
-
-			</q-card>
-		</q-dialog>
-	</q-page>
+		<UModal v-model:open="showDialogCreate" title="Crear pagina publica" description="Configura los datos para generar una nueva pagina publica.">
+			<template #body>
+				<form class="grid gap-3" @submit.prevent="createNewPage">
+					<UInput v-model="loadedPage.name" label="Nombre" required />
+					<UInput v-model="loadedPage.password" label="Contrasena" />
+					<label class="text-sm">Partituras</label>
+					<select
+						multiple
+						class="min-h-28 rounded-md border border-slate-300 bg-white px-3 py-2"
+						@change="onPartituresChange"
+					>
+						<option v-for="partiture in partitures" :key="partiture.id" :value="partiture.id">
+							{{ partiture.name }}
+						</option>
+					</select>
+					<div class="mt-2 flex justify-end gap-2">
+						<UButton color="neutral" variant="ghost" @click="showDialogCreate = false">Cancelar</UButton>
+						<UButton color="primary" type="submit">Guardar</UButton>
+					</div>
+				</form>
+			</template>
+		</UModal>
+	</div>
 </template>
 
-
 <script lang="ts" setup>
-import { mdiMagnify, mdiPencil, mdiTrashCan } from '@quasar/extras/mdi-v6';
-import { type QTableColumn } from 'quasar';
-import type { Page } from "@/stores/songStore"
+import type { Page } from '@/stores/songStore'
 
-const { getItems, createItems } = useDirectusItems();
+const { getItems, createItems } = useDirectusItems()
 
 definePageMeta({
-	name: "ListPublicPages"
+	name: 'ListPublicPages'
 })
 
-let pages = ref<Page[]>([])
-let partitures = ref<Partiture[]>([])
-let filteredPartitures = ref<Partiture[]>([])
+const pages = ref<Page[]>([])
+const partitures = ref<Partiture[]>([])
+const showDialogCreate = ref(false)
 
-let showDialogCreate = ref(false)
-
-let loadedPage = ref<Partial<Page>>({
-	name: "",
-	password: "",
+const loadedPage = ref<Partial<Page>>({
+	name: '',
+	password: '',
 	partitures: []
 })
 
-let columns: QTableColumn<Page>[] = [
-	{
-		field: 'name',
-		label: 'Nombre',
-		name: 'name',
-		align: 'left'
-	},
-	{
-		field: 'id',
-		label: 'Acciones',
-		name: 'actions',
-		align: 'left'
-	},
-]
-
 async function createNewPage() {
+	if (!loadedPage.value.name) {
+		return
+	}
 
 	await createItems<Page>({
 		collection: 'page',
@@ -98,68 +83,39 @@ async function createNewPage() {
 			{
 				name: loadedPage.value.name,
 				password: loadedPage.value.password,
-				partitures: loadedPage.value.partitures!.map(p => ({ partiture_id: p.id! })),
+				partitures: loadedPage.value.partitures!.map((p) => ({ partiture_id: p.id! }))
 			}
-		],
+		]
 	})
 
 	showDialogCreate.value = false
-
+	loadedPage.value = { name: '', password: '', partitures: [] }
 	await loadPages()
+}
 
+async function loadPages() {
+	const temp = await getItems<Page>({
+		collection: 'page',
+		params: { filter: { user_created: '$CURRENT_USER' } }
+	})
+
+	pages.value = temp && temp.length !== 0 ? [...temp] : []
 }
 
 onMounted(async () => {
 	await loadPages()
 
-	let temp2 = await getItems<Partiture>({
+	const temp2 = await getItems<Partiture>({
 		collection: 'partiture',
-		params: {
-			filter: {
-				user_created: '$CURRENT_USER'
-			},
-		}
+		params: { filter: { user_created: '$CURRENT_USER' } }
 	})
 
-	if (temp2 && temp2.length !== 0) {
-		partitures.value.length = 0
-		partitures.value.push(...temp2)
-	}
-
+	partitures.value = temp2 && temp2.length !== 0 ? [...temp2] : []
 })
 
-async function loadPages() {
-	let temp = await getItems<Page>({
-		collection: 'page',
-		params: {
-			filter: {
-				user_created: '$CURRENT_USER'
-			},
-		}
-	})
-
-	if (temp && temp.length !== 0) {
-		pages.value.length = 0
-		pages.value.push(...temp)
-	}
+function onPartituresChange(event: Event) {
+	const target = event.target as HTMLSelectElement
+	const ids = new Set(Array.from(target.selectedOptions).map((option) => option.value))
+	loadedPage.value.partitures = partitures.value.filter((partiture) => ids.has(partiture.id))
 }
-
-
-function filterFn(val: string, update: (cb: () => void) => void) {
-	if (val === '') {
-		update(() => {
-			filteredPartitures.value = partitures.value
-
-			// here you have access to "ref" which
-			// is the Vue reference of the QSelect
-		})
-		return
-	}
-
-	update(() => {
-		const needle = val.toLowerCase()
-		filteredPartitures.value = partitures.value.filter(v => v.name.toLowerCase().indexOf(needle) > -1)
-	})
-}
-
 </script>

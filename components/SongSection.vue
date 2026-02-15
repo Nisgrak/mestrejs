@@ -1,46 +1,166 @@
 <template>
-	<div v-if="section" class="section w-full border-1 p-5 rounded-lg flex flex-col">
-		<div class="flex flex-nowrap">
-			<div class="flex items-center lt-md:justify-center gap-3 mb-5" :class="{
-				'sticky left-5 flex-nowrap bg-white z-2': songStore.horizontalView
-			}">
-				<!-- <q-icon :name="mdiDrag" class="song-section-handle" aria-label="Arrastrar sección" /> -->
-				<q-input class="text-xl font-medium lt-md:w-full" input-class="lt-md:text-center"
+	<div
+		v-if="section"
+		class="section flex w-full flex-col rounded-lg border-1 p-5"
+	>
+		<div class="flex flex-wrap">
+			<div
+				class="mb-5 flex w-full flex-wrap items-center gap-2 md:gap-3"
+				:class="{
+					'flex-nowrap overflow-x-auto bg-white py-2 md:sticky md:left-0 md:z-30 md:w-[560px] md:flex-nowrap': horizontalView,
+					'flex-wrap': !horizontalView
+				}"
+			>
+				<UInput
+					class="w-full font-medium"
+					:class="horizontalView ? 'w-52 shrink-0 text-base md:w-44 md:flex-none' : 'text-xl md:w-72'"
 					:model-value="section.name"
 					@update:model-value="emit('update:section', Object.assign(section, { name: $event }))"
-					aria-label="Nombre de la sección" />
-				<q-btn class="self-center" color="secondary" unelevated :disabled="section.instruments.length == 0"
-					:icon="playing ? mdiStop : mdiPlay" @click="playing ? pause() : play()"
-					:aria-label="playing ? 'Pausar reproducción' : 'Reproducir sección'" />
+					aria-label="Nombre de la seccion"
+				/>
 
-				<q-btn-group flat rounded unelevated>
-					<q-btn :icon="mdiPlus" @click="addInstrument" aria-label="Añadir instrumento" />
-					<q-btn :icon="mdiFractionOneHalf" aria-label="Cambiar compás">
-						<q-menu anchor="bottom left" self="top left" transition-show="jump-down"
-							transition-hide="jump-up">
-							<div class="row q-pa-md q-gutter-sm">
-								<q-btn v-for="(beat, index) in songStore.beats" :key="index" v-close-popup outline
-									unelevated color="secondary" :disabled="section.beat.name === beat.name"
-									@click="changeBeat(beat)" :aria-label="`Cambiar compás a ${beat.name}`">
-									{{ beat.name }}
-								</q-btn>
-							</div>
-						</q-menu>
-					</q-btn>
-					<q-btn :icon="mdiContentCopy" @click="emit('duplicate')" aria-label="Duplicar sección" />
-					<q-btn :icon="mdiTrashCan" @click="askDelete" aria-label="Borrar sección" />
-				</q-btn-group>
+				<div class="flex h-9 w-full items-center gap-0 overflow-hidden rounded-md border border-slate-200 md:w-auto md:shrink-0">
+					<UTooltip :text="playing ? 'Pausar reproduccion' : 'Reproducir seccion'">
+						<UButton
+							class="h-full rounded-none rounded-l-md"
+							color="primary"
+							:disabled="section.instruments.length == 0"
+							:icon="playing ? 'i-lucide-square' : 'i-lucide-play'"
+							@click="playing ? pause() : play()"
+							:aria-label="playing ? 'Pausar reproduccion' : 'Reproducir seccion'"
+						/>
+					</UTooltip>
+					<UTooltip text="Anadir instrumento">
+						<UButton
+							class="h-9 px-2"
+							icon="i-lucide-plus"
+							variant="ghost"
+							@click="addInstrument"
+							aria-label="Anadir instrumento"
+						/>
+					</UTooltip>
+					<UDropdownMenu :items="beatMenuItems">
+						<UButton
+							class="h-9 px-2"
+							variant="ghost"
+							:aria-label="`Compas ${section.beat.name}`"
+						>
+							{{ section.beat.name }}
+						</UButton>
+					</UDropdownMenu>
+					<UTooltip text="Duplicar seccion">
+						<UButton
+							class="h-9 px-2"
+							icon="i-lucide-copy"
+							variant="ghost"
+							@click="emit('duplicate')"
+							aria-label="Duplicar seccion"
+						/>
+					</UTooltip>
+					<UTooltip text="Borrar seccion">
+						<UButton
+							class="h-9 px-2"
+							icon="i-lucide-trash-2"
+							variant="ghost"
+							color="error"
+							@click="askDelete"
+							aria-label="Borrar seccion"
+						/>
+					</UTooltip>
+				</div>
 			</div>
 			<div class="flex-grow" />
 		</div>
 
 		<div ref="parentRef">
-			<InstrumentRow v-for="(instrument, indexInstrument) in section.instruments" :ref="instrumentsRefs.set"
-				:key="instrument.id" :instrument="section.instruments[indexInstrument]" :beat="section.beat"
+			<InstrumentRow
+				v-for="(instrument, indexInstrument) in section.instruments"
+				:ref="instrumentsRefs.set"
+				:key="instrument.id"
+				:instrument="section.instruments[indexInstrument]"
+				:beat="section.beat"
+				:horizontal-view="horizontalView"
 				:class="[`beat-${section.beat.name}`]"
 				@update:instrument="emit('update:section', Object.assign(section, { instruments: section.instruments.map((instrument, index) => index === indexInstrument ? $event : instrument) }))"
-				@remove="emit('update:section', Object.assign(section, { instruments: section.instruments.filter((_, index) => index !== indexInstrument) }))" />
+				@remove="emit('update:section', Object.assign(section, { instruments: section.instruments.filter((_, index) => index !== indexInstrument) }))"
+			/>
 		</div>
+
+		<UModal
+			v-model:open="showConfirmBeatModal"
+			title="Cambio de compas"
+			description="Cambiar el compas reiniciara las notas de la seccion."
+		>
+			<template #body>
+				<div class="grid gap-3">
+					<p>¿Vas a perder todas las notas de esta seccion, estás seguro?</p>
+					<div class="flex justify-end gap-2">
+						<UButton
+							color="neutral"
+							variant="ghost"
+							@click="cancelBeatChange"
+						>Cancelar</UButton>
+						<UButton
+							color="primary"
+							@click="confirmBeatChange"
+						>Cambiar</UButton>
+					</div>
+				</div>
+			</template>
+		</UModal>
+
+		<UModal
+			v-model:open="showDeleteSectionModal"
+			title="Borrar seccion"
+			description="Esta accion eliminara la seccion completa."
+		>
+			<template #body>
+				<div class="grid gap-3">
+					<p>¿Estás seguro que quieres eliminar esta seccion?</p>
+					<div class="flex justify-end gap-2">
+						<UButton
+							color="neutral"
+							variant="ghost"
+							@click="showDeleteSectionModal = false"
+						>Cancelar</UButton>
+						<UButton
+							color="error"
+							@click="confirmDeleteSection"
+						>Borrar</UButton>
+					</div>
+				</div>
+			</template>
+		</UModal>
+
+		<UModal
+			v-model:open="showSelectInstrumentModal"
+			title="Selecciona un instrumento"
+			description="Elige el instrumento que quieres anadir a la seccion."
+		>
+			<template #body>
+				<div class="grid gap-3">
+					<div class="grid grid-cols-2 gap-2 md:grid-cols-3">
+						<UButton
+							v-for="(instrument, index) in songStore.instruments"
+							:key="instrument.name"
+							color="neutral"
+							variant="outline"
+							class="min-h-11 justify-center"
+							@click="confirmAddInstrument(index)"
+						>
+							{{ instrument.name }}
+						</UButton>
+					</div>
+					<div class="flex justify-end gap-2">
+						<UButton
+							color="neutral"
+							variant="ghost"
+							@click="showSelectInstrumentModal = false"
+						>Cancelar</UButton>
+					</div>
+				</div>
+			</template>
+		</UModal>
 	</div>
 </template>
 
@@ -48,20 +168,28 @@
 import { type Beat, type Section } from '../stores/songStore';
 import InstrumentRow from './InstrumentRow.vue';
 import { type PropType, ref } from 'vue';
-import { mdiPlay, mdiPlus, mdiStop, mdiTrashCan, mdiFractionOneHalf, mdiContentCopy, mdiDrag } from '@quasar/extras/mdi-v6';
 import { useTemplateRefsList } from '@vueuse/core'
 import NoteBoxVue from './NoteBox.vue';
-import SelectInstrumentDialog from './SelectInstrumentDialog.vue';
 import { Howl } from 'howler';
-import { uid, useQuasar } from 'quasar';
 import { generateNewLine } from '../utils/lines'
 import { dragAndDrop } from '@formkit/drag-and-drop/vue';
+import { createId } from '@/utils/id';
 
 let songStore = useSongStore()
 let playing = ref(false)
-
-let $q = useQuasar()
 const instrumentsRefs = useTemplateRefsList<InstanceType<typeof InstrumentRow>>()
+const toast = useToast()
+const showConfirmBeatModal = ref(false)
+const showDeleteSectionModal = ref(false)
+const showSelectInstrumentModal = ref(false)
+const pendingBeat = ref<Beat | null>(null)
+const beatMenuItems = computed(() =>
+	songStore.beats.map((beat) => ({
+		label: beat.name,
+		disabled: beat.name === props.section.beat.name,
+		onSelect: () => changeBeat(beat)
+	}))
+)
 
 let getPlayingLength = () => {
 	return getTimeOfNote() * getMaxNote();
@@ -71,36 +199,16 @@ let getTimeOfNote = (groups = props.section.beat.beatsPerBar) => {
 }
 
 let changeBeat = async (newBeat: Beat) => {
+	if (newBeat.name === props.section.beat.name) {
+		return
+	}
 
-	$q.dialog({
-		message: 'Vas a perder todas las notas de esta sección, ¿estás seguro?',
-		title: 'Cambio de compás',
-		cancel: true,
-	}).onOk(() => {
-
-		emit('update:section', Object.assign(props.section, { beat: newBeat }))
-
-		for (const instrumentIndex in props.section.instruments) {
-
-			let instrument = props.section.instruments[instrumentIndex];
-
-			instrument.noteLines = [generateNewLine(props.section.beat.numOfGroups, props.section.beat.beatsPerBar)];
-		}
-	})
-
-
+	pendingBeat.value = newBeat
+	showConfirmBeatModal.value = true
 }
 
 let askDelete = () => {
-	$q.dialog({
-		message: '¿Estás seguro que quieres eliminar este instrumento?',
-		cancel: true
-	}).onOk(() => {
-
-
-		emit('remove')
-	})
-
+	showDeleteSectionModal.value = true
 }
 
 let getMaxNote = () => {
@@ -215,21 +323,42 @@ let pause = () => {
 
 let instrumentsSoundsList = ref<ReturnType<typeof setTimeout>[]>([])
 let addInstrument = () => {
-	$q.dialog({
-		component: SelectInstrumentDialog,
+	showSelectInstrumentModal.value = true
+}
 
-		// props forwarded to your custom component
-		componentProps: {
-			text: 'something',
-			// ...more..props...
-		}
-	}).onOk(({ instrument }) => {
-		createInstrument(instrument)
-	}).onCancel(() => {
-		console.log('Cancel')
-	}).onDismiss(() => {
-		console.log('Called on OK or Cancel')
-	})
+function confirmAddInstrument(index: number) {
+	if (Number.isNaN(index) || index < 0 || index >= songStore.instruments.length) {
+		toast.add({ title: 'Instrumento invalido', color: 'warning' })
+		return
+	}
+
+	createInstrument(index)
+	showSelectInstrumentModal.value = false
+}
+
+function confirmDeleteSection() {
+	showDeleteSectionModal.value = false
+	emit('remove')
+}
+
+function cancelBeatChange() {
+	showConfirmBeatModal.value = false
+	pendingBeat.value = null
+}
+
+function confirmBeatChange() {
+	if (!pendingBeat.value) {
+		return
+	}
+
+	emit('update:section', Object.assign(props.section, { beat: pendingBeat.value }))
+
+	for (const instrument of props.section.instruments) {
+		instrument.noteLines = [generateNewLine(pendingBeat.value.numOfGroups, pendingBeat.value.beatsPerBar)]
+	}
+
+	showConfirmBeatModal.value = false
+	pendingBeat.value = null
 }
 
 let createInstrument = (indexInstrument: number) => {
@@ -238,7 +367,7 @@ let createInstrument = (indexInstrument: number) => {
 		instruments: [
 			...props.section.instruments, {
 				alias: songStore.instruments[indexInstrument].name,
-				id: uid(),
+				id: createId(),
 				lines: 1,
 				vol: 1,
 				type: indexInstrument,
@@ -256,6 +385,10 @@ let createInstrument = (indexInstrument: number) => {
 let props = defineProps({
 	section: {
 		type: Object as PropType<Section>,
+		required: true,
+	},
+	horizontalView: {
+		type: Boolean,
 		required: true,
 	}
 })

@@ -1,55 +1,176 @@
 <template>
-	<div>
-		<q-page-sticky position="top" expand class="z-5 bg-white">
+	<div class="overflow-x-clip">
+		<div class="sticky top-0 z-40 border-b border-default bg-white shadow-sm">
 			<div
-				class="border-1 flex flex-row items-center md:justify-center overflow-auto flex-nowrap gap-3 px-5 py-2 sticky left-0 top-0 w-full bg-white h-full z-5">
-				<q-btn color="secondary" :disabled="songStore.sections.length == 0" :icon="playing ? mdiStop : mdiPlay"
-					class="w-50px" unelevated @click="playing ? pause() : play()"
-					:aria-label="playing ? 'Pausar reproducción' : 'Reproducir canción'" />
+				class="flex w-full flex-wrap items-center gap-2 bg-white px-2 py-2 md:justify-center md:gap-3 md:px-5">
+				<div class="flex w-full flex-wrap items-center gap-2 md:w-auto md:flex-nowrap">
+					<UTooltip :text="playing ? 'Pausar reproduccion' : 'Reproducir cancion'">
+						<UButton
+							color="primary"
+							size="md"
+							class="h-9"
+							:disabled="songStore.sections.length == 0"
+							:icon="playing ? 'i-lucide-square' : 'i-lucide-play'"
+							@click="playing ? pause() : play()"
+							:aria-label="playing ? 'Pausar reproduccion' : 'Reproducir cancion'"
+						/>
+					</UTooltip>
 
-				<q-btn :text-color="songStore.repeat ? 'secondary' : 'grey'" class="w-50px" :icon="mdiRepeat" outline
-					@click="songStore.repeat = !songStore.repeat"
-					:aria-label="songStore.repeat ? 'Desactivar repetición' : 'Activar repetición'" />
+					<UTooltip :text="songStore.repeat ? 'Desactivar repeticion' : 'Activar repeticion'">
+						<UButton
+							:color="songStore.repeat ? 'primary' : 'neutral'"
+							size="md"
+							class="h-9"
+							variant="outline"
+							icon="i-lucide-repeat"
+							@click="songStore.repeat = !songStore.repeat"
+							:aria-label="songStore.repeat ? 'Desactivar repeticion' : 'Activar repeticion'"
+						/>
+					</UTooltip>
 
-				<q-btn :text-color="songStore.showNote ? 'secondary' : 'grey'" unelevated outline class="w-50px"
-					:icon="mdiNumeric" @click="songStore.showNote = !songStore.showNote"
-					:aria-label="songStore.showNote ? 'Ocultar notas' : 'Mostrar notas'" />
-				<q-btn :text-color="songStore.horizontalView ? 'secondary' : 'grey'" unelevated outline class="w-50px"
-					:icon="mdiViewDashboard" @click="songStore.horizontalView = !songStore.horizontalView"
-					:aria-label="songStore.horizontalView ? 'Vista vertical' : 'Vista horizontal'" />
+					<UTooltip :text="songStore.showNote ? 'Ocultar notas' : 'Mostrar notas'">
+						<UButton
+							:color="songStore.showNote ? 'primary' : 'neutral'"
+							size="md"
+							class="h-9"
+							variant="outline"
+							icon="i-lucide-hash"
+							@click="songStore.showNote = !songStore.showNote"
+							:aria-label="songStore.showNote ? 'Ocultar notas' : 'Mostrar notas'"
+						/>
+					</UTooltip>
+					<UTooltip
+						v-if="!isMobileViewport"
+						:text="songStore.horizontalView ? 'Vista vertical' : 'Vista horizontal'"
+					>
+						<UButton
+							:color="songStore.horizontalView ? 'primary' : 'neutral'"
+							size="md"
+							class="h-9"
+							variant="outline"
+							icon="i-lucide-layout-grid"
+							@click="songStore.horizontalView = !songStore.horizontalView"
+							:aria-label="songStore.horizontalView ? 'Vista vertical' : 'Vista horizontal'"
+						/>
+					</UTooltip>
 
-				<q-btn-group flat rounded unelevated>
-					<q-btn :icon="mdiCardPlus" flat @click="addSection()" aria-label="Añadir sección" />
-					<q-btn :icon="mdiContentSave" flat @click="saveSong(true)" aria-label="Guardar canción" />
-					<q-btn :icon="mdiDeleteEmpty" flat @click="clearNotes()" aria-label="Borrar notas" />
-					<q-btn :icon="mdiXml" flat @click="insert()" aria-label="Insertar canción" />
-				</q-btn-group>
+					<div class="flex h-9 items-center rounded-md border border-default">
+						<UTooltip text="Anadir seccion">
+							<UButton
+								size="md"
+								class="h-9"
+								icon="i-lucide-folder-plus"
+								variant="ghost"
+								@click="addSection()"
+								aria-label="Anadir seccion"
+							/>
+						</UTooltip>
+						<UTooltip text="Guardar cancion">
+							<UButton
+								size="md"
+								class="h-9"
+								icon="i-lucide-save"
+								variant="ghost"
+								@click="saveSong(true)"
+								aria-label="Guardar cancion"
+							/>
+						</UTooltip>
+						<UTooltip text="Borrar notas">
+							<UButton
+								size="md"
+								class="h-9"
+								icon="i-lucide-eraser"
+								variant="ghost"
+								@click="clearNotes()"
+								aria-label="Borrar notas"
+							/>
+						</UTooltip>
+						<UTooltip text="Insertar cancion">
+							<UButton
+								size="md"
+								class="h-9"
+								icon="i-lucide-code"
+								variant="ghost"
+								@click="insert()"
+								aria-label="Insertar cancion"
+							/>
+						</UTooltip>
+					</div>
 
+				</div>
 
-
-				<q-input v-model="songStore.name" label="Nombre" />
-				<q-input v-model="songStore.bpm" label="BPM" type="number" />
+				<div class="flex w-full items-center gap-2 md:w-auto">
+					<UInput
+						v-model="songStore.name"
+						size="md"
+						:ui="{ base: 'h-9' }"
+						class="min-w-0 flex-1 md:w-72 md:flex-none"
+						placeholder="Partitura"
+					/>
+					<UInput
+						v-model="songStore.bpm"
+						size="md"
+						:ui="{ base: 'h-9 text-center' }"
+						class="w-24"
+						placeholder="BPM"
+						type="number"
+					/>
+				</div>
 			</div>
-		</q-page-sticky>
-
-		<div class="w-full p-5 mt-15 md:p-15 flex flex-col justify-start" :class="{
-			'min-w-max !pl-0': songStore.horizontalView
-		}" ref="parentRef">
-			<SongSection v-for="(section, index) in songStore.sections" :key="section.id" :ref="sectionsRefs.set"
-				v-model:section="songStore.sections[index]" @remove="songStore.sections.splice(index, 1)"
-				@duplicate="duplicateSection(index)" />
 		</div>
+
+		<div :class="effectiveHorizontalView ? 'w-full overflow-x-auto' : 'w-full'">
+			<div
+				class="mt-3 flex w-full flex-col justify-start gap-4 p-5 md:p-15"
+				:class="{
+					'min-w-max md:pl-0': effectiveHorizontalView
+				}"
+				ref="parentRef"
+			>
+				<SongSection
+					v-for="(section, index) in songStore.sections"
+					:key="section.id"
+					:ref="sectionsRefs.set"
+					v-model:section="songStore.sections[index]"
+					:horizontal-view="effectiveHorizontalView"
+					@remove="songStore.sections.splice(index, 1)"
+					@duplicate="duplicateSection(index)"
+				/>
+			</div>
+		</div>
+
+		<UModal
+			v-model:open="showConfirmModal"
+			:title="confirmDialogTitle"
+			:description="confirmDialogMessage"
+		>
+			<template #body>
+				<div class="grid gap-3">
+					<p>{{ confirmDialogMessage }}</p>
+					<div class="flex justify-end gap-2">
+						<UButton
+							color="neutral"
+							variant="ghost"
+							@click="resolveConfirm(false)"
+						>Cancelar</UButton>
+						<UButton
+							color="primary"
+							@click="resolveConfirm(true)"
+						>Confirmar</UButton>
+					</div>
+				</div>
+			</template>
+		</UModal>
 	</div>
 </template>
 
 <script lang="ts" setup>
-import { copyToClipboard, uid, useQuasar, extend } from 'quasar';
 import { useRoute } from 'vue-router';
-import { onMounted, ref, toRaw } from 'vue';
-import { mdiContentSave, mdiPlay, mdiStop, mdiRepeat, mdiXml, mdiCardPlus, mdiDeleteEmpty, mdiNumeric, mdiViewDashboard } from '@quasar/extras/mdi-v6';
+import { computed, onBeforeUnmount, onMounted, ref, toRaw } from 'vue';
 import { useTemplateRefsList } from '@vueuse/core';
 import type { SongSection } from '#build/components';
 import { dragAndDrop } from '@formkit/drag-and-drop/vue';
+import { createId } from '@/utils/id';
 
 definePageMeta({
 	name: "Canvas"
@@ -59,15 +180,38 @@ let playingAll = ref(false);
 let playing = ref(false);
 let sectionsRefs = useTemplateRefsList<InstanceType<typeof SongSection>>()
 let instrumentsSoundsList = ref<ReturnType<typeof setTimeout>[]>([])
+const showConfirmModal = ref(false)
+const confirmDialogTitle = ref('Confirmar accion')
+const confirmDialogMessage = ref('')
+let confirmResolver: ((value: boolean) => void) | null = null
+const isMobileViewport = ref(false)
+const isLandscapeOrientation = ref(false)
+
+const effectiveHorizontalView = computed(() => {
+	if (isMobileViewport.value) {
+		return isLandscapeOrientation.value
+	}
+
+	return songStore.horizontalView
+})
+
+function updateResponsiveMode() {
+	if (typeof window === 'undefined') {
+		return
+	}
+
+	isMobileViewport.value = window.matchMedia('(max-width: 767px)').matches
+	isLandscapeOrientation.value = window.matchMedia('(orientation: landscape)').matches
+}
 
 let duplicateSection = (index: number) => {
 	let deepCopy = JSON.parse(JSON.stringify(toRaw(songStore.sections[index])))
-	deepCopy.id = uid()
+	deepCopy.id = createId()
 	songStore.sections.splice(index, 0, deepCopy)
 }
 
 let addSection = (instrumentIndex?: number) => {
-	let id = uid();
+	let id = createId();
 	let beat = songStore.beats[0]
 
 	if (songStore.sections.length != 0) {
@@ -84,7 +228,7 @@ let addSection = (instrumentIndex?: number) => {
 	if (instrumentIndex !== undefined) {
 		let newInstrument = songStore.instruments[instrumentIndex];
 		section.instruments.push({
-			id: uid(),
+			id: createId(),
 			type: instrumentIndex,
 			alias: newInstrument.name,
 			lines: 1,
@@ -97,13 +241,9 @@ let addSection = (instrumentIndex?: number) => {
 
 }
 
-let clearNotes = () => {
-	$q.dialog({
-		title: 'Borrar notas',
-		message: 'Vas a borrar todas las notas, ¿estás seguro?',
-		cancel: true,
-		persistent: true
-	}).onOk(() => {
+let clearNotes = async () => {
+	const confirmed = await requestConfirmation('Borrar notas', 'Vas a borrar todas las notas, ¿estás seguro?')
+	if (confirmed) {
 
 		for (const section of songStore.sections) {
 			for (const instrument of section.instruments) {
@@ -117,11 +257,7 @@ let clearNotes = () => {
 			}
 		}
 
-	}).onCancel(() => {
-		// console.log('>>>> Cancel')
-	}).onDismiss(() => {
-		// console.log('I am triggered on both OK and Cancel')
-	})
+	}
 
 }
 
@@ -188,14 +324,8 @@ let insert = () => {
 
 	let text = `<iframe src="${window.location.href}" height="300" width="900"></iframe>`;
 
-	copyToClipboard(text);
-
-	$q.notify({
-		message: 'Código para insertar copiado',
-		color: 'positive',
-		position: 'top-right',
-		timeout: 2000
-	})
+	navigator.clipboard.writeText(text)
+	toast.add({ title: 'Codigo para insertar copiado', color: 'primary' })
 
 
 }
@@ -203,38 +333,19 @@ let insert = () => {
 let songStore = useSongStore()
 
 let route = useRoute()
-
-let $q = useQuasar()
+const toast = useToast()
 
 let saveSong = async (notify = true, forceAskClone = false) => {
 
-	let forceCreate = await new Promise<boolean | undefined>((resolve, reject) => {
-		if (songStore.user === undefined || forceAskClone) {
-			$q.dialog({
-				title: 'Crear nueva copia',
-				message: 'Vas a crear una nueva copia de la canción, ¿estás seguro?',
-				cancel: {
-					label: 'Cancelar',
-					flat: true
-				},
-				ok: {
-					label: 'Duplicar',
-					unelevated: true,
-					color: 'primary'
-				},
-				persistent: true
-			}).onOk(() => {
-				resolve(true)
-			}).onCancel(() => {
-				resolve(undefined)
-			}).onDismiss(() => {
-				resolve(undefined)
-			})
-		} else {
-			resolve(false)
+	let forceCreate: boolean | undefined
+	if (songStore.user === undefined || forceAskClone) {
+		forceCreate = await requestConfirmation('Crear copia', 'Vas a crear una nueva copia de la cancion, ¿estás seguro?')
+		if (!forceCreate) {
+			forceCreate = undefined
 		}
-
-	});
+	} else {
+		forceCreate = false
+	}
 
 	if (forceCreate === undefined) {
 		return
@@ -275,16 +386,28 @@ let saveSong = async (notify = true, forceAskClone = false) => {
 		}
 	}
 
-	copyToClipboard(window.location.href)
+	navigator.clipboard.writeText(window.location.href)
 
 	if (notify) {
+		toast.add({ title: 'Enlace copiado al portapapeles', color: 'primary' })
+	}
+}
 
-		$q.notify({
-			message: 'Enlace copiado al portapapeles',
-			color: 'positive',
-			position: 'top-right',
-			timeout: 2000
-		})
+function requestConfirmation(title: string, message: string): Promise<boolean> {
+	confirmDialogTitle.value = title
+	confirmDialogMessage.value = message
+	showConfirmModal.value = true
+
+	return new Promise((resolve) => {
+		confirmResolver = resolve
+	})
+}
+
+function resolveConfirm(value: boolean) {
+	showConfirmModal.value = false
+	if (confirmResolver) {
+		confirmResolver(value)
+		confirmResolver = null
 	}
 }
 
@@ -292,6 +415,10 @@ let parentRef = ref<HTMLElement | undefined>(undefined)
 
 
 onMounted(async () => {
+	updateResponsiveMode()
+	window.addEventListener('resize', updateResponsiveMode)
+	window.addEventListener('orientationchange', updateResponsiveMode)
+
 	let possibleShare = route.query.share
 	if (route.query.share === undefined && window.location.hash.includes("share")) {
 		possibleShare = (new URL(window.location.href.replace("#/", "")).searchParams.get("share"))
@@ -345,6 +472,15 @@ onMounted(async () => {
 	// })
 
 
+})
+
+onBeforeUnmount(() => {
+	if (typeof window === 'undefined') {
+		return
+	}
+
+	window.removeEventListener('resize', updateResponsiveMode)
+	window.removeEventListener('orientationchange', updateResponsiveMode)
 })
 
 

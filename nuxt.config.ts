@@ -1,6 +1,11 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
 	devtools: { enabled: true },
+	css: ['~/assets/css/main.css'],
+	colorMode: {
+		preference: 'light',
+		fallback: 'light'
+	},
 
 	runtimeConfig: {
 		public: {
@@ -26,8 +31,8 @@ export default defineNuxtConfig({
 
 	typescript: {
 		shim: false,
-		strict: true,
-		typeCheck: true
+		strict: false,
+		typeCheck: false
 	},
 	directus: {
 		autoFetch: true
@@ -45,7 +50,7 @@ export default defineNuxtConfig({
 		}
 	},
 	modules: [
-		"nuxt-quasar-ui",
+		"@nuxt/ui",
 		'@pinia/nuxt',
 		"@unocss/nuxt",
 		"nuxt-directus",
@@ -145,29 +150,6 @@ export default defineNuxtConfig({
 				},
 			]
 
-		}
-	},
-	quasar: {
-		lang: "es",
-		iconSet: "svg-mdi-v6",
-		plugins: [
-			"Notify",
-			"Dialog"
-		],
-		config: {
-			brand: {
-				primary: "#E47C44",
-				secondary: "#26a69a",
-				accent: "#424242",
-
-				dark: "#1D1D1D",
-
-				positive: "#4caf50",
-				negative: "#f44336",
-				info: "#2196f3",
-				warning: "#ffeb3b",
-
-			}
 		}
 	}
 })

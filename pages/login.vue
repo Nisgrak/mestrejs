@@ -1,108 +1,116 @@
 <template>
-	<q-page class="row items-center justify-evenly">
-		<div class="border-1 border-solid border-gray-200 rounded-lg p-5 w-9/10 md:w-3/10">
-			<div class="text-xl mb-5 text-center">
-				Inicia sesión
+	<div class="mx-auto flex min-h-[70vh] w-full max-w-md items-center px-4">
+		<UPageCard class="w-full">
+			<UAuthForm
+				ref="authForm"
+				title="Inicia sesion"
+				description="Accede para guardar y compartir tus partituras."
+				icon="i-lucide-log-in"
+				:fields="fields"
+				:submit="{ label: 'Login', color: 'primary', block: true }"
+				@submit="login"
+			>
+				<template #password-hint>
+					<UButton color="primary" variant="link" class="px-0" @click="changePassword">
+						He olvidado la contrasena
+					</UButton>
+				</template>
+			</UAuthForm>
+		</UPageCard>
+	</div>
+
+	<UModal v-model:open="showResetPasswordModal" title="Recuperar contrasena" description="Introduce tu email para recibir el enlace de recuperacion.">
+		<template #body>
+			<div class="grid gap-3">
+				<UInput v-model="resetPasswordEmail" label="Email" autocomplete="email" />
+				<div class="flex justify-end gap-2">
+					<UButton color="neutral" variant="ghost" @click="showResetPasswordModal = false">Cancelar</UButton>
+					<UButton color="primary" @click="sendResetPasswordEmail">Enviar</UButton>
+				</div>
 			</div>
-			<div>
-				<q-form greedy @submit="login">
-					<q-input v-model="email" label="Email" autocomplete="email"
-						:rules="[val => val && val.length > 0 || 'El campo es obligatorio']" />
-					<q-input v-model="password" label="Contraseña" autocomplete="password" type="password" class=""
-						:rules="[val => val && val.length > 0 || 'El campo es obligatorio']" />
-
-					<q-btn flat unelevated no-caps class="pl-0 mb-2" color="primary" @click="changePassword"
-						label="He olvidado la contraseña">
-					</q-btn>
-
-
-					<q-btn no-caps color="primary" class="w-full" type="submit" label="Login">
-					</q-btn>
-				</q-form>
-			</div>
-		</div>
-	</q-page>
+		</template>
+	</UModal>
 </template>
 
-
 <script lang="ts" setup>
-import posthog from 'posthog-js';
-import { useQuasar } from 'quasar';
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import posthog from 'posthog-js'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import type { AuthFormField, FormSubmitEvent } from '@nuxt/ui'
 
-const { login: loginDirectus, requestPasswordReset } = useDirectusAuth();
+const { login: loginDirectus, requestPasswordReset } = useDirectusAuth()
 
 definePageMeta({
-	name: "LoginPage"
+	name: 'LoginPage'
 })
 
-let email = ref('')
-let password = ref('')
-let $q = useQuasar()
-let router = useRouter()
-let songStore = useSongStore()
+const router = useRouter()
+const songStore = useSongStore()
+const toast = useToast()
+const showResetPasswordModal = ref(false)
+const resetPasswordEmail = ref('')
+const authForm = useTemplateRef('authForm')
+
+const fields: AuthFormField[] = [
+	{ name: 'email', type: 'email', label: 'Email', required: true, placeholder: 'tu@email.com' },
+	{ name: 'password', type: 'password', label: 'Contrasena', required: true, placeholder: 'Tu contrasena' }
+]
+
+interface LoginFormState {
+	email: string
+	password: string
+}
 
 function emailBool(value: string): boolean {
 	return /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(value)
 }
 
-let changePassword = () => {
-	$q.dialog({
-		title: 'Cambiar contraseña',
-		message: '¿Cuál es tu email?',
-		prompt: {
-			model: '',
-			type: 'email',
-			isValid: emailBool,
-		},
-		ok: 'Cambiar',
-		cancel: 'Cancelar',
-		persistent: true,
-	}).onOk(async (email) => {
-		let resetPasswordRoute = router
-			.getRoutes()
-			.find((route) => route.name === 'ResetPasswordPage');
+const changePassword = async () => {
+	const formEmail = authForm.value?.state?.email
+	resetPasswordEmail.value = typeof formEmail === 'string' ? formEmail : ''
+	showResetPasswordModal.value = true
+}
 
-		if (resetPasswordRoute) {
-			let changePasswordUrl = window.location.origin;
-			let path = `${process.env.VUE_ROUTER_BASE || ""}${resetPasswordRoute.path}`
-			path = path.replace('//', '/')
-			await requestPasswordReset({ email, reset_url: changePasswordUrl + path });
-			$q.dialog({
-				title: 'Cambiar contraseña',
-				message:
-					'Recibirás un email con las instrucciones para cambiar tu contraseña',
-				persistent: true,
-			});
-		}
-	});
-};
+const sendResetPasswordEmail = async () => {
+	const emailValue = resetPasswordEmail.value
+	if (!emailValue || !emailBool(emailValue)) {
+		toast.add({ title: 'Email invalido', color: 'warning' })
+		return
+	}
 
-let login = async () => {
-	if (email.value !== '' && password.value !== '') {
-		try {
+	const resetPasswordRoute = router.getRoutes().find((route) => route.name === 'ResetPasswordPage')
+	if (!resetPasswordRoute) {
+		return
+	}
 
-			await loginDirectus({
-				email: email.value,
-				password: password.value
-			})
+	let path = `${process.env.VUE_ROUTER_BASE || ''}${resetPasswordRoute.path}`
+	path = path.replace('//', '/')
+	await requestPasswordReset({ email: emailValue, reset_url: window.location.origin + path })
+	showResetPasswordModal.value = false
+	toast.add({
+		title: 'Revisa tu email',
+		description: 'Recibiras las instrucciones para cambiar tu contrasena.',
+		color: 'primary'
+	})
+}
 
-			songStore.user = (await useDirectusUser()).value
-			posthog.identify(songStore.user?.id, { email: songStore.user?.email })
+const login = async (event: FormSubmitEvent<LoginFormState>) => {
+	if (!event.data.email || !event.data.password) {
+		toast.add({ title: 'Completa email y contrasena', color: 'warning' })
+		return
+	}
 
+	try {
+		await loginDirectus({
+			email: event.data.email,
+			password: event.data.password
+		})
 
-			await navigateTo({
-				name: 'Canvas'
-			})
-		} catch (err) {
-			$q.notify({
-				message: 'Error al iniciar sesión',
-				color: 'negative',
-				position: 'top',
-				timeout: 5000
-			})
-		}
+		songStore.user = (await useDirectusUser()).value
+		posthog.identify(songStore.user?.id, { email: songStore.user?.email })
+		await navigateTo({ name: 'Canvas' })
+	} catch {
+		toast.add({ title: 'Error al iniciar sesion', color: 'error' })
 	}
 }
 </script>

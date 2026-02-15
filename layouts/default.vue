@@ -1,75 +1,52 @@
 <template>
-	<q-layout view="hHh Lpr lFf">
-		<q-header>
-			<q-toolbar>
-				<q-toolbar-title class="cursor-pointer text-black flex no-wrap items-center"
-					@click="navigateTo({ name: 'Canvas' })">
-					<img src="/logo-mestrejs.svg" height="50px" width="50px" square alt="MestreJS Logo" loading="eager" />
-					<span class="font-light text-black">Mestre</span>
-					<span class="font-medium text-black">JS</span>
-				</q-toolbar-title>
+	<div class="min-h-screen bg-white text-slate-900">
+		<header class="sticky top-0 z-40 border-b border-black/10 bg-[var(--ui-primary)] text-white backdrop-blur">
+			<div class="flex w-full items-center justify-between gap-3 px-2 py-2 md:px-3">
+				<button class="flex cursor-pointer items-center gap-2 leading-none" @click="navigateTo({ name: 'Canvas' })">
+					<img src="/logo-mestrejs.svg" height="42" width="42" alt="MestreJS Logo" loading="eager" />
+					<span class="text-lg tracking-tight">
+						<span class="font-light">Mestre</span><span class="font-semibold">JS</span>
+					</span>
+				</button>
 
-				<div v-if="!songStore.user" class="gap-3 flex">
-					<q-btn no-caps outline label="Iniciar sesión" color="dark" :to="{ name: 'LoginPage' }" />
-					<q-btn no-caps outline label="Registrate" color="dark" :to="{ name: 'RegisterPage' }" />
+				<div v-if="!songStore.user" class="flex items-center gap-2">
+					<UTooltip text="Ir a inicio de sesion">
+						<UButton size="sm" color="primary" variant="soft" class="border-transparent bg-white/10 text-white hover:bg-white/20" :to="{ name: 'LoginPage' }">Iniciar sesion</UButton>
+					</UTooltip>
+					<UTooltip text="Ir a registro">
+						<UButton size="sm" color="primary" variant="soft" class="border-transparent bg-white/10 text-white hover:bg-white/20" :to="{ name: 'RegisterPage' }">Registrate</UButton>
+					</UTooltip>
 				</div>
-				<div v-else>
-					<q-btn flat no-caps outline label="Listado" :to="{ name: 'ListPartituresPage' }" color="dark" />
-					<!-- <q-btn flat no-caps outline label="Páginas" :to="{ name: 'ListPublicPages' }" color="dark" /> -->
-					<q-btn flat no-caps outline label="Logout" color="dark" @click="logout" />
+				<div v-else class="flex items-center gap-2">
+					<UTooltip text="Ver listado de partituras">
+						<UButton size="sm" color="primary" variant="soft" class="border-transparent bg-white/10 text-white hover:bg-white/20" :to="{ name: 'ListPartituresPage' }">Listado</UButton>
+					</UTooltip>
+					<UTooltip text="Cerrar sesion">
+						<UButton size="sm" color="primary" variant="soft" class="border-transparent bg-white/10 text-white hover:bg-white/20" @click="logout">Logout</UButton>
+					</UTooltip>
 				</div>
-				<!-- <q-btn
-					flat
-					dense
-					round
-					:icon="mdiMenu"
-					aria-label="Menu"
-					@click="leftDrawerOpen = !leftDrawerOpen"
-				/> -->
-			</q-toolbar>
-		</q-header>
+			</div>
+		</header>
 
-		<!-- <q-drawer
-			v-model="leftDrawerOpen"
-			show-if-above
-			bordered
-		>
-			<q-list>
-				<q-item-label
-					header
-				>
-					Essential Links
-				</q-item-label>
-
-				<EssentialLink
-					v-for="link in essentialLinks"
-					:key="link.title"
-					v-bind="link"
-				/>
-			</q-list>
-		</q-drawer> -->
-		<q-page-sticky position="bottom-left" :offset="[18, 18]" v-show="route.name !== 'Contact'" class="z-5000">
-			<q-btn round color="primary" :icon="mdiHelp" :to="{ name: 'Contact' }" />
-		</q-page-sticky>
-		<q-page-container>
+		<main>
 			<slot />
-		</q-page-container>
-	</q-layout>
+		</main>
+
+		<div v-show="route.name !== 'Contact'" class="fixed bottom-5 left-5 z-50">
+			<UTooltip text="Contacto">
+				<UButton color="primary" variant="solid" square icon="i-lucide-circle-help" aria-label="Contacto" :to="{ name: 'Contact' }" />
+			</UTooltip>
+		</div>
+	</div>
 </template>
 
 <script lang="ts" setup>
-import { mdiHelp } from '@quasar/extras/mdi-v6';
-import { ref } from 'vue';
-
 let songStore = useSongStore()
-const { logout: logoutDirectus } = useDirectusAuth();
-
+const { logout: logoutDirectus } = useDirectusAuth()
 let route = useRoute()
 
-let logout = () => {
-	logoutDirectus()
+const logout = async () => {
+	await logoutDirectus()
 	songStore.user = undefined
 }
-
-const leftDrawerOpen = ref(false)
 </script>

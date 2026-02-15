@@ -1,13 +1,14 @@
 <template>
-	<VitePwaManifest />
-	<NuxtLayout>
-		<NuxtPage />
-	</NuxtLayout>
+	<UApp>
+		<VitePwaManifest />
+		<NuxtLayout>
+			<NuxtPage />
+		</NuxtLayout>
+	</UApp>
 </template>
 
 
 <script lang="ts" setup>
-import { useQuasar } from 'quasar';
 import { onMounted } from 'vue';
 import unmuteAudio from "unmute-ios-audio";
 import posthog from 'posthog-js';
@@ -20,15 +21,7 @@ useServerSeoMeta({
 	themeColor: "#E47C44"
 })
 
-let $q = useQuasar()
 let songStore = useSongStore()
-
-$q.iconMapFn = (iconName: string) => {
-	if (iconName.startsWith('app:')) {
-		let icon = iconName.replace('app:', '');
-		return { icon: `svguse:/app-icons/${icon}.svg#${icon}` };
-	}
-};
 
 onMounted(async () => {
 

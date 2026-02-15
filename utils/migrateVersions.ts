@@ -1,8 +1,9 @@
-import type { DirectusUser } from "nuxt-directus/dist/runtime/types";
 import { createMigration, createMigrator } from "yuppee";
 import type { Partiture } from "./partiture";
 import type { Section } from "../stores/songStore";
-import { uid } from "quasar";
+import { createId } from "./id";
+
+type DirectusUser = Record<string, any>
 
 export const LAST_VERSION = 4
 
@@ -115,7 +116,7 @@ export function migratePartiture(oldFormat: any) {
 				migrate: (state) => ({
 					bpm: state.bpm,
 					name: "Partitura sin nombre",
-					id: uid(),
+					id: createId(),
 					song: state.sections.map((section) => ({
 						beat: section.beat,
 						id: section.id,
@@ -137,12 +138,12 @@ export function migratePartiture(oldFormat: any) {
 				migrate: (state) => ({
 					bpm: state.bpm,
 					name: "Partitura sin nombre",
-					id: uid(),
+					id: createId(),
 					song: state.song.map((section) => ({
 						beat: section.beat,
-						id: uid(),
+						id: createId(),
 						instruments: section.instruments.map((instrument) => ({
-							id: uid(),
+							id: createId(),
 							type: instrument.type,
 							alias: instrument.alias,
 							lines: instrument.lines,
@@ -176,7 +177,5 @@ export function migratePartiture(oldFormat: any) {
 
 	return migrate(oldFormat)
 }
-
-
 
 

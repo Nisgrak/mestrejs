@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+:root {
+	--ui-primary: #e47c44;
+}
+
+body {
+	background: #ffffff;
+	color: rgb(24 24 27);
+}

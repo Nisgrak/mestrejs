@@ -1,72 +1,54 @@
 <template>
-	<q-page class="row items-center justify-evenly">
-		<div class="border-1 rounded-lg p-5 w-9/10 md:w-3/10">
-			<div class="text-xl mb-5 text-center">
-				Resetea tu contraseña
-			</div>
-			<div>
-				<q-form
-					greedy
-					@submit="register"
-				>
-					<q-input
-						v-model="password"
-						label="Contraseña"
-						autocomplete="password"
-						type="password"
-						:rules="[ val => val && val.length > 0 || 'El campo es obligatorio']"
-					/>
-
-					<q-btn
-						no-caps
-						color="primary"
-						class="w-full"
-						type="submit"
-					>
-						Resetear contraseña
-					</q-btn>
-				</q-form>
-			</div>
-		</div>
-	</q-page>
+	<div class="mx-auto flex min-h-[70vh] w-full max-w-md items-center px-4">
+		<UPageCard class="w-full">
+			<UAuthForm
+				title="Resetea tu contrasena"
+				description="Introduce una nueva contrasena para tu cuenta."
+				icon="i-lucide-key-round"
+				:fields="fields"
+				:submit="{ label: 'Resetear contrasena', color: 'primary', block: true }"
+				@submit="resetAccountPassword"
+			/>
+		</UPageCard>
+	</div>
 </template>
 
-
 <script lang="ts" setup>
-import { useQuasar } from 'quasar';
-import { useRoute } from 'vue-router';
+import { useRoute } from 'vue-router'
+import type { AuthFormField, FormSubmitEvent } from '@nuxt/ui'
 
 definePageMeta({
-  name: "ResetPasswordPage"
+	name: 'ResetPasswordPage'
 })
 
-let password = ref('')
-let $q = useQuasar()
-let route = useRoute()
-let songStore = useSongStore()
-const { resetPassword } = useDirectusAuth();
+const route = useRoute()
+const { resetPassword } = useDirectusAuth()
+const toast = useToast()
 
-let register = async ()=> {
-	if (password.value !== '') {
-		try {
+const fields: AuthFormField[] = [
+	{ name: 'password', type: 'password', label: 'Contrasena', required: true, placeholder: 'Nueva contrasena' }
+]
 
-			if (!route.query.token || typeof route.query.token !== 'string') {
-				return await navigateTo({ name: 'Home' });
-			}
+interface ResetPasswordFormState {
+	password: string
+}
 
-			await resetPassword({token: route.query.token, password: password.value});
+const resetAccountPassword = async (event: FormSubmitEvent<ResetPasswordFormState>) => {
+	if (!event.data.password) {
+		toast.add({ title: 'La contrasena es obligatoria', color: 'warning' })
+		return
+	}
 
-			await navigateTo({
-				name: 'LoginPage'
-			})
-		} catch (err) {
-			$q.notify({
-				message: 'Error al resetear la contraseña',
-				color: 'negative',
-				position: 'top',
-				timeout: 5000
-			})
+	try {
+		if (!route.query.token || typeof route.query.token !== 'string') {
+			await navigateTo({ name: 'Home' })
+			return
 		}
+
+		await resetPassword({ token: route.query.token, password: event.data.password })
+		await navigateTo({ name: 'LoginPage' })
+	} catch {
+		toast.add({ title: 'Error al resetear la contrasena', color: 'error' })
 	}
 }
 </script>

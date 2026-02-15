@@ -1,68 +1,52 @@
 <template>
-	<q-page class="row items-center justify-evenly">
-		<div class="border-1 rounded-lg p-5 w-9/10 md:w-3/10">
-			<div class="text-xl mb-5 text-center">
-				Crea tu cuenta
-			</div>
-			<div>
-				<q-form greedy @submit="register">
-					<q-input v-model="email" label="Email" autocomplete="email"
-						:rules="[val => val && val.length > 0 || 'El campo es obligatorio']" />
-					<q-input v-model="password" label="Contraseña" autocomplete="password" type="password"
-						:rules="[val => val && val.length > 0 || 'El campo es obligatorio']" />
-
-					<q-btn no-caps color="primary" class="w-full" type="submit">
-						Crear cuenta
-					</q-btn>
-				</q-form>
-			</div>
-		</div>
-	</q-page>
+	<div class="mx-auto flex min-h-[70vh] w-full max-w-md items-center px-4">
+		<UPageCard class="w-full">
+			<UAuthForm
+				title="Crea tu cuenta"
+				description="Registrate para guardar y sincronizar tus partituras."
+				icon="i-lucide-user-plus"
+				:fields="fields"
+				:submit="{ label: 'Crear cuenta', color: 'primary', block: true }"
+				@submit="register"
+			/>
+		</UPageCard>
+	</div>
 </template>
 
-
 <script lang="ts" setup>
-import { useQuasar } from 'quasar';
-import { useSongStore } from '../stores/songStore';
-import { ref } from 'vue';
+import type { AuthFormField, FormSubmitEvent } from '@nuxt/ui'
 
 definePageMeta({
-	name: "RegisterPage"
+	name: 'RegisterPage'
 })
 
-let email = ref('')
-let password = ref('')
-let $q = useQuasar()
-let songStore = useSongStore()
-const { createUser, login } = useDirectusAuth();
+const songStore = useSongStore()
+const { createUser, login } = useDirectusAuth()
+const toast = useToast()
 
-let register = async () => {
-	if (email.value !== '' && password.value !== '') {
-		try {
+const fields: AuthFormField[] = [
+	{ name: 'email', type: 'email', label: 'Email', required: true, placeholder: 'tu@email.com' },
+	{ name: 'password', type: 'password', label: 'Contrasena', required: true, placeholder: 'Minimo 8 caracteres' }
+]
 
-			await createUser({
-				email: email.value,
-				password: password.value
-			});
+interface RegisterFormState {
+	email: string
+	password: string
+}
 
-			await login({
-				email: email.value,
-				password: password.value
-			});
+const register = async (event: FormSubmitEvent<RegisterFormState>) => {
+	if (!event.data.email || !event.data.password) {
+		toast.add({ title: 'Completa email y contrasena', color: 'warning' })
+		return
+	}
 
-			songStore.user = (await useDirectusUser()).value
-
-			await navigateTo({
-				name: 'Canvas'
-			})
-		} catch (err) {
-			$q.notify({
-				message: 'Error al iniciar sesión',
-				color: 'negative',
-				position: 'top',
-				timeout: 5000
-			})
-		}
+	try {
+		await createUser({ email: event.data.email, password: event.data.password })
+		await login({ email: event.data.email, password: event.data.password })
+		songStore.user = (await useDirectusUser()).value
+		await navigateTo({ name: 'Canvas' })
+	} catch {
+		toast.add({ title: 'Error al crear la cuenta', color: 'error' })
 	}
 }
 </script>

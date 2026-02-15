@@ -1,81 +1,101 @@
 <template>
-	<q-page class="row items-center justify-evenly">
-		<div class="border-1 rounded-lg p-5 w-9/10 md:w-5/10">
-			<div v-if="emailError !== '' || emailSended" class="flex items-center wrap">
-				<h4 class="w-full text-center">{{ emailSended ? "Enviado" : "Error" }}</h4>
-				<p class="w-full text-center">{{ emailSended ? messages.EMAIL_SENDED : emailError }}</p>
+	<div class="mx-auto w-full max-w-3xl px-4 py-8">
+		<UPageCard>
+			<template #header>
+				<div class="space-y-1">
+					<h1 class="text-2xl font-semibold">Contacto</h1>
+					<p class="text-sm text-slate-600">Comparte dudas, errores o mejoras que te gustaria ver en MestreJS.</p>
+				</div>
+			</template>
+
+			<div class="space-y-4">
+				<UAlert
+					v-if="requestStatus !== 'idle'"
+					:color="requestStatus === 'success' ? 'success' : 'error'"
+					:icon="requestStatus === 'success' ? 'i-lucide-check-circle-2' : 'i-lucide-triangle-alert'"
+					:title="requestStatus === 'success' ? 'Mensaje enviado' : 'No se pudo enviar'"
+					:description="statusMessage"
+				/>
+
+				<form class="space-y-4" @submit.prevent="sendContactMessage">
+					<NuxtTurnstile v-model="formData.token" />
+
+					<div class="grid gap-3">
+						<UInput v-model="formData.subject" label="Asunto" placeholder="Ej: Problema al guardar partitura" required />
+						<UInput v-model="formData.name" label="Nombre" placeholder="Tu nombre" required />
+						<UInput v-model="formData.email" type="email" label="Email" placeholder="tu@email.com" required />
+						<UTextarea v-model="formData.message" label="Mensaje" placeholder="Cuentanos con detalle" :rows="5" required />
+					</div>
+
+					<div class="flex justify-end gap-2">
+						<UButton color="neutral" variant="ghost" :disabled="isSubmitting" @click="resetForm">Limpiar</UButton>
+						<UButton color="primary" type="submit" :loading="isSubmitting">Enviar mensaje</UButton>
+					</div>
+				</form>
 			</div>
-			<q-form @submit="sendContactMessage" class="q-gutter-md" v-else>
-				<h4>Contacto</h4>
-
-				<NuxtTurnstile v-model="formData.token" />
-
-				<q-card-section class="grid gap-3">
-					<q-input filled v-model="formData.subject" label="Asunto" required />
-					<q-input filled v-model="formData.name" label="Nombre" required />
-
-					<q-input type="email" filled v-model="formData.email" label="Email" required />
-
-					<q-input type="textarea" filled v-model="formData.message" label="Mensaje" required />
-
-				</q-card-section>
-				<q-separator />
-
-				<q-card-actions align="right">
-					<q-btn label="Guardar" type="submit" color="primary" unelevated />
-				</q-card-actions>
-			</q-form>
-		</div>
-	</q-page>
+		</UPageCard>
+	</div>
 </template>
 
 <script lang="ts" setup>
-
 definePageMeta({
-	name: "Contact"
+	name: 'Contact'
 })
 
-let formData = ref({
-	message: "",
-	subject: "",
-	name: "",
-	email: "",
-	token: ""
-
+const formData = ref({
+	message: '',
+	subject: '',
+	name: '',
+	email: '',
+	token: ''
 })
 
-let emailSended = ref(false)
-let emailError = ref("")
+const isSubmitting = ref(false)
+const requestStatus = ref<'idle' | 'success' | 'error'>('idle')
+const statusMessage = ref('')
 
-let messages = {
-	EMAIL_SENDED: "Muchas gracias por tus comentarios",
-
-	ERROR_CHECK_CAPTCHA: "Ha ocurrido un error al verificar el captcha",
-	CAPTCHA_DONT_SUCCESS: "El captcha no se ha verificado correctamente",
-	ERROR_SENDING_MAIL: "Ha ocurrido un error al enviar el email",
-	UNKNOWN_ERROR: "Ha ocurrido algún error al enviar el email",
+const messages = {
+	EMAIL_SENDED: 'Muchas gracias por tus comentarios',
+	ERROR_CHECK_CAPTCHA: 'Ha ocurrido un error al verificar el captcha',
+	CAPTCHA_DONT_SUCCESS: 'El captcha no se ha verificado correctamente',
+	ERROR_SENDING_MAIL: 'Ha ocurrido un error al enviar el email',
+	UNKNOWN_ERROR: 'Ha ocurrido algun error al enviar el email'
 }
 
 async function sendContactMessage() {
-	try {
-
-		let response = await $fetch("/api/sendEmail", { method: "POST", body: formData.value })
-
-		if (response.code === "EMAIL_SENDED") {
-			emailSended.value = true
-		} else {
-			emailError.value = response.code ? messages[response.code as keyof typeof messages] : messages.UNKNOWN_ERROR
-
-		}
-	} catch (error) {
-		emailError.value = messages.UNKNOWN_ERROR
-
+	if (isSubmitting.value) {
+		return
 	}
 
+	requestStatus.value = 'idle'
+	statusMessage.value = ''
+	isSubmitting.value = true
+
+	try {
+		const response = await $fetch('/api/sendEmail', { method: 'POST', body: formData.value })
+		if (response.code === 'EMAIL_SENDED') {
+			requestStatus.value = 'success'
+			statusMessage.value = messages.EMAIL_SENDED
+			resetForm()
+		} else {
+			requestStatus.value = 'error'
+			statusMessage.value = response.code ? messages[response.code as keyof typeof messages] : messages.UNKNOWN_ERROR
+		}
+	} catch {
+		requestStatus.value = 'error'
+		statusMessage.value = messages.UNKNOWN_ERROR
+	} finally {
+		isSubmitting.value = false
+	}
 }
 
-
-
+function resetForm() {
+	formData.value = {
+		message: '',
+		subject: '',
+		name: '',
+		email: '',
+		token: ''
+	}
+}
 </script>
-
-<style></style>
