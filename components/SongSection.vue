@@ -84,7 +84,9 @@
 				:instrument="section.instruments[indexInstrument]"
 				:beat="section.beat"
 				:horizontal-view="horizontalView"
+				:sync-notes-scroll="syncNotesScroll"
 				:class="[`beat-${section.beat.name}`, 'mb-2 last:mb-0']"
+				@notes-scroll="syncInstrumentNotesScroll(indexInstrument, $event)"
 				@update:instrument="emit('update:section', Object.assign(section, { instruments: section.instruments.map((instrument, index) => index === indexInstrument ? $event : instrument) }))"
 				@remove="emit('update:section', Object.assign(section, { instruments: section.instruments.filter((_, index) => index !== indexInstrument) }))"
 			/>
@@ -239,9 +241,11 @@ let play = (internalPlay = true) => {
 
 	for (let indexInstrument = 0; indexInstrument < props.section.instruments.length; indexInstrument++) {
 		let instrument = props.section.instruments[indexInstrument];
+		const instrumentRow = instrumentsRefs.value[indexInstrument]
 		let howls = songStore.getPossibleNotes(instrument.type);
 		let accTime = 0
 		let noteInInstrument = 0
+		const shouldFollowScroll = props.horizontalView && indexInstrument === 0
 		for (let indexLine = 0; indexLine < instrument.noteLines.length; indexLine++) {
 			let noteInLine = 0
 			for (let indexGroup = 0; indexGroup < instrument.noteLines[indexLine].length; indexGroup++) {
@@ -249,7 +253,11 @@ let play = (internalPlay = true) => {
 				for (let indexNote = 0; indexNote < instrument.noteLines[indexLine][indexGroup].length; indexNote++) {
 					const note = instrument.noteLines[indexLine][indexGroup][indexNote]
 
-					let boxElement = instrumentsRefs.value[indexInstrument].notesRefs[noteInInstrument];
+					if (!instrumentRow) {
+						continue
+					}
+
+					let boxElement = instrumentRow.notesRefs[noteInInstrument];
 
 
 					// Nota con subidivisiones
@@ -260,7 +268,7 @@ let play = (internalPlay = true) => {
 
 							let sound = howls[note[indexSubNote]].howls;
 
-							playNote(accTime, sound, instrument.vol, boxElement, noteLong, indexSubNote);
+							playNote(accTime, sound, instrument.vol, boxElement, noteLong, indexSubNote, instrumentRow, noteInInstrument, shouldFollowScroll && indexSubNote === 0);
 							accTime += noteLong
 
 						}
@@ -269,7 +277,7 @@ let play = (internalPlay = true) => {
 
 						let sound = howls[note].howls;
 
-						playNote(accTime, sound, instrument.vol, boxElement, timeOfgroup);
+						playNote(accTime, sound, instrument.vol, boxElement, timeOfgroup, undefined, instrumentRow, noteInInstrument, shouldFollowScroll);
 						accTime += timeOfgroup
 					}
 
@@ -302,7 +310,17 @@ let play = (internalPlay = true) => {
 	}
 }
 
-let playNote = (time: number, sound: Howl | undefined, volume: number, element: InstanceType<typeof NoteBoxVue>, lightTime: number, subNote: number | undefined = undefined) => {
+let playNote = (
+	time: number,
+	sound: Howl | undefined,
+	volume: number,
+	element: InstanceType<typeof NoteBoxVue>,
+	lightTime: number,
+	subNote: number | undefined = undefined,
+	instrumentRow?: InstanceType<typeof InstrumentRow>,
+	noteIndex?: number,
+	followScroll = false
+) => {
 	instrumentsSoundsList.value.push(setTimeout(() => {
 		if (sound) {
 			sound.volume(volume);
@@ -310,6 +328,10 @@ let playNote = (time: number, sound: Howl | undefined, volume: number, element: 
 		}
 
 		element.changeColor(lightTime, subNote);
+
+		if (followScroll && typeof noteIndex === 'number' && instrumentRow && typeof instrumentRow.scrollToNote === 'function') {
+			instrumentRow.scrollToNote(noteIndex, props.syncNotesScroll)
+		}
 	}, time));
 }
 let pause = () => {
@@ -365,6 +387,20 @@ function confirmBeatChange() {
 	pendingBeat.value = null
 }
 
+function syncInstrumentNotesScroll(sourceIndex: number, scrollLeft: number) {
+	if (!props.syncNotesScroll) {
+		return
+	}
+
+	instrumentsRefs.value.forEach((rowRef, index) => {
+		if (index === sourceIndex || !rowRef || typeof rowRef.setNotesScrollLeft !== 'function') {
+			return
+		}
+
+		rowRef.setNotesScrollLeft(scrollLeft)
+	})
+}
+
 let createInstrument = (indexInstrument: number) => {
 
 	emit('update:section', Object.assign(props.section, {
@@ -392,6 +428,10 @@ let props = defineProps({
 		required: true,
 	},
 	horizontalView: {
+		type: Boolean,
+		required: true,
+	},
+	syncNotesScroll: {
 		type: Boolean,
 		required: true,
 	}

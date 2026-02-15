@@ -2,8 +2,13 @@
 	<div class="overflow-x-clip">
 		<div class="sticky top-0 z-40 border-b border-default bg-white shadow-sm">
 			<div
-				class="flex w-full flex-wrap items-center gap-2 bg-white px-2 py-2 md:justify-center md:gap-3 md:px-5">
-				<div class="flex w-full flex-wrap items-center gap-2 md:w-auto md:flex-nowrap">
+				class="flex w-full items-center bg-white px-2 py-2 md:justify-center md:gap-3 md:px-5"
+				:class="isMobileLandscape ? 'flex-nowrap gap-1 overflow-x-auto' : 'flex-wrap gap-2'"
+			>
+				<div
+					class="flex items-center md:w-auto md:flex-nowrap"
+					:class="isMobileLandscape ? 'w-auto shrink-0 flex-nowrap gap-1' : 'w-full flex-wrap gap-2'"
+				>
 					<UTooltip :text="playing ? 'Pausar reproduccion' : 'Reproducir cancion'">
 						<UButton
 							color="primary"
@@ -99,19 +104,22 @@
 
 				</div>
 
-				<div class="flex w-full items-center gap-2 md:w-auto">
+				<div
+					class="flex items-center md:w-auto"
+					:class="isMobileLandscape ? 'w-auto shrink-0 gap-1' : 'w-full gap-2'"
+				>
 					<UInput
 						v-model="songStore.name"
 						size="md"
 						:ui="{ base: 'h-9' }"
-						class="min-w-0 flex-1 md:w-72 md:flex-none"
+						:class="isMobileLandscape ? 'w-40' : 'min-w-0 flex-1 md:w-72 md:flex-none'"
 						placeholder="Partitura"
 					/>
 					<UInput
 						v-model="songStore.bpm"
 						size="md"
 						:ui="{ base: 'h-9 text-center' }"
-						class="w-24"
+						:class="isMobileLandscape ? 'w-16' : 'w-24'"
 						placeholder="BPM"
 						type="number"
 					/>
@@ -119,7 +127,10 @@
 			</div>
 		</div>
 
-		<div :class="effectiveHorizontalView ? 'w-full md:overflow-x-auto' : 'w-full'">
+		<div
+			data-notes-scroll-root
+			:class="effectiveHorizontalView ? 'w-full md:overflow-x-auto' : 'w-full'"
+		>
 			<div
 				class="mt-3 flex w-full flex-col justify-start gap-4 p-5 md:p-15"
 				:class="{
@@ -133,6 +144,7 @@
 					:ref="sectionsRefs.set"
 					v-model:section="songStore.sections[index]"
 					:horizontal-view="effectiveHorizontalView"
+					:sync-notes-scroll="shouldSyncNotesScroll"
 					@remove="songStore.sections.splice(index, 1)"
 					@duplicate="duplicateSection(index)"
 				/>
@@ -194,6 +206,9 @@ const effectiveHorizontalView = computed(() => {
 
 	return songStore.horizontalView
 })
+
+const shouldSyncNotesScroll = computed(() => isMobileViewport.value && effectiveHorizontalView.value)
+const isMobileLandscape = computed(() => isMobileViewport.value && isLandscapeOrientation.value)
 
 function updateResponsiveMode() {
 	if (typeof window === 'undefined') {

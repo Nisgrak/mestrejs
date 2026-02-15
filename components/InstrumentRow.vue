@@ -85,6 +85,8 @@
 		</div>
 		<div
 			class="w-full gap-10px"
+			ref="notesScrollContainerRef"
+			@scroll.passive="onNotesScroll"
 			:class="{ 'grid grid-cols-1': !horizontalView, 'flex flex-nowrap overflow-x-auto md:overflow-visible': horizontalView }"
 		>
 			<div
@@ -198,6 +200,10 @@ const props = defineProps({
 	horizontalView: {
 		type: Boolean,
 		required: true
+	},
+	syncNotesScroll: {
+		type: Boolean,
+		required: true
 	}
 })
 
@@ -208,7 +214,9 @@ let askDelete = () => {
 let showDialogNotes = ref(false)
 let showDeleteInstrumentModal = ref(false)
 const notesRefs = useTemplateRefsList<InstanceType<typeof Note>>()
-const emit = defineEmits(['update:instrument', 'remove'])
+const notesScrollContainerRef = ref<HTMLElement | null>(null)
+const emit = defineEmits(['update:instrument', 'remove', 'notes-scroll'])
+const syncingScroll = ref(false)
 
 function confirmDeleteInstrument() {
 	showDeleteInstrumentModal.value = false
@@ -267,8 +275,85 @@ function resizeGroup(index: number, indexGroup: number, event: Event) {
 	emit('update:instrument', Object.assign(props.instrument, { noteLines: props.instrument.noteLines }))
 }
 
+function onNotesScroll() {
+	if (!props.syncNotesScroll || syncingScroll.value || !notesScrollContainerRef.value) {
+		return
+	}
+
+	emit('notes-scroll', notesScrollContainerRef.value.scrollLeft)
+}
+
+function setNotesScrollLeft(scrollLeft: number) {
+	if (!notesScrollContainerRef.value) {
+		return
+	}
+
+	if (Math.abs(notesScrollContainerRef.value.scrollLeft - scrollLeft) < 1) {
+		return
+	}
+
+	syncingScroll.value = true
+	notesScrollContainerRef.value.scrollLeft = scrollLeft
+
+	requestAnimationFrame(() => {
+		syncingScroll.value = false
+	})
+}
+
+function scrollToNote(noteIndex: number, syncFollowers = false) {
+	if (!notesScrollContainerRef.value) {
+		return
+	}
+
+	const noteComponent = notesRefs.value[noteIndex] as { $el?: HTMLElement } | undefined
+	const noteElement = noteComponent?.$el
+
+	if (!noteElement) {
+		return
+	}
+
+	const desktopScrollRoot = notesScrollContainerRef.value.closest('[data-notes-scroll-root]') as HTMLElement | null
+	const container = props.syncNotesScroll
+		? notesScrollContainerRef.value
+		: (desktopScrollRoot ?? notesScrollContainerRef.value)
+	const visibleLeft = container.scrollLeft
+	const visibleRight = visibleLeft + container.clientWidth
+	const containerRect = container.getBoundingClientRect()
+	const noteRect = noteElement.getBoundingClientRect()
+	const noteLeft = noteRect.left - containerRect.left + container.scrollLeft
+	const noteRight = noteLeft + noteElement.offsetWidth
+	const padding = 24
+	let nextScrollLeft = visibleLeft
+
+	if (noteLeft < visibleLeft + padding) {
+		nextScrollLeft = Math.max(0, noteLeft - padding)
+	} else if (noteRight > visibleRight - padding) {
+		nextScrollLeft = Math.max(0, noteRight - container.clientWidth + padding)
+	}
+
+	const maxScrollLeft = Math.max(0, container.scrollWidth - container.clientWidth)
+	nextScrollLeft = Math.min(nextScrollLeft, maxScrollLeft)
+
+	if (Math.abs(container.scrollLeft - nextScrollLeft) < 1) {
+		return
+	}
+
+	syncingScroll.value = true
+	container.scrollLeft = nextScrollLeft
+
+	if (syncFollowers && props.syncNotesScroll) {
+		emit('notes-scroll', nextScrollLeft)
+	}
+
+	requestAnimationFrame(() => {
+		syncingScroll.value = false
+	})
+}
+
 defineExpose({
-	notesRefs
+	notesRefs,
+	setNotesScrollLeft,
+	scrollToNote
 })
 </script>
 
