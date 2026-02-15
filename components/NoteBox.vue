@@ -9,11 +9,15 @@
 			'show-note': songStore.showNote
 		}"
 		@contextmenu="changeNoteType"
+		@touchstart="handleTouchStart"
+		@touchend="handleTouchEnd"
+		@touchcancel="handleTouchEnd"
+		@touchmove="handleTouchMove"
 	>
 		<div
 			v-if="!Array.isArray(note)"
 			class="w-full h-full"
-			@click="$emit('update:note', incrementNote(note))"
+			@click="handleMainNoteClick"
 		>
 			<div class="grid h-full w-full place-items-center">
 				<UIcon
@@ -29,7 +33,7 @@
 				:key="index"
 				:class="[`note${index}`, typeof actualNotePlaying === 'number' && index === actualNotePlaying ? '!border-red-600' : '']"
 				class="flex h-full w-full items-center justify-center"
-				@click="$emit('update:note', changeNoteIndex(index))"
+				@click="handleSubNoteClick(index)"
 			>
 				<UIcon
 					v-if="getIconName(instrumentIndex, subNote)"
@@ -42,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, type PropType, ref } from 'vue';
+import { computed, onBeforeUnmount, type PropType, ref } from 'vue';
 
 
 const props = defineProps({
@@ -109,8 +113,39 @@ let changeColor = (lightTime: number, note?: number) => {
 
 let emit = defineEmits(['update:note'])
 
-let changeNoteType = (self: Event) => {
-	self.preventDefault();
+const LONG_PRESS_MS = 450
+let longPressTimeout: ReturnType<typeof setTimeout> | null = null
+let longPressTriggered = ref(false)
+
+let clearLongPressTimeout = () => {
+	if (longPressTimeout) {
+		clearTimeout(longPressTimeout)
+		longPressTimeout = null
+	}
+}
+
+let handleMainNoteClick = () => {
+	if (longPressTriggered.value) {
+		longPressTriggered.value = false
+		return
+	}
+
+	if (!Array.isArray(props.note)) {
+		emit('update:note', incrementNote(props.note))
+	}
+}
+
+let handleSubNoteClick = (index: number) => {
+	if (longPressTriggered.value) {
+		longPressTriggered.value = false
+		return
+	}
+
+	emit('update:note', changeNoteIndex(index))
+}
+
+let changeNoteType = (self?: Event) => {
+	self?.preventDefault();
 
 	if (Array.isArray(props.note)) {
 		if (props.note.length < 4) {
@@ -124,6 +159,32 @@ let changeNoteType = (self: Event) => {
 		emit('update:note', [props.note, 0])
 	}
 }
+
+let handleTouchStart = () => {
+	longPressTriggered.value = false
+	clearLongPressTimeout()
+
+	longPressTimeout = setTimeout(() => {
+		longPressTriggered.value = true
+		changeNoteType()
+	}, LONG_PRESS_MS)
+}
+
+let handleTouchEnd = (event: TouchEvent) => {
+	clearLongPressTimeout()
+
+	if (longPressTriggered.value) {
+		event.preventDefault()
+	}
+}
+
+let handleTouchMove = () => {
+	clearLongPressTimeout()
+}
+
+onBeforeUnmount(() => {
+	clearLongPressTimeout()
+})
 
 
 let changeNoteIndex = (index: number) => {
@@ -258,5 +319,11 @@ defineExpose({
 
 .note.show-note {
 	--numberOfNote2: v-bind(numberOfNote2);
+}
+
+.note,
+.note * {
+	-webkit-user-select: none;
+	user-select: none;
 }
 </style>
