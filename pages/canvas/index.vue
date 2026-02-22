@@ -282,7 +282,7 @@
 				>
 					<h3>{{ instrument.alias }}</h3>
 					<div
-						v-for="(line, lineIndex) in getPrintableInstrumentLines(instrument.noteLines)"
+						v-for="(line, lineIndex) in getPrintableInstrumentLines(instrument.noteLines, block.repeats)"
 						:key="`${block.key}:${instrument.id}:line-${lineIndex}`"
 						class="print-line"
 						:style="{ gridTemplateColumns: `repeat(${line.length}, minmax(0, 1fr))` }"
@@ -358,7 +358,7 @@ const normalizedPrintBarsPerLine = computed(() => Math.max(1, Math.floor(Number(
 
 const printableArrangement = computed(() => {
 	const sectionById = new Map(songStore.sectionLibrary.map((section) => [section.id, section]))
-	const blocks: { key: string, title: string, section: Section }[] = []
+	const blocks: { key: string, title: string, section: Section, repeats: number }[] = []
 
 	for (const item of songStore.arrangement) {
 		const section = sectionById.get(item.sectionId)
@@ -367,13 +367,12 @@ const printableArrangement = computed(() => {
 		}
 
 		const repeats = Math.max(1, Math.floor(item.repeats || 1))
-		for (let repeatIndex = 0; repeatIndex < repeats; repeatIndex++) {
-			blocks.push({
-				key: `${item.id}:${repeatIndex}`,
-				title: repeats > 1 ? `${section.name} (${repeatIndex + 1}/${repeats})` : section.name,
-				section
-			})
-		}
+		blocks.push({
+			key: item.id,
+			title: section.name,
+			section,
+			repeats
+		})
 	}
 
 	if (blocks.length === 0) {
@@ -381,7 +380,8 @@ const printableArrangement = computed(() => {
 			blocks.push({
 				key: section.id,
 				title: section.name,
-				section
+				section,
+				repeats: 1
 			})
 		}
 	}
@@ -594,14 +594,23 @@ function splitInChunks<T>(items: T[], size: number): T[][] {
 	return chunks
 }
 
-function getPrintableInstrumentLines(noteLines: Note[][][]): Note[][][] {
-	const groups = noteLines.flatMap((line) => line.map((group) => [...group]))
+function getPrintableInstrumentLines(noteLines: Note[][][], repeats = 1): Note[][][] {
+	const baseGroups = noteLines.flatMap((line) => line.map((group) => [...group]))
+	const normalizedRepeats = Math.max(1, Math.floor(Number(repeats) || 1))
+	const groups: Note[][] = []
+
+	for (let repeatIndex = 0; repeatIndex < normalizedRepeats; repeatIndex++) {
+		for (const group of baseGroups) {
+			groups.push([...group])
+		}
+	}
+
 	return splitInChunks(groups, normalizedPrintBarsPerLine.value)
 }
 
 function getInstrumentSymbol(instrumentType: number, note: number): string {
 	const instrument = songStore.instruments[instrumentType]
-	const symbol = instrument?.possibleNotes[note]?.icon
+	const symbol = instrument?.possibleNotes[note]?.printSymbol
 
 	if (!symbol) {
 		return '·'
@@ -621,6 +630,19 @@ function formatPrintableNote(instrumentType: number, note: Note): string {
 async function printCompositionPdf() {
 	normalizePrintBarsPerLine()
 	await nextTick()
+
+	if (typeof window === 'undefined') {
+		return
+	}
+
+	const previousTitle = document.title
+	const printableTitle = (songStore.name || 'Partitura').trim() || 'Partitura'
+	const restoreTitle = () => {
+		document.title = previousTitle
+	}
+
+	document.title = printableTitle
+	window.addEventListener('afterprint', restoreTitle, { once: true })
 	window.print()
 }
 

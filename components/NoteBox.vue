@@ -83,21 +83,7 @@ let incrementNote = (note: number) => {
 let songStore = useSongStore()
 
 let getIconName = (index: number, note: number) => {
-	const icon = songStore.instruments[index].possibleNotes[note].icon
-
-	switch (icon) {
-		case 'x':
-			return 'i-lucide-x'
-		case '-':
-			return 'i-lucide-minus'
-		case 'o':
-		case 'O':
-			return 'i-lucide-circle'
-		case '*':
-			return 'i-lucide-cookie'
-		default:
-			return null
-	}
+	return songStore.instruments[index].possibleNotes[note].icon || null
 }
 
 let actualNotePlaying = ref<boolean | null | number>(null)
