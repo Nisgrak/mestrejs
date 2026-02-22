@@ -1,5 +1,6 @@
 <template>
 	<div class="overflow-x-clip">
+		<div class="screen-only">
 		<div class="sticky top-0 z-40 border-b border-default bg-white shadow-sm">
 			<div
 				class="flex w-full items-center bg-white px-2 py-2 md:justify-center md:gap-3 md:px-5"
@@ -134,6 +135,26 @@
 						placeholder="BPM"
 						type="number"
 					/>
+					<UInput
+						v-model.number="printBarsPerLine"
+						size="md"
+						:ui="{ base: 'h-9 text-center' }"
+						class="w-26"
+						placeholder="Comp/lin"
+						type="number"
+						min="1"
+						@blur="normalizePrintBarsPerLine"
+					/>
+					<UTooltip text="Imprimir composicion en PDF">
+						<UButton
+							size="md"
+							class="h-9"
+							icon="i-lucide-printer"
+							variant="outline"
+							@click="printCompositionPdf"
+							aria-label="Imprimir composicion en PDF"
+						/>
+					</UTooltip>
 				</div>
 			</div>
 		</div>
@@ -239,17 +260,61 @@
 				</div>
 			</template>
 		</UModal>
+		</div>
+
+		<div class="print-only print-sheet">
+			<header class="print-header">
+				<h1>{{ songStore.name || 'Partitura' }}</h1>
+				<p>BPM {{ songStore.bpm }} · {{ normalizedPrintBarsPerLine }} compases por linea</p>
+			</header>
+
+			<section
+				v-for="block in printableArrangement"
+				:key="block.key"
+				class="print-block"
+			>
+				<h2>{{ block.title }}</h2>
+
+				<article
+					v-for="instrument in block.section.instruments"
+					:key="`${block.key}:${instrument.id}`"
+					class="print-instrument"
+				>
+					<h3>{{ instrument.alias }}</h3>
+					<div
+						v-for="(line, lineIndex) in getPrintableInstrumentLines(instrument.noteLines)"
+						:key="`${block.key}:${instrument.id}:line-${lineIndex}`"
+						class="print-line"
+						:style="{ gridTemplateColumns: `repeat(${line.length}, minmax(0, 1fr))` }"
+					>
+						<div
+							v-for="(group, groupIndex) in line"
+							:key="`${block.key}:${instrument.id}:line-${lineIndex}:group-${groupIndex}`"
+							class="print-group"
+						>
+							<span
+								v-for="(note, noteIndex) in group"
+								:key="`${block.key}:${instrument.id}:line-${lineIndex}:group-${groupIndex}:note-${noteIndex}`"
+								class="print-note"
+							>
+								{{ formatPrintableNote(instrument.type, note) }}
+							</span>
+						</div>
+					</div>
+				</article>
+			</section>
+		</div>
 
 	</div>
 </template>
 
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useTemplateRefsList } from '@vueuse/core';
 import type { SongSection } from '#build/components';
 import { dragAndDrop } from '@formkit/drag-and-drop/vue';
-import type { Section } from '@/stores/songStore';
+import type { Note, Section } from '@/stores/songStore';
 import { buildCompositionFromLegacySong, normalizeCompositionData } from '@/utils/composition';
 import { createId } from '@/utils/id';
 
@@ -287,6 +352,42 @@ const shouldSyncNotesScroll = computed(() => isMobileViewport.value && effective
 const isMobileLandscape = computed(() => isMobileViewport.value && isLandscapeOrientation.value)
 const displaySections = computed(() => songStore.resolvedSections)
 const compositionRef = ref<HTMLElement | undefined>(undefined)
+const printBarsPerLine = ref(4)
+
+const normalizedPrintBarsPerLine = computed(() => Math.max(1, Math.floor(Number(printBarsPerLine.value) || 1)))
+
+const printableArrangement = computed(() => {
+	const sectionById = new Map(songStore.sectionLibrary.map((section) => [section.id, section]))
+	const blocks: { key: string, title: string, section: Section }[] = []
+
+	for (const item of songStore.arrangement) {
+		const section = sectionById.get(item.sectionId)
+		if (!section) {
+			continue
+		}
+
+		const repeats = Math.max(1, Math.floor(item.repeats || 1))
+		for (let repeatIndex = 0; repeatIndex < repeats; repeatIndex++) {
+			blocks.push({
+				key: `${item.id}:${repeatIndex}`,
+				title: repeats > 1 ? `${section.name} (${repeatIndex + 1}/${repeats})` : section.name,
+				section
+			})
+		}
+	}
+
+	if (blocks.length === 0) {
+		for (const section of songStore.sectionLibrary) {
+			blocks.push({
+				key: section.id,
+				title: section.name,
+				section
+			})
+		}
+	}
+
+	return blocks
+})
 
 const arrangementValues = computed({
 	get: () => songStore.arrangement,
@@ -476,6 +577,51 @@ function updateResponsiveMode() {
 
 	isMobileViewport.value = isSmallViewport || isTouchDevice
 	isLandscapeOrientation.value = window.matchMedia('(orientation: landscape)').matches
+}
+
+function normalizePrintBarsPerLine() {
+	printBarsPerLine.value = normalizedPrintBarsPerLine.value
+}
+
+function splitInChunks<T>(items: T[], size: number): T[][] {
+	const chunkSize = Math.max(1, Math.floor(size || 1))
+	const chunks: T[][] = []
+
+	for (let index = 0; index < items.length; index += chunkSize) {
+		chunks.push(items.slice(index, index + chunkSize))
+	}
+
+	return chunks
+}
+
+function getPrintableInstrumentLines(noteLines: Note[][][]): Note[][][] {
+	const groups = noteLines.flatMap((line) => line.map((group) => [...group]))
+	return splitInChunks(groups, normalizedPrintBarsPerLine.value)
+}
+
+function getInstrumentSymbol(instrumentType: number, note: number): string {
+	const instrument = songStore.instruments[instrumentType]
+	const symbol = instrument?.possibleNotes[note]?.icon
+
+	if (!symbol) {
+		return '·'
+	}
+
+	return symbol
+}
+
+function formatPrintableNote(instrumentType: number, note: Note): string {
+	if (Array.isArray(note)) {
+		return note.map((value) => getInstrumentSymbol(instrumentType, value)).join('/')
+	}
+
+	return getInstrumentSymbol(instrumentType, note)
+}
+
+async function printCompositionPdf() {
+	normalizePrintBarsPerLine()
+	await nextTick()
+	window.print()
 }
 
 let addSection = (instrumentIndex?: number) => {
@@ -761,4 +907,115 @@ onBeforeUnmount(() => {
 
 </script>
 
-<style></style>
+<style>
+.print-only {
+	display: none;
+}
+
+.print-sheet {
+	padding: 0;
+	color: #111;
+	font-family: 'Times New Roman', Times, serif;
+	max-width: 100%;
+}
+
+.print-header {
+	margin-bottom: 14px;
+	padding: 0 0 10px;
+	border-bottom: 3px double #111;
+}
+
+.print-header h1 {
+	margin: 0;
+	font-size: 24px;
+	font-weight: 700;
+}
+
+.print-header p {
+	margin: 6px 0 0;
+	font-size: 13px;
+}
+
+.print-block {
+	margin-top: 16px;
+	break-inside: avoid;
+	padding-top: 6px;
+	border-top: 1px solid #d8d8d8;
+}
+
+.print-block h2 {
+	margin: 0 0 10px;
+	font-size: 16px;
+	font-weight: 700;
+}
+
+.print-instrument {
+	margin-bottom: 12px;
+	break-inside: avoid;
+}
+
+.print-instrument h3 {
+	margin: 0 0 5px;
+	font-size: 14px;
+	font-weight: 700;
+}
+
+.print-line {
+	display: grid;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.print-group {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(16px, 1fr));
+	gap: 0;
+	padding: 0;
+	border: 1px solid #111;
+	min-height: 30px;
+	background: #fff;
+}
+
+.print-note {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1;
+	padding: 4px 2px;
+	border-right: 1px solid #d2d2d2;
+}
+
+.print-note:last-child {
+	border-right: 0;
+}
+
+@media print {
+	@page {
+		size: A4 portrait;
+		margin: 10mm;
+	}
+
+	body {
+		background: #fff;
+	}
+
+	main {
+		padding: 0 !important;
+	}
+
+	.screen-only {
+		display: none !important;
+	}
+
+	.print-only {
+		display: block !important;
+	}
+
+	.print-sheet {
+		padding: 8mm;
+		box-sizing: border-box;
+	}
+}
+</style>

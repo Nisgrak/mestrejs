@@ -1,6 +1,6 @@
 <template>
 	<div class="min-h-screen bg-white text-slate-900">
-		<header class="sticky top-0 z-40 border-b border-black/10 bg-[var(--ui-primary)] text-white backdrop-blur">
+		<header class="no-print sticky top-0 z-40 border-b border-black/10 bg-[var(--ui-primary)] text-white backdrop-blur">
 			<div class="flex w-full items-center justify-between gap-3 px-2 py-2 md:px-3">
 				<button class="flex cursor-pointer items-center gap-2 leading-none" @click="navigateTo({ name: 'Canvas' })">
 					<img src="/logo-mestrejs.svg" height="42" width="42" alt="MestreJS Logo" loading="eager" />
@@ -32,11 +32,12 @@
 			<slot />
 		</main>
 
-		<div v-show="route.name !== 'Contact'" class="fixed bottom-5 left-5 z-50">
+		<div v-show="route.name !== 'Contact'" class="no-print fixed bottom-5 left-5 z-50">
 			<UTooltip text="Contacto">
 				<UButton color="primary" variant="solid" square icon="i-lucide-circle-help" aria-label="Contacto" :to="{ name: 'Contact' }" />
 			</UTooltip>
 		</div>
+
 	</div>
 </template>
 
@@ -50,3 +51,11 @@ const logout = async () => {
 	songStore.user = undefined
 }
 </script>
+
+<style>
+@media print {
+	.no-print {
+		display: none !important;
+	}
+}
+</style>
