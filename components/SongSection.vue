@@ -52,25 +52,6 @@
 							{{ section.beat.name }}
 						</UButton>
 					</UDropdownMenu>
-					<UTooltip text="Duplicar seccion">
-						<UButton
-							class="h-9 px-2"
-							icon="i-lucide-copy"
-							variant="ghost"
-							@click="emit('duplicate')"
-							aria-label="Duplicar seccion"
-						/>
-					</UTooltip>
-					<UTooltip text="Borrar seccion">
-						<UButton
-							class="h-9 px-2"
-							icon="i-lucide-trash-2"
-							variant="ghost"
-							color="error"
-							@click="askDelete"
-							aria-label="Borrar seccion"
-						/>
-					</UTooltip>
 				</div>
 			</div>
 			<div class="flex-grow" />
@@ -110,29 +91,6 @@
 							color="primary"
 							@click="confirmBeatChange"
 						>Cambiar</UButton>
-					</div>
-				</div>
-			</template>
-		</UModal>
-
-		<UModal
-			v-model:open="showDeleteSectionModal"
-			title="Borrar seccion"
-			description="Esta accion eliminara la seccion completa."
-		>
-			<template #body>
-				<div class="grid gap-3">
-					<p>¿Estás seguro que quieres eliminar esta seccion?</p>
-					<div class="flex justify-end gap-2">
-						<UButton
-							color="neutral"
-							variant="ghost"
-							@click="showDeleteSectionModal = false"
-						>Cancelar</UButton>
-						<UButton
-							color="error"
-							@click="confirmDeleteSection"
-						>Borrar</UButton>
 					</div>
 				</div>
 			</template>
@@ -186,7 +144,6 @@ let playing = ref(false)
 const instrumentsRefs = useTemplateRefsList<InstanceType<typeof InstrumentRow>>()
 const toast = useToast()
 const showConfirmBeatModal = ref(false)
-const showDeleteSectionModal = ref(false)
 const showSelectInstrumentModal = ref(false)
 const pendingBeat = ref<Beat | null>(null)
 const beatMenuItems = computed(() =>
@@ -211,10 +168,6 @@ let changeBeat = async (newBeat: Beat) => {
 
 	pendingBeat.value = newBeat
 	showConfirmBeatModal.value = true
-}
-
-let askDelete = () => {
-	showDeleteSectionModal.value = true
 }
 
 let getMaxNote = () => {
@@ -367,11 +320,6 @@ function confirmAddInstrument(index: number) {
 	showSelectInstrumentModal.value = false
 }
 
-function confirmDeleteSection() {
-	showDeleteSectionModal.value = false
-	emit('remove')
-}
-
 function cancelBeatChange() {
 	showConfirmBeatModal.value = false
 	pendingBeat.value = null
@@ -447,7 +395,7 @@ let instruments = computed({
 	set: (value) => emit('update:section', Object.assign(props.section, { instruments: value }))
 })
 
-let emit = defineEmits(['update:section', 'remove', 'duplicate'])
+let emit = defineEmits(['update:section'])
 
 let parentRef = ref<HTMLElement | undefined>(undefined)
 

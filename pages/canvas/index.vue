@@ -10,6 +10,19 @@
 					class="flex items-center md:w-auto md:flex-nowrap"
 					:class="isMobileLandscape ? 'w-auto shrink-0 flex-nowrap gap-1' : 'w-full flex-wrap gap-2'"
 				>
+					<UTooltip v-if="isMobileLandscape" :text="mobileSidePanelOpen ? 'Cerrar panel lateral' : 'Abrir panel lateral'">
+						<UButton
+							:color="mobileSidePanelOpen ? 'primary' : 'neutral'"
+							size="md"
+							class="h-9"
+							:variant="mobileSidePanelOpen ? 'solid' : 'outline'"
+							icon="i-lucide-panel-left"
+							@click="toggleMobileSidePanel"
+							:aria-label="mobileSidePanelOpen ? 'Cerrar panel lateral' : 'Abrir panel lateral'"
+						>
+							Panel
+						</UButton>
+					</UTooltip>
 					<UTooltip :text="playing ? 'Pausar reproduccion' : 'Reproducir cancion'">
 						<UButton
 							color="primary"
@@ -61,27 +74,6 @@
 					</UTooltip>
 
 					<div class="flex h-9 items-center rounded-md border border-default">
-						<UTooltip text="Anadir seccion">
-							<UButton
-								size="md"
-								class="h-9"
-								icon="i-lucide-folder-plus"
-								variant="ghost"
-								@click="addSection()"
-								aria-label="Anadir seccion"
-							/>
-						</UTooltip>
-						<UTooltip text="Componer seccion existente">
-							<UButton
-								size="md"
-								class="h-9"
-								icon="i-lucide-list-plus"
-								variant="ghost"
-								@click="appendSelectedSectionToArrangement"
-								:disabled="songStore.sectionLibrary.length === 0"
-								aria-label="Componer seccion existente"
-							/>
-						</UTooltip>
 						<UTooltip text="Guardar cancion">
 							<UButton
 								size="md"
@@ -112,6 +104,16 @@
 								aria-label="Insertar cancion"
 							/>
 						</UTooltip>
+						<UTooltip text="Imprimir composicion en PDF">
+							<UButton
+								size="md"
+								class="h-9"
+								icon="i-lucide-printer"
+								variant="ghost"
+								@click="printCompositionPdf"
+								aria-label="Imprimir composicion en PDF"
+							/>
+						</UTooltip>
 					</div>
 
 				</div>
@@ -135,50 +137,209 @@
 						placeholder="BPM"
 						type="number"
 					/>
-					<UInput
-						v-model.number="printBarsPerLine"
-						size="md"
-						:ui="{ base: 'h-9 text-center' }"
-						class="w-26"
-						placeholder="Comp/lin"
-						type="number"
-						min="1"
-						@blur="normalizePrintBarsPerLine"
-					/>
-					<UTooltip text="Imprimir composicion en PDF">
-						<UButton
-							size="md"
-							class="h-9"
-							icon="i-lucide-printer"
-							variant="outline"
-							@click="printCompositionPdf"
-							aria-label="Imprimir composicion en PDF"
-						/>
-					</UTooltip>
+				</div>
+			</div>
+			<div v-if="isMobileViewport && !isMobileLandscape" class="border-t border-default bg-white px-2 py-2">
+				<div class="grid grid-cols-3 gap-2">
+					<UButton
+						:variant="mobileActivePanel === 'library' ? 'solid' : 'outline'"
+						:color="mobileActivePanel === 'library' ? 'primary' : 'neutral'"
+						size="sm"
+						@click="mobileActivePanel = 'library'"
+					>
+						<span class="inline-flex items-center gap-1">
+							<span>Biblioteca</span>
+							<UBadge size="xs" variant="soft" color="neutral">{{ songStore.sectionLibrary.length }}</UBadge>
+						</span>
+					</UButton>
+					<UButton
+						:variant="mobileActivePanel === 'composition' ? 'solid' : 'outline'"
+						:color="mobileActivePanel === 'composition' ? 'primary' : 'neutral'"
+						size="sm"
+						@click="mobileActivePanel = 'composition'"
+					>
+						<span class="inline-flex items-center gap-1">
+							<span>Compositor</span>
+							<UBadge size="xs" variant="soft" color="neutral">{{ songStore.arrangement.length }}</UBadge>
+						</span>
+					</UButton>
+					<UButton
+						:variant="mobileActivePanel === 'editor' ? 'solid' : 'outline'"
+						:color="mobileActivePanel === 'editor' ? 'primary' : 'neutral'"
+						size="sm"
+						@click="mobileActivePanel = 'editor'"
+					>
+						<span class="inline-flex items-center gap-1">
+							<span>Editor</span>
+							<UBadge size="xs" variant="soft" color="neutral">{{ selectedSectionInstrumentsCount }}</UBadge>
+						</span>
+					</UButton>
 				</div>
 			</div>
 		</div>
+
+		<div
+			v-if="isMobileLandscape && mobileSidePanelOpen"
+			class="fixed inset-0 z-40 bg-black/30"
+			@click="mobileSidePanelOpen = false"
+		/>
 
 		<div
 			data-notes-scroll-root
 			:class="effectiveHorizontalView ? 'w-full md:overflow-x-auto' : 'w-full'"
 		>
 			<div class="mt-3 grid w-full gap-4 p-5 md:grid-cols-[320px_minmax(0,1fr)] md:p-8">
-				<aside class="rounded-lg border border-default bg-white p-4">
-					<h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-600">Composicion</h3>
-					<div class="mb-3 grid gap-2">
-						<select
-							v-model="composeSectionId"
-							class="rounded-md border border-default bg-white px-3 py-2 text-sm"
-						>
-							<option v-for="section in songStore.sectionLibrary" :key="section.id" :value="section.id">
-								{{ section.name }}
-							</option>
-						</select>
-						<div class="flex gap-2">
-							<UInput v-model.number="composeRepeats" type="number" min="1" class="w-24" />
-							<UButton color="primary" class="flex-1" @click="appendSelectedSectionToArrangement">Anadir bloque</UButton>
+				<aside
+					v-show="!isMobileViewport || isMobileLandscape || mobileActivePanel !== 'editor'"
+					class="rounded-lg border border-default bg-white p-4"
+					:class="isMobileLandscape
+						? [
+							'fixed inset-y-0 left-0 z-50 w-[20rem] overflow-y-auto rounded-none border-y-0 border-l-0 shadow-xl transition-transform duration-200',
+							mobileSidePanelOpen ? 'translate-x-0' : '-translate-x-full'
+						]
+						: ''"
+				>
+					<div v-if="isMobileLandscape" class="sticky top-0 z-10 -mx-4 mb-4 border-b border-default bg-white px-4 py-2">
+						<div class="flex items-center gap-2">
+							<UButton
+								:variant="mobileSidePanelTab === 'library' ? 'solid' : 'outline'"
+								:color="mobileSidePanelTab === 'library' ? 'primary' : 'neutral'"
+								size="sm"
+								class="flex-1"
+								@click="mobileSidePanelTab = 'library'"
+							>
+								<span class="inline-flex items-center gap-1">
+									<span>Biblioteca</span>
+									<UBadge size="xs" variant="soft" color="neutral">{{ songStore.sectionLibrary.length }}</UBadge>
+								</span>
+							</UButton>
+							<UButton
+								:variant="mobileSidePanelTab === 'composition' ? 'solid' : 'outline'"
+								:color="mobileSidePanelTab === 'composition' ? 'primary' : 'neutral'"
+								size="sm"
+								class="flex-1"
+								@click="mobileSidePanelTab = 'composition'"
+							>
+								<span class="inline-flex items-center gap-1">
+									<span>Compositor</span>
+									<UBadge size="xs" variant="soft" color="neutral">{{ songStore.arrangement.length }}</UBadge>
+								</span>
+							</UButton>
 						</div>
+					</div>
+					<div v-show="!isMobileViewport || activeSidebarPanel === 'library'" class="mb-4">
+						<div class="mb-3 flex items-center justify-between gap-2">
+							<h3 class="text-sm font-semibold uppercase tracking-wide text-gray-600">Biblioteca de secciones</h3>
+							<div class="flex items-center gap-2">
+								<UBadge color="neutral" variant="subtle">{{ songStore.sectionLibrary.length }}</UBadge>
+								<UTooltip text="Anadir seccion">
+									<UButton
+										size="xs"
+										variant="outline"
+										icon="i-lucide-folder-plus"
+										aria-label="Anadir seccion"
+										@click="addSection()"
+									/>
+								</UTooltip>
+							</div>
+						</div>
+
+						<div ref="sectionLibraryRef" class="grid gap-2">
+							<div
+								v-for="(section, index) in songStore.sectionLibrary"
+								:key="section.id"
+								class="rounded-md border p-2 transition-colors"
+								:class="selectedSectionId === section.id ? 'border-primary bg-primary-50' : 'border-default bg-white hover:bg-slate-50'"
+							>
+								<div class="mb-2 flex items-center gap-2">
+									<UTooltip text="Reordenar seccion">
+										<span
+											class="section-library-handle inline-flex h-8 w-8 cursor-grab items-center justify-center rounded-md border border-default text-gray-500"
+											aria-label="Reordenar seccion"
+											@click.stop
+										>
+											<UIcon name="i-lucide-grip-vertical" class="h-4 w-4" />
+										</span>
+									</UTooltip>
+									<button
+										type="button"
+										class="flex min-w-0 flex-1 items-center justify-between gap-2 text-left"
+										@click="selectSectionFromLibrary(section.id)"
+									>
+										<p class="truncate text-sm font-medium">{{ section.name }}</p>
+										<UBadge color="neutral" variant="soft" size="xs">{{ getSectionUsageLabel(section.id) }}</UBadge>
+									</button>
+								</div>
+								<div class="flex items-center gap-1">
+									<UButton
+										size="xs"
+										variant="ghost"
+										icon="i-lucide-list-plus"
+										aria-label="Anadir bloque"
+										@click="appendSectionToArrangementFromLibrary(section.id, 1)"
+									/>
+									<UButton
+										size="xs"
+										variant="ghost"
+										icon="i-lucide-copy"
+										aria-label="Duplicar seccion"
+										@click="duplicateLibrarySection(index)"
+									/>
+									<UTooltip :text="canRemoveSection(section.id) ? 'Borrar seccion' : getRemoveBlockedMessage(section.id)">
+										<UButton
+											size="xs"
+											variant="ghost"
+											color="error"
+											icon="i-lucide-trash-2"
+											aria-label="Borrar seccion"
+											:disabled="!canRemoveSection(section.id)"
+											@click="removeLibrarySection(index)"
+										/>
+									</UTooltip>
+								</div>
+							</div>
+							<p v-if="songStore.sectionLibrary.length === 0" class="rounded-md border border-dashed border-default p-3 text-sm text-gray-500">
+								No hay secciones. Usa el boton de anadir para crear la primera.
+							</p>
+						</div>
+					</div>
+
+					<div v-if="!isMobileViewport" class="h-px bg-default" />
+
+					<div v-show="!isMobileViewport || activeSidebarPanel === 'composition'" :class="isMobileViewport ? '' : 'mt-4'">
+						<h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-600">Composicion</h3>
+						<div class="mb-3 grid gap-2">
+						<USelectMenu
+							v-model="composeSectionId"
+							:items="composeSectionOptions"
+							value-key="value"
+							label-key="label"
+							placeholder="Selecciona una seccion"
+							searchable
+							:disabled="songStore.sectionLibrary.length === 0"
+						/>
+						<div class="flex gap-2">
+							<UInput
+								v-model.number="composeRepeats"
+								type="number"
+								min="1"
+								class="w-30"
+								icon="i-lucide-repeat-2"
+								placeholder="Reps"
+								aria-label="Repeticiones del bloque"
+							/>
+							<UButton
+								color="primary"
+								class="flex-1"
+								:disabled="songStore.sectionLibrary.length === 0"
+								@click="appendSelectedSectionToArrangement"
+							>
+								Anadir bloque
+							</UButton>
+						</div>
+						<p v-if="songStore.sectionLibrary.length === 0" class="text-xs text-gray-500">
+							Crea secciones en la biblioteca para poder componer.
+						</p>
 					</div>
 					<div ref="compositionRef" class="grid gap-2">
 						<div
@@ -189,39 +350,50 @@
 							:data-arrangement-id="item.id"
 							@click="selectArrangementItem(item.id)"
 						>
-							<UButton
-								class="arrangement-handle cursor-grab"
-								icon="i-lucide-grip-vertical"
-								variant="ghost"
-								color="neutral"
-								aria-label="Mover bloque"
-							/>
-							<select
-								v-model="item.sectionId"
-								class="min-w-40 rounded-md border border-default bg-white px-3 py-2 text-sm"
+							<UTooltip text="Mover bloque">
+								<span
+									class="arrangement-handle inline-flex h-8 w-8 cursor-grab items-center justify-center rounded-md border border-default text-gray-500"
+									aria-label="Mover bloque"
+									@click.stop
+								>
+									<UIcon name="i-lucide-grip-vertical" class="h-4 w-4" />
+								</span>
+							</UTooltip>
+							<USelectMenu
+								:model-value="item.sectionId"
+								:items="arrangementSectionOptions"
+								value-key="value"
+								label-key="label"
+								class="min-w-40"
+								searchable
 								@click.stop
-								@change="handleArrangementSectionChange(index)"
-							>
-								<option v-for="section in songStore.sectionLibrary" :key="section.id" :value="section.id">
-									{{ section.name }}
-								</option>
-							</select>
+								@update:model-value="setArrangementSection(index, $event)"
+							/>
 							<UInput
 								v-model.number="item.repeats"
 								type="number"
 								min="1"
-								class="w-22"
+								class="w-30"
+								icon="i-lucide-repeat-2"
+								placeholder="Reps"
+								aria-label="Repeticiones del bloque"
 								@click.stop
 								@update:model-value="normalizeRepeats(index)"
 							/>
 							<UButton icon="i-lucide-copy" variant="ghost" color="neutral" @click.stop="duplicateArrangementItem(index)" aria-label="Duplicar bloque" />
 							<UButton icon="i-lucide-trash-2" variant="ghost" color="error" @click.stop="removeArrangementItem(index)" aria-label="Borrar bloque" />
 						</div>
+						<p v-if="songStore.arrangement.length === 0" class="rounded-md border border-dashed border-default p-3 text-sm text-gray-500">
+							No hay bloques en la composicion.
+						</p>
+					</div>
 					</div>
 				</aside>
 
-				<div class="rounded-lg border border-default bg-white p-4">
-					<h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-600">Editor integrado</h3>
+				<div v-show="!isMobileViewport || isMobileLandscape || mobileActivePanel === 'editor'" class="md:min-w-0">
+					<p v-if="!selectedSection" class="rounded-lg border border-dashed border-default bg-white p-4 text-sm text-gray-500">
+						Selecciona una seccion de la biblioteca para empezar a editar.
+					</p>
 					<SongSection
 						v-for="(section, index) in songStore.sectionLibrary"
 						:key="section.id"
@@ -231,8 +403,6 @@
 						:horizontal-view="effectiveHorizontalView"
 						:sync-notes-scroll="shouldSyncNotesScroll"
 						@update:section="updateLibrarySection(index, $event)"
-						@remove="removeLibrarySection(index)"
-						@duplicate="duplicateLibrarySection(index)"
 					/>
 				</div>
 			</div>
@@ -265,7 +435,7 @@
 		<div class="print-only print-sheet">
 			<header class="print-header">
 				<h1>{{ songStore.name || 'Partitura' }}</h1>
-				<p>BPM {{ songStore.bpm }} · {{ normalizedPrintBarsPerLine }} compases por linea</p>
+				<p>BPM {{ songStore.bpm }} · {{ PRINT_BARS_PER_LINE }} compases por linea</p>
 			</header>
 
 			<section
@@ -318,6 +488,9 @@ import type { Note, Section } from '@/stores/songStore';
 import { buildCompositionFromLegacySong, normalizeCompositionData } from '@/utils/composition';
 import { createId } from '@/utils/id';
 
+type MobilePanel = 'library' | 'composition' | 'editor'
+type MobileSidebarPanel = 'library' | 'composition'
+
 definePageMeta({
 	name: "Canvas"
 })
@@ -334,6 +507,9 @@ const composeSectionId = ref('')
 const composeRepeats = ref(1)
 const isMobileViewport = ref(false)
 const isLandscapeOrientation = ref(false)
+const mobileActivePanel = ref<MobilePanel>('library')
+const mobileSidePanelOpen = ref(false)
+const mobileSidePanelTab = ref<MobileSidebarPanel>('library')
 const selectedSectionId = ref('')
 const selectedArrangementItemId = ref('')
 const activeArrangementItemId = ref('')
@@ -350,11 +526,17 @@ const effectiveHorizontalView = computed(() => {
 
 const shouldSyncNotesScroll = computed(() => isMobileViewport.value && effectiveHorizontalView.value)
 const isMobileLandscape = computed(() => isMobileViewport.value && isLandscapeOrientation.value)
+const activeSidebarPanel = computed<MobileSidebarPanel>(() => {
+	if (isMobileLandscape.value) {
+		return mobileSidePanelTab.value
+	}
+
+	return mobileActivePanel.value === 'composition' ? 'composition' : 'library'
+})
 const displaySections = computed(() => songStore.resolvedSections)
 const compositionRef = ref<HTMLElement | undefined>(undefined)
-const printBarsPerLine = ref(4)
-
-const normalizedPrintBarsPerLine = computed(() => Math.max(1, Math.floor(Number(printBarsPerLine.value) || 1)))
+const sectionLibraryRef = ref<HTMLElement | undefined>(undefined)
+const PRINT_BARS_PER_LINE = 4
 
 const printableArrangement = computed(() => {
 	const sectionById = new Map(songStore.sectionLibrary.map((section) => [section.id, section]))
@@ -389,10 +571,63 @@ const printableArrangement = computed(() => {
 	return blocks
 })
 
+const sectionUsageCountById = computed(() => {
+	const counter: Record<string, number> = {}
+
+	for (const arrangementItem of songStore.arrangement) {
+		counter[arrangementItem.sectionId] = (counter[arrangementItem.sectionId] || 0) + 1
+	}
+
+	return counter
+})
+
+const composeSectionOptions = computed(() => {
+	return songStore.sectionLibrary.map((section) => {
+		const usage = sectionUsageCountById.value[section.id] || 0
+		const usageLabel = usage === 1 ? '1 bloque' : `${usage} bloques`
+
+		return {
+			value: section.id,
+			label: `${section.name} · ${usageLabel}`
+		}
+	})
+})
+
+const arrangementSectionOptions = computed(() => {
+	return songStore.sectionLibrary.map((section) => ({
+		value: section.id,
+		label: section.name
+	}))
+})
+
+const selectedSectionIndex = computed(() => {
+	return songStore.sectionLibrary.findIndex((section) => section.id === selectedSectionId.value)
+})
+
+const selectedSection = computed(() => {
+	if (selectedSectionIndex.value < 0) {
+		return null
+	}
+
+	return songStore.sectionLibrary[selectedSectionIndex.value] || null
+})
+
+const selectedSectionInstrumentsCount = computed(() => {
+	return selectedSection.value?.instruments.length || 0
+})
+
 const arrangementValues = computed({
 	get: () => songStore.arrangement,
 	set: (value) => {
 		songStore.arrangement = value
+		syncLegacySongSnapshot()
+	}
+})
+
+const sectionLibraryValues = computed({
+	get: () => songStore.sectionLibrary,
+	set: (value) => {
+		songStore.sectionLibrary = value
 		syncLegacySongSnapshot()
 	}
 })
@@ -424,7 +659,7 @@ function duplicateArrangementItem(index: number) {
 		repeats: source.repeats
 	})
 	selectedArrangementItemId.value = duplicatedId
-	selectedSectionId.value = source.sectionId
+	selectSection(source.sectionId)
 
 	syncLegacySongSnapshot()
 }
@@ -440,7 +675,13 @@ function removeArrangementItem(index: number) {
 	if (selectedArrangementItemId.value === removing.id) {
 		const fallback = songStore.arrangement[index] || songStore.arrangement[index - 1]
 		selectedArrangementItemId.value = fallback?.id || ''
-		selectedSectionId.value = fallback?.sectionId || songStore.sectionLibrary[0]?.id || ''
+		const fallbackSectionId = fallback?.sectionId || songStore.sectionLibrary[0]?.id || ''
+		if (fallbackSectionId) {
+			selectSection(fallbackSectionId)
+		} else {
+			selectedSectionId.value = ''
+			composeSectionId.value = ''
+		}
 	}
 
 	syncLegacySongSnapshot()
@@ -452,11 +693,27 @@ function removeLibrarySection(index: number) {
 		return
 	}
 
+	const usage = sectionUsageCountById.value[section.id] || 0
+	if (usage > 0) {
+		const blocksLabel = usage === 1 ? '1 bloque' : `${usage} bloques`
+		toast.add({
+			title: `No puedes borrar esta seccion: aun tiene ${blocksLabel} en composicion`,
+			color: 'warning'
+		})
+		return
+	}
+
 	songStore.arrangement = songStore.arrangement.filter((item) => item.sectionId !== section.id)
 	songStore.sectionLibrary.splice(index, 1)
 
 	if (selectedSectionId.value === section.id) {
-		selectedSectionId.value = songStore.sectionLibrary[0]?.id || ''
+		const nextSectionId = songStore.sectionLibrary[0]?.id || ''
+		if (nextSectionId) {
+			selectSection(nextSectionId)
+		} else {
+			selectedSectionId.value = ''
+			composeSectionId.value = ''
+		}
 	}
 
 	const selectedExists = songStore.arrangement.some((item) => item.id === selectedArrangementItemId.value)
@@ -464,11 +721,30 @@ function removeLibrarySection(index: number) {
 		selectedArrangementItemId.value = songStore.arrangement[0]?.id || ''
 	}
 
-	if (!songStore.arrangement.some((item) => item.sectionId === selectedSectionId.value)) {
+	if (selectedSectionId.value && !songStore.sectionLibrary.some((item) => item.id === selectedSectionId.value)) {
 		initializeSelectionState()
 	}
 
 	syncLegacySongSnapshot()
+}
+
+function canRemoveSection(sectionId: string) {
+	return (sectionUsageCountById.value[sectionId] || 0) === 0
+}
+
+function getSectionUsageLabel(sectionId: string) {
+	const usage = sectionUsageCountById.value[sectionId] || 0
+	return usage === 1 ? '1 bloque' : `${usage} bloques`
+}
+
+function getRemoveBlockedMessage(sectionId: string) {
+	const usage = sectionUsageCountById.value[sectionId] || 0
+	if (usage === 0) {
+		return ''
+	}
+
+	const blocksLabel = usage === 1 ? '1 bloque' : `${usage} bloques`
+	return `No se puede borrar: aun tiene ${blocksLabel} en composicion`
 }
 
 function updateLibrarySection(index: number, updatedSection: Section) {
@@ -494,8 +770,9 @@ function duplicateLibrarySection(index: number) {
 	deepCopy.id = createId()
 	deepCopy.name = `${source.name} copia`
 	songStore.sectionLibrary.splice(index + 1, 0, deepCopy)
-	selectedSectionId.value = deepCopy.id
-	appendSectionToArrangement(deepCopy.id, 1)
+	selectSection(deepCopy.id)
+	setMobilePanel('editor')
+	syncLegacySongSnapshot()
 }
 
 function appendSectionToArrangement(sectionId: string, repeats = 1) {
@@ -506,27 +783,46 @@ function appendSectionToArrangement(sectionId: string, repeats = 1) {
 		repeats: Math.max(1, Math.floor(repeats || 1))
 	})
 	selectedArrangementItemId.value = itemId
-	selectedSectionId.value = sectionId
+	selectSection(sectionId)
 	activeArrangementItemId.value = ''
 	syncLegacySongSnapshot()
 }
 
+function appendSectionToArrangementFromLibrary(sectionId: string, repeats = 1) {
+	appendSectionToArrangement(sectionId, repeats)
+	if (isMobileLandscape.value) {
+		mobileSidePanelTab.value = 'composition'
+		mobileSidePanelOpen.value = true
+		return
+	}
+
+	setMobilePanel('composition')
+}
+
 function appendSelectedSectionToArrangement() {
-	const sectionId = composeSectionId.value || selectedSectionId.value || songStore.sectionLibrary[0]?.id
+	const sectionId = resolveSectionId(composeSectionId.value) || selectedSectionId.value || songStore.sectionLibrary[0]?.id
 	if (!sectionId) {
 		return
 	}
 
 	appendSectionToArrangement(sectionId, composeRepeats.value)
+	setMobilePanel('composition')
 }
 
 function selectArrangementItem(itemId: string) {
 	selectedArrangementItemId.value = itemId
 	const item = songStore.arrangement.find((entry) => entry.id === itemId)
 	if (item) {
-		selectedSectionId.value = item.sectionId
-		composeSectionId.value = item.sectionId
+		selectSection(item.sectionId)
+		mobileSidePanelOpen.value = false
+		setMobilePanel('editor')
 	}
+}
+
+function selectSectionFromLibrary(sectionId: string) {
+	selectSection(sectionId)
+	mobileSidePanelOpen.value = false
+	setMobilePanel('editor')
 }
 
 function handleArrangementSectionChange(index: number) {
@@ -537,9 +833,70 @@ function handleArrangementSectionChange(index: number) {
 	}
 
 	selectedArrangementItemId.value = arrangementItem.id
+	selectSection(sectionId)
+	mobileSidePanelOpen.value = false
+	setMobilePanel('editor')
+	syncLegacySongSnapshot()
+}
+
+function selectSection(sectionId: string) {
+	if (!sectionId) {
+		return
+	}
+
 	selectedSectionId.value = sectionId
 	composeSectionId.value = sectionId
-	syncLegacySongSnapshot()
+}
+
+function setArrangementSection(index: number, sectionIdValue: unknown) {
+	const sectionId = resolveSectionId(sectionIdValue)
+	const arrangementItem = songStore.arrangement[index]
+	if (!arrangementItem || !sectionId) {
+		return
+	}
+
+	arrangementItem.sectionId = sectionId
+	handleArrangementSectionChange(index)
+}
+
+function resolveSectionId(value: unknown): string {
+	if (typeof value === 'string') {
+		return value
+	}
+
+	if (value && typeof value === 'object' && 'value' in value) {
+		const nestedValue = (value as { value?: unknown }).value
+		return typeof nestedValue === 'string' ? nestedValue : ''
+	}
+
+	return ''
+}
+
+function setMobilePanel(panel: MobilePanel) {
+	if (!isMobileViewport.value) {
+		return
+	}
+
+	if (isMobileLandscape.value) {
+		if (panel === 'editor') {
+			mobileSidePanelOpen.value = false
+			return
+		}
+
+		mobileSidePanelOpen.value = true
+		mobileSidePanelTab.value = panel === 'library' ? 'library' : 'composition'
+		return
+	}
+
+	mobileActivePanel.value = panel
+}
+
+function toggleMobileSidePanel() {
+	if (!isMobileLandscape.value) {
+		return
+	}
+
+	mobileSidePanelOpen.value = !mobileSidePanelOpen.value
 }
 
 function focusActiveArrangementItem(itemId: string) {
@@ -556,15 +913,22 @@ function initializeSelectionState() {
 	const firstArrangement = songStore.arrangement[0]
 	if (firstArrangement) {
 		selectedArrangementItemId.value = firstArrangement.id
-		selectedSectionId.value = firstArrangement.sectionId
-		composeSectionId.value = firstArrangement.sectionId
+		selectSection(firstArrangement.sectionId)
+		setMobilePanel('editor')
 		return
 	}
 
 	const firstSection = songStore.sectionLibrary[0]
 	selectedArrangementItemId.value = ''
-	selectedSectionId.value = firstSection?.id || ''
-	composeSectionId.value = firstSection?.id || ''
+	if (firstSection?.id) {
+		selectSection(firstSection.id)
+		setMobilePanel('library')
+		return
+	}
+
+	selectedSectionId.value = ''
+	composeSectionId.value = ''
+	setMobilePanel('library')
 }
 
 function updateResponsiveMode() {
@@ -577,10 +941,14 @@ function updateResponsiveMode() {
 
 	isMobileViewport.value = isSmallViewport || isTouchDevice
 	isLandscapeOrientation.value = window.matchMedia('(orientation: landscape)').matches
-}
 
-function normalizePrintBarsPerLine() {
-	printBarsPerLine.value = normalizedPrintBarsPerLine.value
+	if (isMobileLandscape.value) {
+		mobileActivePanel.value = 'editor'
+	}
+
+	if (!isMobileLandscape.value) {
+		mobileSidePanelOpen.value = false
+	}
 }
 
 function splitInChunks<T>(items: T[], size: number): T[][] {
@@ -605,7 +973,7 @@ function getPrintableInstrumentLines(noteLines: Note[][][], repeats = 1): Note[]
 		}
 	}
 
-	return splitInChunks(groups, normalizedPrintBarsPerLine.value)
+	return splitInChunks(groups, PRINT_BARS_PER_LINE)
 }
 
 function getInstrumentSymbol(instrumentType: number, note: number): string {
@@ -628,7 +996,6 @@ function formatPrintableNote(instrumentType: number, note: Note): string {
 }
 
 async function printCompositionPdf() {
-	normalizePrintBarsPerLine()
 	await nextTick()
 
 	if (typeof window === 'undefined') {
@@ -674,8 +1041,9 @@ let addSection = (instrumentIndex?: number) => {
 	}
 
 	songStore.sectionLibrary.push(section)
-	composeSectionId.value = section.id
-	appendSectionToArrangement(section.id, 1)
+	selectSection(section.id)
+	setMobilePanel('editor')
+	syncLegacySongSnapshot()
 
 }
 
@@ -719,9 +1087,8 @@ let play = () => {
 		for (let repeatIndex = 0; repeatIndex < repeats; repeatIndex++) {
 			const playTime = accTime
 			instrumentsSoundsList.value.push(setTimeout(() => {
-				selectedSectionId.value = arrangementItem.sectionId
+				selectSection(arrangementItem.sectionId)
 				selectedArrangementItemId.value = arrangementItem.id
-				composeSectionId.value = arrangementItem.sectionId
 				focusActiveArrangementItem(arrangementItem.id)
 				sectionRef.play(false)
 			}, playTime))
@@ -911,6 +1278,12 @@ onMounted(async () => {
 		parent: compositionRef,
 		values: arrangementValues,
 		dragHandle: '.arrangement-handle',
+	})
+
+	dragAndDrop({
+		parent: sectionLibraryRef,
+		values: sectionLibraryValues,
+		dragHandle: '.section-library-handle',
 	})
 
 

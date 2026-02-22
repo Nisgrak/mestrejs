@@ -3,24 +3,32 @@
 		class="instrument w-full"
 		:class="{ 'md:grid md:w-max md:grid-cols-[600px_max-content] md:items-start md:gap-x-3': horizontalView }"
 	>
-		<div :class="[
-			'mb-2 flex w-full items-center gap-2 md:gap-3',
-			horizontalView
-				? 'min-h-11 flex-nowrap overflow-hidden md:flex-nowrap md:overflow-x-auto md:sticky md:left-0 md:z-30 md:!mb-0 md:w-[600px] md:bg-white md:px-3 md:py-2'
-				: 'flex-wrap'
-		]"
-		ref="controlsContainerRef"
+		<div
+			:class="[
+				'mb-2 flex w-full items-center gap-2 md:gap-3',
+				horizontalView
+					? '-mt-2 min-h-11 flex-nowrap overflow-visible md:flex-nowrap md:!mb-0 md:w-[600px] md:bg-white md:px-3 md:py-2'
+					: 'flex-wrap'
+			]"
+			ref="controlsRowRef"
 		>
-			<UInput
-				class="text-base"
-				:class="horizontalView ? 'w-32 shrink-0 md:w-52 md:flex-none md:shrink-0' : 'w-full md:w-48'"
-				:model-value="instrument.alias"
-				@update:model-value="emit('update:instrument', Object.assign(instrument, { alias: $event }))"
-				aria-label="Nombre del instrumento"
-			/>
+			<div
+				:class="horizontalView
+					? 'relative z-30 flex h-50px w-32 shrink-0 items-center bg-white md:w-52 md:flex-none md:shrink-0'
+					: 'w-full md:w-48'"
+				:style="aliasPinStyle"
+				ref="aliasBoxRef"
+			>
+				<UInput
+					class="my-auto w-full self-center text-base"
+					:model-value="instrument.alias"
+					@update:model-value="emit('update:instrument', Object.assign(instrument, { alias: $event }))"
+					aria-label="Nombre del instrumento"
+				/>
+			</div>
 			<div
 				class="flex h-8 items-center gap-1 rounded-md border border-slate-200 px-1 md:h-9"
-				:class="horizontalView ? 'w-auto shrink-0' : 'w-full md:w-auto'"
+				:class="horizontalView ? 'relative z-10 w-auto shrink-0' : 'w-full md:w-auto'"
 			>
 				<UTooltip text="Anadir fila">
 					<UButton
@@ -62,7 +70,7 @@
 			</div>
 			<div
 				class="flex items-center gap-1.5 md:min-w-0 md:gap-2"
-				:class="horizontalView ? 'w-28 shrink-0 md:w-auto' : 'w-full md:w-auto'"
+				:class="horizontalView ? 'relative z-10 w-28 shrink-0 md:w-auto' : 'w-full md:w-auto'"
 			>
 				<UTooltip :text="instrument.vol !== 0 ? 'Silenciar instrumento' : 'Activar sonido'">
 					<UButton
@@ -89,7 +97,7 @@
 			class="w-full gap-10px"
 			ref="notesScrollContainerRef"
 			@scroll.passive="onNotesScroll"
-			:class="{ 'grid grid-cols-1': !horizontalView, 'flex flex-nowrap overflow-x-auto md:overflow-visible': horizontalView }"
+			:class="{ 'grid grid-cols-1': !horizontalView, 'relative z-20 flex flex-nowrap overflow-x-auto md:overflow-visible': horizontalView }"
 		>
 			<div
 				v-for="(noteLine, indexRow) in instrument.noteLines"
@@ -185,7 +193,7 @@
 
 <script setup lang="ts">
 import { type Beat, type Instrument } from '../stores/songStore'
-import { computed, type PropType, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, type CSSProperties, type PropType, ref, watch } from 'vue'
 import Note from './NoteBox.vue'
 import { useTemplateRefsList } from '@vueuse/core'
 import { generateNewLine } from '../utils/lines'
@@ -217,9 +225,23 @@ let showDialogNotes = ref(false)
 let showDeleteInstrumentModal = ref(false)
 const notesRefs = useTemplateRefsList<InstanceType<typeof Note>>()
 const notesScrollContainerRef = ref<HTMLElement | null>(null)
-const controlsContainerRef = ref<HTMLElement | null>(null)
+const controlsRowRef = ref<HTMLElement | null>(null)
+const aliasBoxRef = ref<HTMLElement | null>(null)
 const emit = defineEmits(['update:instrument', 'remove', 'notes-scroll'])
 const syncingScroll = ref(false)
+const aliasViewportOffset = ref(0)
+let aliasScrollTarget: HTMLElement | null = null
+const ALIAS_LEFT_BLEED_PX = 12
+
+const aliasPinStyle = computed<CSSProperties | undefined>(() => {
+	if (!props.horizontalView) {
+		return undefined
+	}
+
+	return {
+		transform: `translateX(${aliasViewportOffset.value}px)`
+	}
+})
 
 function confirmDeleteInstrument() {
 	showDeleteInstrumentModal.value = false
@@ -279,24 +301,27 @@ function resizeGroup(index: number, indexGroup: number, event: Event) {
 }
 
 function onNotesScroll() {
-	if (!props.syncNotesScroll || syncingScroll.value || !notesScrollContainerRef.value) {
+	const scrollContainer = resolveNotesScrollContainer()
+	if (!props.syncNotesScroll || syncingScroll.value || !scrollContainer) {
 		return
 	}
 
-	emit('notes-scroll', notesScrollContainerRef.value.scrollLeft)
+	emit('notes-scroll', scrollContainer.scrollLeft)
 }
 
 function setNotesScrollLeft(scrollLeft: number) {
-	if (!notesScrollContainerRef.value) {
+	const scrollContainer = resolveNotesScrollContainer()
+	if (!scrollContainer) {
 		return
 	}
 
-	if (Math.abs(notesScrollContainerRef.value.scrollLeft - scrollLeft) < 1) {
+	if (Math.abs(scrollContainer.scrollLeft - scrollLeft) < 1) {
 		return
 	}
 
 	syncingScroll.value = true
-	notesScrollContainerRef.value.scrollLeft = scrollLeft
+	scrollContainer.scrollLeft = scrollLeft
+	updateAliasViewportOffset()
 
 	requestAnimationFrame(() => {
 		syncingScroll.value = false
@@ -304,7 +329,8 @@ function setNotesScrollLeft(scrollLeft: number) {
 }
 
 function scrollToNote(noteIndex: number, syncFollowers = false, force = false) {
-	if (!notesScrollContainerRef.value) {
+	const scrollContainer = resolveNotesScrollContainer()
+	if (!scrollContainer || !notesScrollContainerRef.value) {
 		return
 	}
 
@@ -315,41 +341,39 @@ function scrollToNote(noteIndex: number, syncFollowers = false, force = false) {
 		return
 	}
 
-	const desktopScrollRoot = notesScrollContainerRef.value.closest('[data-notes-scroll-root]') as HTMLElement | null
-	const container = props.syncNotesScroll
-		? notesScrollContainerRef.value
-		: (desktopScrollRoot ?? notesScrollContainerRef.value)
-	const visibleLeft = container.scrollLeft
-	const visibleRight = container.scrollLeft + container.clientWidth
-	const containerRect = container.getBoundingClientRect()
+	const visibleLeft = scrollContainer.scrollLeft
+	const visibleRight = scrollContainer.scrollLeft + scrollContainer.clientWidth
+	const containerRect = scrollContainer.getBoundingClientRect()
 	const noteRect = noteElement.getBoundingClientRect()
-	const noteLeft = noteRect.left - containerRect.left + container.scrollLeft
+	const noteLeft = noteRect.left - containerRect.left + scrollContainer.scrollLeft
 	const noteRight = noteLeft + noteElement.offsetWidth
 	const padding = 24
+	const leftOcclusion = getLeftOcclusionWidth()
+	const leftSafeZone = padding + leftOcclusion
 	let nextScrollLeft = visibleLeft
 
 	if (force) {
-		const leadSpace = props.syncNotesScroll ? padding : ((controlsContainerRef.value?.clientWidth ?? 0) + padding)
-		nextScrollLeft = Math.max(0, noteLeft - leadSpace)
+		nextScrollLeft = Math.max(0, noteLeft - leftSafeZone)
 	}
 
 	if (!force) {
-		if (noteLeft < visibleLeft + padding) {
-			nextScrollLeft = Math.max(0, noteLeft - padding)
+		if (noteLeft < visibleLeft + leftSafeZone) {
+			nextScrollLeft = Math.max(0, noteLeft - leftSafeZone)
 		} else if (noteRight > visibleRight - padding) {
-			nextScrollLeft = Math.max(0, noteRight - container.clientWidth + padding)
+			nextScrollLeft = Math.max(0, noteRight - scrollContainer.clientWidth + padding)
 		}
 	}
 
-	const maxScrollLeft = Math.max(0, container.scrollWidth - container.clientWidth)
+	const maxScrollLeft = Math.max(0, scrollContainer.scrollWidth - scrollContainer.clientWidth)
 	nextScrollLeft = Math.min(nextScrollLeft, maxScrollLeft)
 
-	if (Math.abs(container.scrollLeft - nextScrollLeft) < 1) {
+	if (Math.abs(scrollContainer.scrollLeft - nextScrollLeft) < 1) {
 		return
 	}
 
 	syncingScroll.value = true
-	container.scrollLeft = nextScrollLeft
+	scrollContainer.scrollLeft = nextScrollLeft
+	updateAliasViewportOffset()
 
 	if (syncFollowers && props.syncNotesScroll) {
 		emit('notes-scroll', nextScrollLeft)
@@ -359,6 +383,122 @@ function scrollToNote(noteIndex: number, syncFollowers = false, force = false) {
 		syncingScroll.value = false
 	})
 }
+
+function resolveNotesScrollContainer(): HTMLElement | null {
+	if (!notesScrollContainerRef.value) {
+		return null
+	}
+
+	const rowContainer = notesScrollContainerRef.value
+	const desktopScrollRoot = rowContainer.closest('[data-notes-scroll-root]') as HTMLElement | null
+	const rowScrollable = rowContainer.scrollWidth - rowContainer.clientWidth > 1
+	const rootScrollable = !!desktopScrollRoot && desktopScrollRoot.scrollWidth - desktopScrollRoot.clientWidth > 1
+
+	if (props.syncNotesScroll) {
+		if (rowScrollable) {
+			return rowContainer
+		}
+
+		if (rootScrollable && desktopScrollRoot) {
+			return desktopScrollRoot
+		}
+
+		return rowContainer
+	}
+
+	return desktopScrollRoot ?? rowContainer
+}
+
+function handleAliasScroll() {
+	updateAliasViewportOffset()
+}
+
+function unbindAliasScroll() {
+	if (!aliasScrollTarget) {
+		return
+	}
+
+	aliasScrollTarget.removeEventListener('scroll', handleAliasScroll)
+	aliasScrollTarget = null
+}
+
+function bindAliasScroll() {
+	unbindAliasScroll()
+	aliasViewportOffset.value = 0
+
+	if (!props.horizontalView) {
+		return
+	}
+
+	nextTick(() => {
+		const target = resolveNotesScrollContainer()
+		if (!target) {
+			return
+		}
+
+		aliasScrollTarget = target
+		updateAliasViewportOffset()
+		target.addEventListener('scroll', handleAliasScroll, { passive: true })
+	})
+}
+
+function updateAliasViewportOffset() {
+	if (!props.horizontalView || !controlsRowRef.value || !aliasBoxRef.value || !notesScrollContainerRef.value) {
+		aliasViewportOffset.value = 0
+		return
+	}
+
+	const aliasRect = aliasBoxRef.value.getBoundingClientRect()
+	const naturalAliasLeft = aliasRect.left - aliasViewportOffset.value
+	const naturalAliasRight = naturalAliasLeft + aliasRect.width
+	const shouldPinToViewportLeft = naturalAliasLeft <= ALIAS_LEFT_BLEED_PX
+
+	const firstNoteElement = notesScrollContainerRef.value.querySelector('.note') as HTMLElement | null
+	const willCollideWithNotes = firstNoteElement
+		? firstNoteElement.getBoundingClientRect().left <= naturalAliasRight
+		: false
+
+	if (!shouldPinToViewportLeft && !willCollideWithNotes) {
+		aliasViewportOffset.value = 0
+		return
+	}
+
+	aliasViewportOffset.value = -(controlsRowRef.value.getBoundingClientRect().left + ALIAS_LEFT_BLEED_PX)
+}
+
+function getLeftOcclusionWidth() {
+	if (!props.horizontalView || !aliasBoxRef.value) {
+		return 0
+	}
+
+	return aliasBoxRef.value.getBoundingClientRect().width
+}
+
+function handleWindowResize() {
+	updateAliasViewportOffset()
+}
+
+watch(() => [props.horizontalView, props.syncNotesScroll], bindAliasScroll, { immediate: true })
+
+onMounted(() => {
+	if (typeof window === 'undefined') {
+		return
+	}
+
+	window.addEventListener('resize', handleWindowResize)
+	window.addEventListener('orientationchange', handleWindowResize)
+	nextTick(() => {
+		updateAliasViewportOffset()
+	})
+})
+
+onBeforeUnmount(() => {
+	unbindAliasScroll()
+	if (typeof window !== 'undefined') {
+		window.removeEventListener('resize', handleWindowResize)
+		window.removeEventListener('orientationchange', handleWindowResize)
+	}
+})
 
 defineExpose({
 	notesRefs,
