@@ -248,8 +248,9 @@
 							<div
 								v-for="(section, index) in songStore.sectionLibrary"
 								:key="section.id"
-								class="rounded-md border p-2 transition-colors"
+								class="rounded-md border p-2 transition-colors cursor-pointer"
 								:class="selectedSectionId === section.id ? 'border-primary bg-primary-50' : 'border-default bg-white hover:bg-slate-50'"
+								@click="selectSectionFromLibrary(section.id)"
 							>
 								<div class="mb-2 flex items-center gap-2">
 									<UTooltip text="Reordenar seccion">
@@ -261,14 +262,10 @@
 											<UIcon name="i-lucide-grip-vertical" class="h-4 w-4" />
 										</span>
 									</UTooltip>
-									<button
-										type="button"
-										class="flex min-w-0 flex-1 items-center justify-between gap-2 text-left"
-										@click="selectSectionFromLibrary(section.id)"
-									>
+									<div class="flex min-w-0 flex-1 items-center justify-between gap-2 text-left">
 										<p class="truncate text-sm font-medium">{{ section.name }}</p>
 										<UBadge color="neutral" variant="soft" size="xs">{{ getSectionUsageLabel(section.id) }}</UBadge>
-									</button>
+									</div>
 								</div>
 								<div class="flex items-center gap-1">
 									<UButton
@@ -276,14 +273,14 @@
 										variant="ghost"
 										icon="i-lucide-list-plus"
 										aria-label="Anadir bloque"
-										@click="appendSectionToArrangementFromLibrary(section.id, 1)"
+										@click.stop="appendSectionToArrangementFromLibrary(section.id, 1)"
 									/>
 									<UButton
 										size="xs"
 										variant="ghost"
 										icon="i-lucide-copy"
 										aria-label="Duplicar seccion"
-										@click="duplicateLibrarySection(index)"
+										@click.stop="duplicateLibrarySection(index)"
 									/>
 									<UTooltip :text="canRemoveSection(section.id) ? 'Borrar seccion' : getRemoveBlockedMessage(section.id)">
 										<UButton
@@ -293,7 +290,7 @@
 											icon="i-lucide-trash-2"
 											aria-label="Borrar seccion"
 											:disabled="!canRemoveSection(section.id)"
-											@click="removeLibrarySection(index)"
+											@click.stop="removeLibrarySection(index)"
 										/>
 									</UTooltip>
 								</div>
