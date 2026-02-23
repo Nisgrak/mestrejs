@@ -6,7 +6,10 @@ export default defineConfig({
 	presets: [presetWind()],
 	safelist: [
 		'lg:grid-cols-2',
-		'lg:grid-cols-4'
+		'lg:grid-cols-4',
+		'rounded-l-lg',
+		'rounded-r-lg',
+		'bg-gray-300'
 	],
 	transformers: [
 		transformerDirectives(),
