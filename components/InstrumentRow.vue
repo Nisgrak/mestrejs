@@ -509,8 +509,7 @@ defineExpose({
 
 <style>
 .note:first-child {
-	--at-apply: rounded-l-lg;
-	--at-apply: bg-gray-300;
+	--at-apply: rounded-l-lg bg-gray-300;
 }
 
 .instrument.beat-6\/8 .note.show-note:nth-child(4) {
