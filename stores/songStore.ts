@@ -53,12 +53,12 @@ export const useSongStore = defineStore('song', () => {
 				},
 				{
 					icon: 'i-lucide-x',
-					printSymbol: 'x',
+					printSymbol: 'X',
 					howls: new Howl({ src: ['/sounds/alfaia/upperNote.mp3', '/sounds/alfaia/upperNote.wav'], preload: true })
 				},
 				{
 					icon: 'i-lucide-minus',
-					printSymbol: '-',
+					printSymbol: '—',
 					howls: new Howl({ src: ['/sounds/alfaia/lowerNote.mp3', '/sounds/alfaia/lowerNote.wav'], preload: true })
 				}
 			]
@@ -73,12 +73,12 @@ export const useSongStore = defineStore('song', () => {
 				},
 				{
 					icon: 'i-lucide-x',
-					printSymbol: 'x',
+					printSymbol: 'X',
 					howls: new Howl({ src: ['/sounds/caixa/upperNote.mp3', '/sounds/caixa/upperNote.wav'], preload: true })
 				},
 				{
 					icon: 'i-lucide-minus',
-					printSymbol: '-',
+					printSymbol: '—',
 					howls: new Howl({ src: ['/sounds/caixa/lowerNote.mp3', '/sounds/caixa/lowerNote.wav'], preload: true })
 				}
 			]
@@ -93,12 +93,12 @@ export const useSongStore = defineStore('song', () => {
 				},
 				{
 					icon: 'i-lucide-x',
-					printSymbol: 'x',
+					printSymbol: 'X',
 					howls: new Howl({ src: ['/sounds/gonge/upperNote.mp3', '/sounds/gonge/upperNote.wav'], preload: true })
 				},
 				{
 					icon: 'i-lucide-minus',
-					printSymbol: '-',
+					printSymbol: '—',
 					howls: new Howl({ src: ['/sounds/gonge/lowerNote.mp3', '/sounds/gonge/lowerNote.wav'], preload: true })
 				}
 			]
@@ -113,17 +113,17 @@ export const useSongStore = defineStore('song', () => {
 				},
 				{
 					icon: 'i-lucide-x',
-					printSymbol: 'x',
+					printSymbol: 'X',
 					howls: new Howl({ src: ['/sounds/repique/repinique.mp3'], preload: true })
 				},
 				{
 					icon: 'i-lucide-minus',
-					printSymbol: '-',
+					printSymbol: '—',
 					howls: new Howl({ src: ['/sounds/repique/lowerNote.mp3', '/sounds/repique/lowerNote.wav'], preload: true })
 				},
 				{
 					icon: 'i-lucide-circle',
-					printSymbol: 'o',
+					printSymbol: 'O',
 					howls: new Howl({ src: ['/sounds/repique/mediumNote.mp3', '/sounds/repique/mediumNote.wav'], preload: true })
 				}
 			]
@@ -138,7 +138,7 @@ export const useSongStore = defineStore('song', () => {
 				},
 				{
 					icon: 'i-lucide-x',
-					printSymbol: 'x',
+					printSymbol: 'X',
 					howls: new Howl({ src: ['/sounds/surdo/surdo_grave.mp3'], preload: true })
 				},
 				{
@@ -148,7 +148,7 @@ export const useSongStore = defineStore('song', () => {
 				},
 				{
 					icon: 'i-lucide-minus',
-					printSymbol: '-',
+					printSymbol: '—',
 					howls: new Howl({ src: ['/sounds/surdo/surdo_agudo.mp3'], preload: true })
 				}
 			]
