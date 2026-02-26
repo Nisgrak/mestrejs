@@ -9,13 +9,14 @@
 							<th class="py-2">Nombre</th>
 							<th class="py-2">Ritmo</th>
 							<th class="py-2">BPM</th>
+							<th class="py-2">Páginas</th>
 							<th class="py-2">Visibilidad</th>
 							<th class="py-2">Acciones</th>
 						</tr>
 					</thead>
 					<tbody>
 						<tr v-if="partitures.length === 0">
-							<td colspan="5" class="py-8 text-center text-slate-500">
+							<td colspan="6" class="py-8 text-center text-slate-500">
 								No tienes partituras todavía.
 							</td>
 						</tr>
@@ -27,6 +28,7 @@
 							<td class="py-2">{{ partiture.name }}</td>
 							<td class="py-2">{{ partiture.song?.[0]?.beat?.name || '-' }}</td>
 							<td class="py-2">{{ partiture.bpm }}</td>
+							<td class="py-2">{{ partiture.page_count ?? 0 }}</td>
 							<td class="py-2">{{ visibilityLabel(partiture.visibility) }}</td>
 							<td class="py-2">
 								<div class="flex gap-2">
@@ -95,23 +97,26 @@
 			v-model:open="showShareModal"
 			title="Compartir partitura"
 			description="Configura si esta partitura es privada, pública o protegida por contraseña."
+			:ui="{ content: 'sm:max-w-md' }"
 		>
 			<template #body>
-				<div class="grid gap-3">
-					<UFormField label="Visibilidad">
+				<div class="grid w-full gap-3">
+					<UFormField label="Visibilidad" class="w-full">
 						<USelectMenu
 							v-model="shareVisibility"
+							class="w-full"
 							:items="visibilityOptions"
 							value-key="value"
 							label-key="label"
 						/>
 					</UFormField>
 
-					<UFormField v-if="shareVisibility === 'password'" label="Contraseña" required>
+					<UFormField v-if="shareVisibility === 'password'" label="Contraseña" required class="w-full">
 						<UInput
 							v-model="sharePassword"
 							type="password"
 							placeholder="Introduce contraseña"
+							class="w-full"
 						/>
 					</UFormField>
 
@@ -133,6 +138,7 @@ interface PartitureRow {
 	name: string
 	bpm: number
 	song?: any[]
+	page_count?: number
 	visibility: Visibility
 	user_created?: string | null
 }

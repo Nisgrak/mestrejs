@@ -1,13 +1,6 @@
 import type { H3Event } from 'h3'
 import { directusAdminFetch, getCurrentUserId } from '../../utils/directus'
 
-interface UpdatePageBody {
-	name?: string
-	password?: string
-	partitureIds?: string[]
-	clearPassword?: boolean
-}
-
 interface DirectusPageOwnerResponse {
 	data?: {
 		id: string
@@ -46,32 +39,8 @@ const handler = async (event: H3Event) => {
 		throw createError({ statusCode: 403, statusMessage: 'Forbidden' })
 	}
 
-	const body = await readBody<UpdatePageBody>(event)
-	const name = typeof body?.name === 'string' ? body.name.trim() : ''
-	const password = typeof body?.password === 'string' ? body.password.trim() : ''
-	const clearPassword = body?.clearPassword === true
-	const partitureIds = Array.isArray(body?.partitureIds)
-		? body.partitureIds.filter((id): id is string => typeof id === 'string' && id.length > 0)
-		: []
-
-	if (!name) {
-		throw createError({ statusCode: 400, statusMessage: 'Name is required' })
-	}
-
-	const payload: Record<string, unknown> = {
-		name,
-		partitures: partitureIds.map((id) => ({ partiture_id: id }))
-	}
-
-	if (clearPassword) {
-		payload.password = null
-	} else if (password) {
-		payload.password = password
-	}
-
 	await directusAdminFetch(`/items/page/${pageId}`, {
-		method: 'PATCH',
-		body: payload
+		method: 'DELETE'
 	})
 
 	return { success: true }

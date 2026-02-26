@@ -71,6 +71,16 @@
 											@click="copyPublicLink(row.id)"
 										/>
 									</UTooltip>
+									<UTooltip text="Eliminar página">
+										<UButton
+											color="error"
+											variant="ghost"
+											square
+											icon="i-lucide-trash-2"
+											aria-label="Eliminar página"
+											@click="openDeleteDialog(row)"
+										/>
+									</UTooltip>
 								</div>
 							</td>
 						</tr>
@@ -80,35 +90,77 @@
 		</UPageCard>
 
 		<UModal
+			v-model:open="showDeleteModal"
+			title="Eliminar página"
+			description="Esta acción no se puede deshacer."
+		>
+			<template #body>
+				<div class="grid gap-3">
+					<p>
+						¿Seguro que quieres eliminar
+						<strong>{{ deletingPageName }}</strong>?
+					</p>
+					<div class="flex justify-end gap-2">
+						<UButton color="neutral" variant="ghost" @click="closeDeleteDialog">Cancelar</UButton>
+						<UButton color="error" :loading="isDeleting" @click="confirmDeletePage">Eliminar</UButton>
+					</div>
+				</div>
+			</template>
+		</UModal>
+
+		<UModal
 			v-model:open="showDialogCreate"
 			:title="editingPageId ? 'Editar página pública' : 'Crear página pública'"
 			:description="editingPageId ? 'Actualiza nombre, contraseña y partituras de la página.' : 'Configura los datos para generar una nueva página con acceso público.'"
+			:ui="{ content: 'sm:max-w-3xl' }"
 		>
 			<template #body>
-				<form class="grid gap-3" @submit.prevent="savePage">
-					<UFormField label="Nombre" required>
-						<UInput v-model="loadedPage.name" />
+				<form class="grid w-full gap-4" @submit.prevent="savePage">
+					<UFormField label="Nombre" required class="w-full">
+						<UInput v-model="loadedPage.name" class="w-full" />
 					</UFormField>
 					<UFormField
 						label="Contraseña de acceso público"
 						help="Quien tenga este enlace necesitará esta contraseña para ver las partituras."
+						class="w-full"
 					>
 						<UInput
 							v-model="loadedPage.password"
 							type="password"
+							:disabled="clearPasswordOnSave"
 							:placeholder="editingPageId ? 'Deja vacío para mantener la actual' : 'Opcional'"
+							class="w-full"
 						/>
+						<label v-if="editingPageId" class="mt-2 flex items-center gap-2 text-sm text-slate-600">
+							<input
+								v-model="clearPasswordOnSave"
+								type="checkbox"
+								class="h-4 w-4 rounded border-slate-300"
+							>
+							Quitar contraseña pública
+						</label>
 					</UFormField>
-					<UFormField label="Partituras">
+					<UFormField
+						label="Partituras"
+						help="Selecciona una o varias partituras para incluir en esta página."
+						class="w-full"
+					>
 						<USelectMenu
 							v-model="selectedPartitureIds"
+							class="w-full"
 							placeholder="Selecciona una o varias partituras"
 							:items="partitureOptions"
+							:search-input="{ placeholder: 'Buscar partitura...' }"
 							value-key="value"
 							label-key="label"
 							multiple
-							searchable
-						/>
+						>
+							<template #default>
+								<span class="truncate">
+									{{ selectedPartitureTriggerLabel }}
+								</span>
+							</template>
+						</USelectMenu>
 					</UFormField>
 					<div class="mt-2 flex justify-end gap-2">
 						<UButton color="neutral" variant="ghost" @click="closeDialog">Cancelar</UButton>
@@ -147,10 +199,15 @@ definePageMeta({
 const pages = ref<PageRecord[]>([])
 const partitures = ref<Partiture[]>([])
 const showDialogCreate = ref(false)
+const showDeleteModal = ref(false)
 const isSaving = ref(false)
+const isDeleting = ref(false)
 const errorMessage = ref('')
 const selectedPartitureIds = ref<string[]>([])
 const editingPageId = ref<string | null>(null)
+const deletingPageId = ref<string | null>(null)
+const deletingPageName = ref('')
+const clearPasswordOnSave = ref(false)
 
 const loadedPage = ref({
 	name: '',
@@ -162,6 +219,21 @@ const partitureOptions = computed(() => {
 		label: partiture.name,
 		value: partiture.id
 	}))
+})
+
+const selectedPartitureTriggerLabel = computed(() => {
+	if (selectedPartitureIds.value.length === 0) {
+		return 'Selecciona una o varias partituras'
+	}
+
+	if (selectedPartitureIds.value.length === 1) {
+		const selectedId = selectedPartitureIds.value[0]
+		const selected = partitureOptions.value.find((option) => option.value === selectedId)
+
+		return selected?.label ?? '1 partitura seleccionada'
+	}
+
+	return `${selectedPartitureIds.value.length} partituras seleccionadas`
 })
 
 function getPublicPath(pageId: string) {
@@ -183,6 +255,19 @@ function closeDialog() {
 	editingPageId.value = null
 	loadedPage.value = { name: '', password: '' }
 	selectedPartitureIds.value = []
+	clearPasswordOnSave.value = false
+}
+
+function openDeleteDialog(page: PageRecord) {
+	deletingPageId.value = page.id
+	deletingPageName.value = page.name
+	showDeleteModal.value = true
+}
+
+function closeDeleteDialog() {
+	showDeleteModal.value = false
+	deletingPageId.value = null
+	deletingPageName.value = ''
 }
 
 function getPartitureId(relation: PagePartitureRelation) {
@@ -203,6 +288,7 @@ function openEditDialog(page: PageRecord) {
 		name: page.name,
 		password: ''
 	}
+	clearPasswordOnSave.value = false
 	selectedPartitureIds.value = (page.partitures ?? [])
 		.map((relation) => getPartitureId(relation))
 		.filter((id): id is string => Boolean(id))
@@ -229,6 +315,7 @@ async function savePage() {
 				body: {
 					name: pagePayload.name,
 					password: normalizedPassword,
+					clearPassword: clearPasswordOnSave.value,
 					partitureIds: selectedPartitureIds.value
 				}
 			})
@@ -260,6 +347,36 @@ async function savePage() {
 		})
 	} finally {
 		isSaving.value = false
+	}
+}
+
+async function confirmDeletePage() {
+	if (!deletingPageId.value || isDeleting.value) {
+		return
+	}
+
+	isDeleting.value = true
+
+	try {
+		await $fetch(`/api/pages/${deletingPageId.value}`, {
+			method: 'DELETE'
+		})
+
+		closeDeleteDialog()
+		await loadPages()
+
+		toast.add({
+			title: 'Página eliminada',
+			description: 'La página se eliminó correctamente.',
+			color: 'primary'
+		})
+	} catch {
+		toast.add({
+			title: 'No se pudo eliminar la página',
+			color: 'error'
+		})
+	} finally {
+		isDeleting.value = false
 	}
 }
 

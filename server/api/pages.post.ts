@@ -1,5 +1,5 @@
 import type { H3Event } from 'h3'
-import { directusAdminFetch, getCurrentUserId } from '../utils/directus'
+import { directusUserFetch, getCurrentUserId } from '../utils/directus'
 
 interface CreatePageBody {
 	name?: string
@@ -24,7 +24,7 @@ const handler = async (event: H3Event) => {
 		throw createError({ statusCode: 400, statusMessage: 'Name is required' })
 	}
 
-	await directusAdminFetch('/items/page', {
+	await directusUserFetch(event, '/items/page', {
 		method: 'POST',
 		body: {
 			name,

@@ -540,23 +540,26 @@
 				v-model:open="showPartitureShareModal"
 				title="Visibilidad de la partitura"
 				description="Elige si esta partitura es privada, pública o con contraseña."
+				:ui="{ content: 'sm:max-w-md' }"
 			>
 				<template #body>
-					<div class="grid gap-3">
-						<UFormField label="Visibilidad">
+					<div class="grid w-full gap-3">
+						<UFormField label="Visibilidad" class="w-full">
 							<USelectMenu
 								v-model="partitureShareVisibility"
+								class="w-full"
 								:items="partitureVisibilityOptions"
 								value-key="value"
 								label-key="label"
 							/>
 						</UFormField>
 
-						<UFormField v-if="partitureShareVisibility === 'password'" label="Contraseña" required>
+						<UFormField v-if="partitureShareVisibility === 'password'" label="Contraseña" required class="w-full">
 							<UInput
 								v-model="partitureSharePassword"
 								type="password"
 								placeholder="Define la contraseña"
+								class="w-full"
 							/>
 						</UFormField>
 

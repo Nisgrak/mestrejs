@@ -39,6 +39,16 @@ function getAccessTokenFromRequest(event: H3Event) {
 	return getCookie(event, cookieName) ?? null
 }
 
+export function requireAccessTokenFromRequest(event: H3Event) {
+	const token = getAccessTokenFromRequest(event)
+
+	if (!token) {
+		throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
+	}
+
+	return token
+}
+
 export async function getCurrentUserId(event: H3Event) {
 	const token = getAccessTokenFromRequest(event)
 	if (!token) {
@@ -70,6 +80,19 @@ export async function directusAdminFetch<T>(path: string, options?: Parameters<t
 		...options,
 		headers: {
 			Authorization: `Bearer ${adminToken}`,
+			...(options?.headers ?? {})
+		}
+	})
+}
+
+export async function directusUserFetch<T>(event: H3Event, path: string, options?: Parameters<typeof $fetch<T>>[1]) {
+	const directusUrl = getDirectusUrl()
+	const accessToken = requireAccessTokenFromRequest(event)
+
+	return await $fetch<T>(`${directusUrl}${path}`, {
+		...options,
+		headers: {
+			Authorization: `Bearer ${accessToken}`,
 			...(options?.headers ?? {})
 		}
 	})
