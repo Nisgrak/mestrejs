@@ -29,7 +29,7 @@ onMounted(async () => {
 
 	const { token } = useDirectusToken();
 
-	if (songStore.user === undefined && token) {
+	if (songStore.user === undefined && token.value) {
 		songStore.user = (await useDirectusUser()).value
 		posthog.identify(songStore.user?.id, { email: songStore.user?.email })
 	}

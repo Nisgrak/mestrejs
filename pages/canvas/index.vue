@@ -34,7 +34,7 @@
 								:disabled="displaySections.length === 0"
 								:icon="playing ? 'i-lucide-square' : 'i-lucide-play'"
 								@click="playing ? pause() : play()"
-							:aria-label="playing ? 'Pausar reproducción' : 'Reproducir canción'"
+								:aria-label="playing ? 'Pausar reproducción' : 'Reproducir canción'"
 							/>
 						</UTooltip>
 
@@ -84,7 +84,7 @@
 									icon="i-lucide-save"
 									variant="ghost"
 									@click="saveSong(true)"
-								aria-label="Guardar canción"
+									aria-label="Guardar canción"
 								/>
 							</UTooltip>
 							<UTooltip text="Borrar notas">
@@ -104,7 +104,7 @@
 									icon="i-lucide-code"
 									variant="ghost"
 									@click="insert()"
-								aria-label="Insertar canción"
+									aria-label="Insertar canción"
 								/>
 							</UTooltip>
 							<UTooltip text="Imprimir composición en PDF">
@@ -114,7 +114,7 @@
 									icon="i-lucide-printer"
 									variant="ghost"
 									@click="printCompositionPdf"
-								aria-label="Imprimir composición en PDF"
+									aria-label="Imprimir composición en PDF"
 								/>
 							</UTooltip>
 						</div>
@@ -361,7 +361,8 @@
 							v-show="!isMobileViewport || activeSidebarPanel === 'composition'"
 							:class="isMobileViewport ? '' : 'mt-4'"
 						>
-							<h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-600">Composición</h3>
+							<h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-600">Composición
+							</h3>
 							<div class="mb-3 grid gap-2">
 								<USelectMenu
 									v-model="composeSectionId"
@@ -577,8 +578,7 @@ type MobilePanel = 'library' | 'composition' | 'editor'
 type MobileSidebarPanel = 'library' | 'composition'
 
 definePageMeta({
-	name: "Canvas",
-	alias: "/canvas"
+	name: "Canvas"
 })
 
 let playingAll = ref(false);
