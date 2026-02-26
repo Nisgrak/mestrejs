@@ -1,5 +1,7 @@
 import { directusAdminFetch, getCurrentUserId } from '../../utils/directus'
+import { getPageAccessSecret, PAGE_ACCESS_COOKIE_NAME, verifyPageAccessGrantToken } from '../../utils/page-access-grant'
 import { verifySharePassword } from '../../utils/share-password'
+import type { H3Event } from 'h3'
 
 type Visibility = 'private' | 'public' | 'password' | null
 
@@ -24,6 +26,12 @@ interface DirectusPartitureResponse {
 	data?: DirectusPartiture
 }
 
+interface DirectusPagePartitureLookupResponse {
+	data?: Array<{
+		id?: number | string
+	}>
+}
+
 function canRead(item: DirectusPartiture, userId: string | null) {
 	if (!item.user_created) {
 		return true
@@ -38,6 +46,53 @@ function canRead(item: DirectusPartiture, userId: string | null) {
 	}
 
 	return false
+}
+
+async function hasPageGrantAccess(event: H3Event, partitureId: string) {
+	const grantToken = getCookie(event, PAGE_ACCESS_COOKIE_NAME) ?? ''
+	if (!grantToken) {
+		return false
+	}
+
+	let secret = ''
+
+	try {
+		secret = getPageAccessSecret()
+	} catch {
+		return false
+	}
+
+	const grant = verifyPageAccessGrantToken(grantToken, secret)
+	if (!grant || grant.pageIds.length === 0) {
+		return false
+	}
+
+	try {
+		const response = await directusAdminFetch<DirectusPagePartitureLookupResponse>('/items/page_partiture', {
+			query: {
+				fields: 'id',
+				filter: {
+					_and: [
+						{
+							page_id: {
+								_in: grant.pageIds
+							}
+						},
+						{
+							partiture_id: {
+								_eq: partitureId
+							}
+						}
+					]
+				},
+				limit: 1
+			}
+		})
+
+		return Boolean(response.data?.[0]?.id)
+	} catch {
+		return false
+	}
 }
 
 export default defineEventHandler(async (event) => {
@@ -79,6 +134,21 @@ export default defineEventHandler(async (event) => {
 			visibility: item.visibility ?? null,
 			user_created: item.user_created ?? null,
 			can_manage: canManage
+		}
+	}
+
+	if (await hasPageGrantAccess(event, partitureId)) {
+		return {
+			id: item.id,
+			name: item.name,
+			bpm: item.bpm,
+			song: item.song,
+			sectionLibrary: item.sectionLibrary,
+			arrangement: item.arrangement,
+			version: item.version,
+			visibility: item.visibility ?? null,
+			user_created: item.user_created ?? null,
+			can_manage: false
 		}
 	}
 

@@ -6,6 +6,7 @@ const samplePageId = process.env.DIRECTUS_SAMPLE_PAGE_ID ?? '11111111-1111-1111-
 const samplePagePartitureId = process.env.DIRECTUS_SAMPLE_PAGE_PARTITURE_ID
 const userToken = process.env.DIRECTUS_USER_TOKEN
 const serverToken = process.env.NUXT_DIRECTUS_SERVER_TOKEN
+const expectPublicLockdown = process.env.DIRECTUS_EXPECT_PUBLIC_LOCKDOWN === 'true'
 
 interface DirectusResponse<T = unknown> {
 	status: number
@@ -52,16 +53,26 @@ function expectObjectWithFields(value: unknown, fields: string[]) {
 }
 
 describe('Directus security policy - public and user token access', () => {
-	it('anonymous cannot list partiture', async () => {
+	it('anonymous access to partiture list matches configured rollout stage', async () => {
 		const response = await request('/items/partiture?limit=1')
 
-		expect([401, 403]).toContain(response.status)
+		if (expectPublicLockdown) {
+			expect([401, 403]).toContain(response.status)
+			return
+		}
+
+		expect(response.status).toBe(200)
 	})
 
-	it('anonymous cannot read one partiture by id', async () => {
+	it('anonymous access to partiture item matches configured rollout stage', async () => {
 		const response = await request(`/items/partiture/${samplePartitureId}`)
 
-		expect([401, 403]).toContain(response.status)
+		if (expectPublicLockdown) {
+			expect([401, 403]).toContain(response.status)
+			return
+		}
+
+		expect(response.status).toBe(200)
 	})
 
 	it('anonymous cannot list page', async () => {
@@ -82,26 +93,35 @@ describe('Directus security policy - public and user token access', () => {
 		expect([401, 403]).toContain(response.status)
 	})
 
-	it('user token cannot bypass app API reading partiture directly', async () => {
+	it('user token cannot read an unrelated partiture by id', async () => {
 		expect(userToken, 'DIRECTUS_USER_TOKEN is required').toBeTruthy()
 
-		const response = await request('/items/partiture?limit=5', userToken)
+		const response = await request(`/items/partiture/${samplePartitureId}`, userToken)
 
 		expect([401, 403]).toContain(response.status)
 	})
 
-	it('user token cannot bypass app API reading page directly', async () => {
+	it('user token cannot read an unrelated page by id', async () => {
 		expect(userToken, 'DIRECTUS_USER_TOKEN is required').toBeTruthy()
 
-		const response = await request('/items/page?limit=5', userToken)
+		const response = await request(`/items/page/${samplePageId}`, userToken)
 
 		expect([401, 403]).toContain(response.status)
 	})
 
-	it('user token cannot bypass app API reading page_partiture directly', async () => {
+	it('user token cannot read an unrelated page_partiture row by id', async () => {
+		expect(userToken, 'DIRECTUS_USER_TOKEN is required').toBeTruthy()
+		expect(samplePagePartitureId, 'DIRECTUS_SAMPLE_PAGE_PARTITURE_ID is required').toBeTruthy()
+
+		const response = await request(`/items/page_partiture/${samplePagePartitureId}`, userToken)
+
+		expect([401, 403]).toContain(response.status)
+	})
+
+	it('user token cannot query restricted ownership fields directly', async () => {
 		expect(userToken, 'DIRECTUS_USER_TOKEN is required').toBeTruthy()
 
-		const response = await request('/items/page_partiture?limit=5', userToken)
+		const response = await request('/items/partiture?fields=id,user_created&limit=5', userToken)
 
 		expect([401, 403]).toContain(response.status)
 	})

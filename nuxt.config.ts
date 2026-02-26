@@ -9,6 +9,7 @@ export default defineNuxtConfig({
 
 	runtimeConfig: {
 		directusServerToken: process.env.DIRECTUS_SERVER_TOKEN,
+		pageAccessSecret: process.env.NUXT_PAGE_ACCESS_SECRET,
 		public: {
 			posthogPublicKey: 'phc_ikxvi8Bsk2BQBVeTlPhFDAJgEG6iO1YV4zy1ONKnqhE',
 			posthogHost: 'https://eu.i.posthog.com'

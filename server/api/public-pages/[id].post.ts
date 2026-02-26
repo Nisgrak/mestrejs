@@ -1,4 +1,11 @@
 import { verifyArgon2Hash } from '../../utils/argon2'
+import {
+	createPageAccessGrantToken,
+	getPageAccessSecret,
+	PAGE_ACCESS_COOKIE_NAME,
+	PAGE_ACCESS_GRANT_TTL_SECONDS,
+	verifyPageAccessGrantToken
+} from '../../utils/page-access-grant'
 
 interface PublicPagePartiture {
 	id: string
@@ -101,6 +108,24 @@ export default defineEventHandler(async (event) => {
 			throw createError({ statusCode: 401, statusMessage: 'Invalid password' })
 		}
 	}
+
+	const pageAccessSecret = getPageAccessSecret()
+	const existingGrantToken = getCookie(event, PAGE_ACCESS_COOKIE_NAME) ?? ''
+	const existingGrant = verifyPageAccessGrantToken(existingGrantToken, pageAccessSecret)
+	const grantedPageIds = existingGrant?.pageIds ?? []
+
+	if (!grantedPageIds.includes(pageId)) {
+		grantedPageIds.unshift(pageId)
+	}
+
+	const grantToken = createPageAccessGrantToken(grantedPageIds, pageAccessSecret)
+	setCookie(event, PAGE_ACCESS_COOKIE_NAME, grantToken, {
+		httpOnly: true,
+		sameSite: 'lax',
+		secure: process.env.NODE_ENV === 'production',
+		path: '/',
+		maxAge: PAGE_ACCESS_GRANT_TTL_SECONDS
+	})
 
 	return toPublicResult(page)
 })
