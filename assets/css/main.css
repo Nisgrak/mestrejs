@@ -9,3 +9,11 @@ body {
 	background: #ffffff;
 	color: rgb(24 24 27);
 }
+
+html,
+body,
+a,
+button,
+[role="button"] {
+	touch-action: manipulation;
+}
