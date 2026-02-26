@@ -8,15 +8,12 @@ export default defineNuxtConfig({
 	},
 
 	runtimeConfig: {
+		directusServerToken: process.env.DIRECTUS_SERVER_TOKEN,
 		public: {
 			posthogPublicKey: 'phc_ikxvi8Bsk2BQBVeTlPhFDAJgEG6iO1YV4zy1ONKnqhE',
 			posthogHost: 'https://eu.i.posthog.com'
 		}
 	},
-
-	ignore: [
-		"pages/pages.vue",
-	],
 
 	hooks: {
 		'pages:extend'(pages) {

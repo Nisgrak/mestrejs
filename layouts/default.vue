@@ -10,19 +10,22 @@
 				</button>
 
 				<div v-if="!songStore.user" class="flex items-center gap-2">
-					<UTooltip text="Ir a inicio de sesion">
-						<UButton size="sm" color="primary" variant="soft" class="border-transparent bg-white/10 text-white hover:bg-white/20" :to="{ name: 'LoginPage' }">Iniciar sesion</UButton>
+					<UTooltip text="Ir a inicio de sesión">
+						<UButton size="sm" color="primary" variant="soft" class="border-transparent bg-white/10 text-white hover:bg-white/20" :to="{ name: 'LoginPage' }">Iniciar sesión</UButton>
 					</UTooltip>
 					<UTooltip text="Ir a registro">
-						<UButton size="sm" color="primary" variant="soft" class="border-transparent bg-white/10 text-white hover:bg-white/20" :to="{ name: 'RegisterPage' }">Registrate</UButton>
+						<UButton size="sm" color="primary" variant="soft" class="border-transparent bg-white/10 text-white hover:bg-white/20" :to="{ name: 'RegisterPage' }">Regístrate</UButton>
 					</UTooltip>
 				</div>
 				<div v-else class="flex items-center gap-2">
 					<UTooltip text="Ver listado de partituras">
 						<UButton size="sm" color="primary" variant="soft" class="border-transparent bg-white/10 text-white hover:bg-white/20" :to="{ name: 'ListPartituresPage' }">Listado</UButton>
 					</UTooltip>
-					<UTooltip text="Cerrar sesion">
-						<UButton size="sm" color="primary" variant="soft" class="border-transparent bg-white/10 text-white hover:bg-white/20" @click="logout">Logout</UButton>
+					<UTooltip text="Gestionar páginas públicas">
+						<UButton size="sm" color="primary" variant="soft" class="border-transparent bg-white/10 text-white hover:bg-white/20" :to="{ name: 'ListPublicPages' }">Páginas</UButton>
+					</UTooltip>
+					<UTooltip text="Cerrar sesión">
+						<UButton size="sm" color="primary" variant="soft" class="border-transparent bg-white/10 text-white hover:bg-white/20" @click="logout">Cerrar sesión</UButton>
 					</UTooltip>
 				</div>
 			</div>

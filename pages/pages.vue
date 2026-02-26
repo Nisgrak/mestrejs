@@ -1,51 +1,113 @@
 <template>
 	<div class="mx-auto w-full max-w-5xl px-4 py-8">
-		<div class="rounded-lg border border-slate-200 bg-white/80 p-5">
-			<div class="mb-4 flex items-center justify-between">
-				<h2 class="text-xl font-semibold">Paginas publicas</h2>
-				<UButton color="neutral" variant="outline" @click="showDialogCreate = true">Crear</UButton>
-			</div>
+		<UPageCard
+			title="Páginas públicas"
+			description="Agrupa partituras en una página compartible con acceso por contraseña."
+		>
+			<template #footer>
+				<div class="flex justify-end">
+					<UButton color="primary" icon="i-lucide-plus" @click="showDialogCreate = true">
+						Crear página
+					</UButton>
+				</div>
+			</template>
+
+			<UAlert
+				v-if="errorMessage"
+				class="mb-4"
+				color="error"
+				variant="soft"
+				title="No se pudieron cargar las páginas"
+				:description="errorMessage"
+			/>
 
 			<div class="overflow-x-auto">
 				<table class="w-full border-collapse text-left">
 					<thead>
 						<tr class="border-b border-slate-200">
 							<th class="py-2">Nombre</th>
+							<th class="py-2">Partituras</th>
 							<th class="py-2">Acciones</th>
 						</tr>
 					</thead>
 					<tbody>
 						<tr v-for="row in pages" :key="row.id" class="border-b border-slate-100">
 							<td class="py-2">{{ row.name }}</td>
+							<td class="py-2">{{ row.partitures?.length ?? 0 }}</td>
 							<td class="py-2">
-							<UTooltip text="Ver pagina">
-								<UButton color="neutral" variant="ghost" square icon="i-lucide-eye" aria-label="Ver pagina" :to="{ name: 'Canvas', query: { id: row.id } }" />
-							</UTooltip>
+								<div class="flex flex-wrap gap-2">
+									<UTooltip text="Editar página">
+										<UButton
+											color="neutral"
+											variant="ghost"
+											square
+											icon="i-lucide-pencil"
+											aria-label="Editar página"
+											@click="openEditDialog(row)"
+										/>
+									</UTooltip>
+									<UTooltip text="Abrir página pública">
+										<UButton
+											color="neutral"
+											variant="ghost"
+											square
+											icon="i-lucide-eye"
+											aria-label="Abrir página pública"
+											:to="getPublicPath(row.id)"
+										/>
+									</UTooltip>
+									<UTooltip text="Copiar enlace público">
+										<UButton
+											color="neutral"
+											variant="ghost"
+											square
+											icon="i-lucide-link"
+											aria-label="Copiar enlace público"
+											@click="copyPublicLink(row.id)"
+										/>
+									</UTooltip>
+								</div>
 							</td>
 						</tr>
 					</tbody>
 				</table>
 			</div>
-		</div>
+		</UPageCard>
 
-		<UModal v-model:open="showDialogCreate" title="Crear pagina publica" description="Configura los datos para generar una nueva pagina publica.">
+		<UModal
+			v-model:open="showDialogCreate"
+			:title="editingPageId ? 'Editar página pública' : 'Crear página pública'"
+			:description="editingPageId ? 'Actualiza nombre, contraseña y partituras de la página.' : 'Configura los datos para generar una nueva página con acceso público.'"
+		>
 			<template #body>
-				<form class="grid gap-3" @submit.prevent="createNewPage">
-					<UInput v-model="loadedPage.name" label="Nombre" required />
-					<UInput v-model="loadedPage.password" label="Contrasena" />
-					<label class="text-sm">Partituras</label>
-					<select
-						multiple
-						class="min-h-28 rounded-md border border-slate-300 bg-white px-3 py-2"
-						@change="onPartituresChange"
+				<form class="grid gap-3" @submit.prevent="savePage">
+					<UFormField label="Nombre" required>
+						<UInput v-model="loadedPage.name" />
+					</UFormField>
+					<UFormField
+						label="Contraseña de acceso público"
+						help="Quien tenga este enlace necesitará esta contraseña para ver las partituras."
 					>
-						<option v-for="partiture in partitures" :key="partiture.id" :value="partiture.id">
-							{{ partiture.name }}
-						</option>
-					</select>
+						<UInput
+							v-model="loadedPage.password"
+							type="password"
+							:placeholder="editingPageId ? 'Deja vacío para mantener la actual' : 'Opcional'"
+						/>
+					</UFormField>
+					<UFormField label="Partituras">
+						<USelectMenu
+							v-model="selectedPartitureIds"
+							placeholder="Selecciona una o varias partituras"
+							:items="partitureOptions"
+							value-key="value"
+							label-key="label"
+							multiple
+							searchable
+						/>
+					</UFormField>
 					<div class="mt-2 flex justify-end gap-2">
-						<UButton color="neutral" variant="ghost" @click="showDialogCreate = false">Cancelar</UButton>
-						<UButton color="primary" type="submit">Guardar</UButton>
+						<UButton color="neutral" variant="ghost" @click="closeDialog">Cancelar</UButton>
+						<UButton color="primary" type="submit" :loading="isSaving">{{ editingPageId ? 'Actualizar' : 'Guardar' }}</UButton>
 					</div>
 				</form>
 			</template>
@@ -54,68 +116,177 @@
 </template>
 
 <script lang="ts" setup>
-import type { Page } from '@/stores/songStore'
+interface PartitureLookup {
+	id: string
+	name: string
+}
 
-const { getItems, createItems } = useDirectusItems()
+interface PagePartitureRelation {
+	partiture_id?: string | PartitureLookup | null
+}
+
+interface PageRecord {
+	id: string
+	name: string
+	password?: string | null
+	partitures?: PagePartitureRelation[]
+}
+
+const { getItems, createItems, updateItem } = useDirectusItems()
+const toast = useToast()
 
 definePageMeta({
 	name: 'ListPublicPages'
 })
 
-const pages = ref<Page[]>([])
+const pages = ref<PageRecord[]>([])
 const partitures = ref<Partiture[]>([])
 const showDialogCreate = ref(false)
+const isSaving = ref(false)
+const errorMessage = ref('')
+const selectedPartitureIds = ref<string[]>([])
+const editingPageId = ref<string | null>(null)
 
-const loadedPage = ref<Partial<Page>>({
+const loadedPage = ref({
 	name: '',
-	password: '',
-	partitures: []
+	password: ''
 })
 
-async function createNewPage() {
-	if (!loadedPage.value.name) {
+const partitureOptions = computed(() => {
+	return partitures.value.map((partiture) => ({
+		label: partiture.name,
+		value: partiture.id
+	}))
+})
+
+function getPublicPath(pageId: string) {
+	return `/public/${pageId}`
+}
+
+async function copyPublicLink(pageId: string) {
+	const path = getPublicPath(pageId)
+	await navigator.clipboard.writeText(`${window.location.origin}${path}`)
+	toast.add({
+		title: 'Enlace copiado',
+		description: 'Comparte este enlace con tu público.',
+		color: 'primary'
+	})
+}
+
+function closeDialog() {
+	showDialogCreate.value = false
+	editingPageId.value = null
+	loadedPage.value = { name: '', password: '' }
+	selectedPartitureIds.value = []
+}
+
+function getPartitureId(relation: PagePartitureRelation) {
+	if (!relation.partiture_id) {
+		return null
+	}
+
+	if (typeof relation.partiture_id === 'string') {
+		return relation.partiture_id
+	}
+
+	return relation.partiture_id.id ?? null
+}
+
+function openEditDialog(page: PageRecord) {
+	editingPageId.value = page.id
+	loadedPage.value = {
+		name: page.name,
+		password: ''
+	}
+	selectedPartitureIds.value = (page.partitures ?? [])
+		.map((relation) => getPartitureId(relation))
+		.filter((id): id is string => Boolean(id))
+	showDialogCreate.value = true
+}
+
+async function savePage() {
+	if (!loadedPage.value.name || isSaving.value) {
 		return
 	}
 
-	await createItems<Page>({
-		collection: 'page',
-		items: [
-			{
-				name: loadedPage.value.name,
-				password: loadedPage.value.password,
-				partitures: loadedPage.value.partitures!.map((p) => ({ partiture_id: p.id! }))
-			}
-		]
-	})
+	isSaving.value = true
 
-	showDialogCreate.value = false
-	loadedPage.value = { name: '', password: '', partitures: [] }
-	await loadPages()
+	try {
+		const pagePayload: Partial<PageRecord> = {
+			name: loadedPage.value.name.trim(),
+			partitures: selectedPartitureIds.value.map((id) => ({ partiture_id: id }))
+		}
+
+		const normalizedPassword = loadedPage.value.password.trim()
+		if (normalizedPassword) {
+			pagePayload.password = normalizedPassword
+		}
+
+		if (editingPageId.value) {
+			await updateItem({
+				collection: 'page',
+				id: editingPageId.value,
+				item: pagePayload
+			})
+		} else {
+			await createItems<PageRecord>({
+				collection: 'page',
+				items: [pagePayload]
+			})
+		}
+
+		const wasEditing = Boolean(editingPageId.value)
+		closeDialog()
+		await loadPages()
+		toast.add({
+			title: wasEditing ? 'Página actualizada' : 'Página creada',
+			description: wasEditing
+				? 'Los cambios se han guardado correctamente.'
+				: 'Tu página pública ya está disponible para compartir.',
+			color: 'primary'
+		})
+	} catch {
+		toast.add({
+			title: editingPageId.value ? 'No se pudo actualizar la página' : 'No se pudo crear la página',
+			color: 'error'
+		})
+	} finally {
+		isSaving.value = false
+	}
 }
 
 async function loadPages() {
-	const temp = await getItems<Page>({
-		collection: 'page',
-		params: { filter: { user_created: '$CURRENT_USER' } }
+	errorMessage.value = ''
+
+	try {
+		const temp = await getItems<PageRecord>({
+			collection: 'page',
+			params: {
+				fields: ['id', 'name', 'partitures.partiture_id', 'partitures.partiture_id.id'],
+				filter: { user_created: '$CURRENT_USER' }
+			}
+		})
+
+		pages.value = temp && temp.length !== 0 ? [...temp] : []
+	} catch {
+		pages.value = []
+		errorMessage.value = 'Revisa tu sesión e inténtalo de nuevo.'
+	}
+}
+
+async function loadPartitures() {
+	const temp = await getItems<Partiture>({
+		collection: 'partiture',
+		params: {
+			fields: ['id', 'name'],
+			filter: { user_created: '$CURRENT_USER' }
+		}
 	})
 
-	pages.value = temp && temp.length !== 0 ? [...temp] : []
+	partitures.value = temp && temp.length !== 0 ? [...temp] : []
 }
 
 onMounted(async () => {
-	await loadPages()
-
-	const temp2 = await getItems<Partiture>({
-		collection: 'partiture',
-		params: { filter: { user_created: '$CURRENT_USER' } }
-	})
-
-	partitures.value = temp2 && temp2.length !== 0 ? [...temp2] : []
+	await Promise.all([loadPages(), loadPartitures()])
 })
-
-function onPartituresChange(event: Event) {
-	const target = event.target as HTMLSelectElement
-	const ids = new Set(Array.from(target.selectedOptions).map((option) => option.value))
-	loadedPage.value.partitures = partitures.value.filter((partiture) => ids.has(partiture.id))
-}
 </script>
