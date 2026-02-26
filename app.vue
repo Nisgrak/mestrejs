@@ -28,7 +28,6 @@ onMounted(async () => {
 	unmuteAudio();
 
 	const { token } = useDirectusToken();
-	const { fetchUser } = useDirectusAuth();
 
 	if (songStore.user === undefined && token) {
 		songStore.user = (await useDirectusUser()).value

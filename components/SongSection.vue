@@ -17,37 +17,37 @@
 					:class="horizontalView ? 'min-w-0 flex-1 text-base md:w-44 md:flex-none md:shrink-0' : 'w-full text-xl md:w-72'"
 					:model-value="section.name"
 					@update:model-value="emit('update:section', Object.assign(section, { name: $event }))"
-					aria-label="Nombre de la seccion"
+					aria-label="Nombre de la sección"
 				/>
 
 				<div
 					class="flex h-9 items-center gap-0 overflow-hidden rounded-md border border-slate-200 md:shrink-0"
 					:class="horizontalView ? 'w-auto shrink-0' : 'w-full md:w-auto'"
 				>
-					<UTooltip :text="playing ? 'Pausar reproduccion' : 'Reproducir seccion'">
+					<UTooltip :text="playing ? 'Pausar reproducción' : 'Reproducir sección'">
 						<UButton
 							class="h-full rounded-none rounded-l-md"
 							color="primary"
 							:disabled="section.instruments.length == 0"
 							:icon="playing ? 'i-lucide-square' : 'i-lucide-play'"
 							@click="playing ? pause() : play()"
-							:aria-label="playing ? 'Pausar reproduccion' : 'Reproducir seccion'"
+							:aria-label="playing ? 'Pausar reproducción' : 'Reproducir sección'"
 						/>
 					</UTooltip>
-					<UTooltip text="Anadir instrumento">
+					<UTooltip text="Añadir instrumento">
 						<UButton
 							class="h-9 px-2"
 							icon="i-lucide-plus"
 							variant="ghost"
 							@click="addInstrument"
-							aria-label="Anadir instrumento"
+							aria-label="Añadir instrumento"
 						/>
 					</UTooltip>
 					<UDropdownMenu :items="beatMenuItems">
 						<UButton
 							class="h-9 px-2"
 							variant="ghost"
-							:aria-label="`Compas ${section.beat.name}`"
+							:aria-label="`Compás ${section.beat.name}`"
 						>
 							{{ section.beat.name }}
 						</UButton>
@@ -75,12 +75,12 @@
 
 		<UModal
 			v-model:open="showConfirmBeatModal"
-			title="Cambio de compas"
-			description="Cambiar el compas reiniciara las notas de la seccion."
+			title="Cambio de compás"
+			description="Cambiar el compás reiniciará las notas de la sección."
 		>
 			<template #body>
 				<div class="grid gap-3">
-					<p>¿Vas a perder todas las notas de esta seccion, estás seguro?</p>
+					<p>¿Vas a perder todas las notas de esta sección, estás seguro?</p>
 					<div class="flex justify-end gap-2">
 						<UButton
 							color="neutral"
@@ -99,7 +99,7 @@
 		<UModal
 			v-model:open="showSelectInstrumentModal"
 			title="Selecciona un instrumento"
-			description="Elige el instrumento que quieres anadir a la seccion."
+			description="Elige el instrumento que quieres añadir a la sección."
 		>
 			<template #body>
 				<div class="grid gap-3">

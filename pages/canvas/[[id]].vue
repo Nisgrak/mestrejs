@@ -26,7 +26,7 @@
 								Panel
 							</UButton>
 						</UTooltip>
-						<UTooltip :text="playing ? 'Pausar reproduccion' : 'Reproducir cancion'">
+						<UTooltip :text="playing ? 'Pausar reproducción' : 'Reproducir canción'">
 							<UButton
 								color="primary"
 								size="md"
@@ -34,7 +34,7 @@
 								:disabled="displaySections.length === 0"
 								:icon="playing ? 'i-lucide-square' : 'i-lucide-play'"
 								@click="playing ? pause() : play()"
-								:aria-label="playing ? 'Pausar reproduccion' : 'Reproducir cancion'"
+							:aria-label="playing ? 'Pausar reproducción' : 'Reproducir canción'"
 							/>
 						</UTooltip>
 
@@ -77,14 +77,14 @@
 						</UTooltip>
 
 						<div class="flex h-9 items-center rounded-md border border-default">
-							<UTooltip text="Guardar cancion">
+							<UTooltip text="Guardar canción">
 								<UButton
 									size="md"
 									class="h-9"
 									icon="i-lucide-save"
 									variant="ghost"
 									@click="saveSong(true)"
-									aria-label="Guardar cancion"
+								aria-label="Guardar canción"
 								/>
 							</UTooltip>
 							<UTooltip text="Borrar notas">
@@ -97,24 +97,24 @@
 									aria-label="Borrar notas"
 								/>
 							</UTooltip>
-							<UTooltip text="Insertar cancion">
+							<UTooltip text="Insertar canción">
 								<UButton
 									size="md"
 									class="h-9"
 									icon="i-lucide-code"
 									variant="ghost"
 									@click="insert()"
-									aria-label="Insertar cancion"
+								aria-label="Insertar canción"
 								/>
 							</UTooltip>
-							<UTooltip text="Imprimir composicion en PDF">
+							<UTooltip text="Imprimir composición en PDF">
 								<UButton
 									size="md"
 									class="h-9"
 									icon="i-lucide-printer"
 									variant="ghost"
 									@click="printCompositionPdf"
-									aria-label="Imprimir composicion en PDF"
+								aria-label="Imprimir composición en PDF"
 								/>
 							</UTooltip>
 						</div>
@@ -268,12 +268,12 @@
 										color="neutral"
 										variant="subtle"
 									>{{ songStore.sectionLibrary.length }}</UBadge>
-									<UTooltip text="Anadir seccion">
+									<UTooltip text="Añadir sección">
 										<UButton
 											size="xs"
 											variant="outline"
 											icon="i-lucide-folder-plus"
-											aria-label="Anadir seccion"
+											aria-label="Añadir sección"
 											@click="addSection()"
 										/>
 									</UTooltip>
@@ -292,10 +292,10 @@
 									@click="selectSectionFromLibrary(section.id)"
 								>
 									<div class="mb-2 flex items-center gap-2">
-										<UTooltip text="Reordenar seccion">
+										<UTooltip text="Reordenar sección">
 											<span
 												class="section-library-handle inline-flex h-8 w-8 cursor-grab items-center justify-center rounded-md border border-default text-gray-500"
-												aria-label="Reordenar seccion"
+												aria-label="Reordenar sección"
 												@click.stop
 											>
 												<UIcon
@@ -318,25 +318,25 @@
 											size="xs"
 											variant="ghost"
 											icon="i-lucide-list-plus"
-											aria-label="Anadir bloque"
+											aria-label="Añadir bloque"
 											@click.stop="appendSectionToArrangementFromLibrary(section.id, 1)"
 										/>
 										<UButton
 											size="xs"
 											variant="ghost"
 											icon="i-lucide-copy"
-											aria-label="Duplicar seccion"
+											aria-label="Duplicar sección"
 											@click.stop="duplicateLibrarySection(index)"
 										/>
 										<UTooltip
-											:text="canRemoveSection(section.id) ? 'Borrar seccion' : getRemoveBlockedMessage(section.id)"
+											:text="canRemoveSection(section.id) ? 'Borrar sección' : getRemoveBlockedMessage(section.id)"
 										>
 											<UButton
 												size="xs"
 												variant="ghost"
 												color="error"
 												icon="i-lucide-trash-2"
-												aria-label="Borrar seccion"
+												aria-label="Borrar sección"
 												:disabled="!canRemoveSection(section.id)"
 												@click.stop="removeLibrarySection(index)"
 											/>
@@ -347,7 +347,7 @@
 									v-if="songStore.sectionLibrary.length === 0"
 									class="rounded-md border border-dashed border-default p-3 text-sm text-gray-500"
 								>
-									No hay secciones. Usa el boton de anadir para crear la primera.
+									No hay secciones. Usa el botón de añadir para crear la primera.
 								</p>
 							</div>
 						</div>
@@ -368,7 +368,7 @@
 									:items="composeSectionOptions"
 									value-key="value"
 									label-key="label"
-									placeholder="Selecciona una seccion"
+									placeholder="Selecciona una sección"
 									searchable
 									:disabled="songStore.sectionLibrary.length === 0"
 								/>
@@ -388,7 +388,7 @@
 										:disabled="songStore.sectionLibrary.length === 0"
 										@click="appendSelectedSectionToArrangement"
 									>
-										Anadir bloque
+										Añadir bloque
 									</UButton>
 								</div>
 								<p
@@ -463,7 +463,7 @@
 									v-if="songStore.arrangement.length === 0"
 									class="rounded-md border border-dashed border-default p-3 text-sm text-gray-500"
 								>
-									No hay bloques en la composicion.
+									No hay bloques en la composición.
 								</p>
 							</div>
 						</div>
@@ -477,7 +477,7 @@
 							v-if="!selectedSection"
 							class="rounded-lg border border-dashed border-default bg-white p-4 text-sm text-gray-500"
 						>
-							Selecciona una seccion de la biblioteca para empezar a editar.
+							Selecciona una sección de la biblioteca para empezar a editar.
 						</p>
 						<SongSection
 							v-for="(section, index) in songStore.sectionLibrary"
@@ -520,7 +520,7 @@
 		<div class="print-only print-sheet">
 			<header class="print-header">
 				<h1>{{ songStore.name || 'Partitura' }}</h1>
-				<p>BPM {{ songStore.bpm }} · {{ PRINT_BARS_PER_LINE }} compases por linea</p>
+				<p>BPM {{ songStore.bpm }} · {{ PRINT_BARS_PER_LINE }} compases por línea</p>
 			</header>
 
 			<section
@@ -586,7 +586,7 @@ let playing = ref(false);
 let sectionsRefs = useTemplateRefsList<InstanceType<typeof SongSection>>()
 let instrumentsSoundsList = ref<ReturnType<typeof setTimeout>[]>([])
 const showConfirmModal = ref(false)
-const confirmDialogTitle = ref('Confirmar accion')
+const confirmDialogTitle = ref('Confirmar acción')
 const confirmDialogMessage = ref('')
 let confirmResolver: ((value: boolean) => void) | null = null
 const composeSectionId = ref('')
@@ -758,7 +758,7 @@ function removeArrangementItem(index: number) {
 
 	if (songStore.arrangement.length <= 1) {
 		toast.add({
-			title: 'La composicion debe tener al menos 1 bloque',
+			title: 'La composición debe tener al menos 1 bloque',
 			color: 'warning'
 		})
 		return
@@ -791,7 +791,7 @@ function removeLibrarySection(index: number) {
 	if (usage > 0) {
 		const blocksLabel = usage === 1 ? '1 bloque' : `${usage} bloques`
 		toast.add({
-			title: `No puedes borrar esta seccion: aun tiene ${blocksLabel} en composicion`,
+			title: `No puedes borrar esta sección: aún tiene ${blocksLabel} en composición`,
 			color: 'warning'
 		})
 		return
@@ -838,7 +838,7 @@ function getRemoveBlockedMessage(sectionId: string) {
 	}
 
 	const blocksLabel = usage === 1 ? '1 bloque' : `${usage} bloques`
-	return `No se puede borrar: aun tiene ${blocksLabel} en composicion`
+	return `No se puede borrar: aún tiene ${blocksLabel} en composición`
 }
 
 function updateLibrarySection(index: number, updatedSection: Section) {
@@ -1247,7 +1247,7 @@ let saveSong = async (notify = true, forceAskClone = false) => {
 	let shouldCreateCopy = !hasCurrentPartiture
 
 	if (!shouldCreateCopy && (songStore.user === undefined || forceAskClone)) {
-		const confirmed = await requestConfirmation('Crear copia', 'Vas a crear una nueva copia de la cancion, ¿estás seguro?')
+		const confirmed = await requestConfirmation('Crear copia', 'Vas a crear una nueva copia de la canción, ¿estás seguro?')
 		if (!confirmed) {
 			return
 		}

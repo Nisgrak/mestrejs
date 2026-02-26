@@ -30,13 +30,13 @@
 				class="flex h-8 items-center gap-1 rounded-md border border-slate-200 px-1 md:h-9"
 				:class="horizontalView ? 'relative z-10 w-auto shrink-0' : 'w-full md:w-auto'"
 			>
-				<UTooltip text="Anadir fila">
+				<UTooltip text="Añadir fila">
 					<UButton
 						class="h-8 px-1.5 md:h-9 md:px-2"
 						icon="i-lucide-plus"
 						variant="ghost"
 						@click="addRow"
-						aria-label="Anadir fila"
+						aria-label="Añadir fila"
 					/>
 				</UTooltip>
 				<UTooltip text="Borrar fila">
@@ -126,7 +126,7 @@
 		<UModal
 			v-model:open="showDialogNotes"
 			title="Cambio de compases"
-			description="Ajusta los grupos de notas por linea."
+			description="Ajusta los grupos de notas por línea."
 		>
 			<template #body>
 				<UAlert
@@ -169,7 +169,7 @@
 		<UModal
 			v-model:open="showDeleteInstrumentModal"
 			title="Borrar instrumento"
-			description="Esta accion eliminara el instrumento de la seccion."
+			description="Esta acción eliminará el instrumento de la sección."
 		>
 			<template #body>
 				<div class="grid gap-3">
