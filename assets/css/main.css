@@ -17,3 +17,10 @@ button,
 [role="button"] {
 	touch-action: manipulation;
 }
+
+@media print {
+	[data-slot="viewport"],
+	[data-slot="base"] {
+		display: none !important;
+	}
+}

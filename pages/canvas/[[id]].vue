@@ -1,432 +1,520 @@
 <template>
 	<div class="overflow-x-clip">
 		<div class="screen-only">
-		<div class="sticky top-0 z-40 border-b border-default bg-white shadow-sm">
-			<div
-				class="flex w-full items-center bg-white px-2 py-2 md:justify-center md:gap-3 md:px-5"
-				:class="isMobileLandscape ? 'flex-nowrap gap-1 overflow-x-auto' : 'flex-wrap gap-2'"
-			>
+			<div class="sticky top-0 z-40 border-b border-default bg-white shadow-sm">
 				<div
-					class="flex items-center md:w-auto md:flex-nowrap"
-					:class="isMobileLandscape ? 'w-auto shrink-0 flex-nowrap gap-1' : 'w-full flex-wrap gap-2'"
+					class="flex w-full items-center bg-white px-2 py-2 md:justify-center md:gap-3 md:px-5"
+					:class="isMobileLandscape ? 'flex-nowrap gap-1 overflow-x-auto' : 'flex-wrap gap-2'"
 				>
-					<UTooltip v-if="isMobileLandscape" :text="mobileSidePanelOpen ? 'Cerrar panel lateral' : 'Abrir panel lateral'">
-						<UButton
-							:color="mobileSidePanelOpen ? 'primary' : 'neutral'"
-							size="md"
-							class="h-9"
-							:variant="mobileSidePanelOpen ? 'solid' : 'outline'"
-							icon="i-lucide-panel-left"
-							@click="toggleMobileSidePanel"
-							:aria-label="mobileSidePanelOpen ? 'Cerrar panel lateral' : 'Abrir panel lateral'"
+					<div
+						class="flex items-center md:w-auto md:flex-nowrap"
+						:class="isMobileLandscape ? 'w-auto shrink-0 flex-nowrap gap-1' : 'w-full flex-wrap gap-2'"
+					>
+						<UTooltip
+							v-if="isMobileLandscape"
+							:text="mobileSidePanelOpen ? 'Cerrar panel lateral' : 'Abrir panel lateral'"
 						>
-							Panel
-						</UButton>
-					</UTooltip>
-					<UTooltip :text="playing ? 'Pausar reproduccion' : 'Reproducir cancion'">
-						<UButton
-							color="primary"
-							size="md"
-							class="h-9"
-							:disabled="displaySections.length === 0"
-							:icon="playing ? 'i-lucide-square' : 'i-lucide-play'"
-							@click="playing ? pause() : play()"
-							:aria-label="playing ? 'Pausar reproduccion' : 'Reproducir cancion'"
-						/>
-					</UTooltip>
-
-					<UTooltip :text="songStore.repeat ? 'Desactivar repeticion' : 'Activar repeticion'">
-						<UButton
-							:color="songStore.repeat ? 'primary' : 'neutral'"
-							size="md"
-							class="h-9"
-							variant="outline"
-							icon="i-lucide-repeat"
-							@click="songStore.repeat = !songStore.repeat"
-							:aria-label="songStore.repeat ? 'Desactivar repeticion' : 'Activar repeticion'"
-						/>
-					</UTooltip>
-
-					<UTooltip :text="songStore.showNote ? 'Ocultar notas' : 'Mostrar notas'">
-						<UButton
-							:color="songStore.showNote ? 'primary' : 'neutral'"
-							size="md"
-							class="h-9"
-							variant="outline"
-							icon="i-lucide-hash"
-							@click="songStore.showNote = !songStore.showNote"
-							:aria-label="songStore.showNote ? 'Ocultar notas' : 'Mostrar notas'"
-						/>
-					</UTooltip>
-					<UTooltip
-						v-if="!isMobileViewport"
-						:text="songStore.horizontalView ? 'Vista vertical' : 'Vista horizontal'"
-					>
-						<UButton
-							:color="songStore.horizontalView ? 'primary' : 'neutral'"
-							size="md"
-							class="h-9"
-							variant="outline"
-							icon="i-lucide-layout-grid"
-							@click="songStore.horizontalView = !songStore.horizontalView"
-							:aria-label="songStore.horizontalView ? 'Vista vertical' : 'Vista horizontal'"
-						/>
-					</UTooltip>
-
-					<div class="flex h-9 items-center rounded-md border border-default">
-						<UTooltip text="Guardar cancion">
 							<UButton
+								:color="mobileSidePanelOpen ? 'primary' : 'neutral'"
 								size="md"
 								class="h-9"
-								icon="i-lucide-save"
-								variant="ghost"
-								@click="saveSong(true)"
-								aria-label="Guardar cancion"
-							/>
-						</UTooltip>
-						<UTooltip text="Borrar notas">
-							<UButton
-								size="md"
-								class="h-9"
-								icon="i-lucide-eraser"
-								variant="ghost"
-								@click="clearNotes()"
-								aria-label="Borrar notas"
-							/>
-						</UTooltip>
-						<UTooltip text="Insertar cancion">
-							<UButton
-								size="md"
-								class="h-9"
-								icon="i-lucide-code"
-								variant="ghost"
-								@click="insert()"
-								aria-label="Insertar cancion"
-							/>
-						</UTooltip>
-						<UTooltip text="Imprimir composicion en PDF">
-							<UButton
-								size="md"
-								class="h-9"
-								icon="i-lucide-printer"
-								variant="ghost"
-								@click="printCompositionPdf"
-								aria-label="Imprimir composicion en PDF"
-							/>
-						</UTooltip>
-					</div>
-
-				</div>
-
-				<div
-					class="flex items-center md:w-auto"
-					:class="isMobileLandscape ? 'w-auto shrink-0 gap-1' : 'w-full gap-2'"
-				>
-					<UInput
-						v-model="songStore.name"
-						size="md"
-						:ui="{ base: 'h-9' }"
-						:class="isMobileLandscape ? 'w-40' : 'min-w-0 flex-1 md:w-72 md:flex-none'"
-						placeholder="Partitura"
-					/>
-					<UInput
-						v-model="songStore.bpm"
-						size="md"
-						:ui="{ base: 'h-9 text-center' }"
-						:class="isMobileLandscape ? 'w-16' : 'w-24'"
-						placeholder="BPM"
-						type="number"
-					/>
-				</div>
-			</div>
-			<div v-if="isMobileViewport && !isMobileLandscape" class="border-t border-default bg-white px-2 py-2">
-				<div class="grid grid-cols-3 gap-2">
-					<UButton
-						:variant="mobileActivePanel === 'library' ? 'solid' : 'outline'"
-						:color="mobileActivePanel === 'library' ? 'primary' : 'neutral'"
-						size="sm"
-						@click="mobileActivePanel = 'library'"
-					>
-						<span class="inline-flex items-center gap-1">
-							<span>Biblioteca</span>
-							<UBadge size="xs" variant="soft" color="neutral">{{ songStore.sectionLibrary.length }}</UBadge>
-						</span>
-					</UButton>
-					<UButton
-						:variant="mobileActivePanel === 'composition' ? 'solid' : 'outline'"
-						:color="mobileActivePanel === 'composition' ? 'primary' : 'neutral'"
-						size="sm"
-						@click="mobileActivePanel = 'composition'"
-					>
-						<span class="inline-flex items-center gap-1">
-							<span>Compositor</span>
-							<UBadge size="xs" variant="soft" color="neutral">{{ songStore.arrangement.length }}</UBadge>
-						</span>
-					</UButton>
-					<UButton
-						:variant="mobileActivePanel === 'editor' ? 'solid' : 'outline'"
-						:color="mobileActivePanel === 'editor' ? 'primary' : 'neutral'"
-						size="sm"
-						@click="mobileActivePanel = 'editor'"
-					>
-						<span class="inline-flex items-center gap-1">
-							<span>Editor</span>
-							<UBadge size="xs" variant="soft" color="neutral">{{ selectedSectionInstrumentsCount }}</UBadge>
-						</span>
-					</UButton>
-				</div>
-			</div>
-		</div>
-
-		<div
-			v-if="isMobileLandscape && mobileSidePanelOpen"
-			class="fixed inset-0 z-40 bg-black/30"
-			@click="mobileSidePanelOpen = false"
-		/>
-
-		<div
-			data-notes-scroll-root
-			:class="effectiveHorizontalView ? 'w-full md:overflow-x-auto' : 'w-full'"
-		>
-			<div class="mt-3 grid w-full gap-4 p-5 md:grid-cols-[320px_minmax(0,1fr)] md:p-8">
-				<aside
-					v-show="!isMobileViewport || isMobileLandscape || mobileActivePanel !== 'editor'"
-					class="rounded-lg border border-default bg-white p-4"
-					:class="isMobileLandscape
-						? [
-							'fixed inset-y-0 left-0 z-50 w-[20rem] overflow-y-auto rounded-none border-y-0 border-l-0 shadow-xl transition-transform duration-200',
-							mobileSidePanelOpen ? 'translate-x-0' : '-translate-x-full'
-						]
-						: ''"
-				>
-					<div v-if="isMobileLandscape" class="sticky top-0 z-10 -mx-4 mb-4 border-b border-default bg-white px-4 py-2">
-						<div class="flex items-center gap-2">
-							<UButton
-								:variant="mobileSidePanelTab === 'library' ? 'solid' : 'outline'"
-								:color="mobileSidePanelTab === 'library' ? 'primary' : 'neutral'"
-								size="sm"
-								class="flex-1"
-								@click="mobileSidePanelTab = 'library'"
+								:variant="mobileSidePanelOpen ? 'solid' : 'outline'"
+								icon="i-lucide-panel-left"
+								@click="toggleMobileSidePanel"
+								:aria-label="mobileSidePanelOpen ? 'Cerrar panel lateral' : 'Abrir panel lateral'"
 							>
-								<span class="inline-flex items-center gap-1">
-									<span>Biblioteca</span>
-									<UBadge size="xs" variant="soft" color="neutral">{{ songStore.sectionLibrary.length }}</UBadge>
-								</span>
+								Panel
 							</UButton>
+						</UTooltip>
+						<UTooltip :text="playing ? 'Pausar reproduccion' : 'Reproducir cancion'">
 							<UButton
-								:variant="mobileSidePanelTab === 'composition' ? 'solid' : 'outline'"
-								:color="mobileSidePanelTab === 'composition' ? 'primary' : 'neutral'"
-								size="sm"
-								class="flex-1"
-								@click="mobileSidePanelTab = 'composition'"
-							>
-								<span class="inline-flex items-center gap-1">
-									<span>Compositor</span>
-									<UBadge size="xs" variant="soft" color="neutral">{{ songStore.arrangement.length }}</UBadge>
-								</span>
-							</UButton>
+								color="primary"
+								size="md"
+								class="h-9"
+								:disabled="displaySections.length === 0"
+								:icon="playing ? 'i-lucide-square' : 'i-lucide-play'"
+								@click="playing ? pause() : play()"
+								:aria-label="playing ? 'Pausar reproduccion' : 'Reproducir cancion'"
+							/>
+						</UTooltip>
+
+						<UTooltip :text="songStore.repeat ? 'Desactivar repeticion' : 'Activar repeticion'">
+							<UButton
+								:color="songStore.repeat ? 'primary' : 'neutral'"
+								size="md"
+								class="h-9"
+								variant="outline"
+								icon="i-lucide-repeat"
+								@click="songStore.repeat = !songStore.repeat"
+								:aria-label="songStore.repeat ? 'Desactivar repeticion' : 'Activar repeticion'"
+							/>
+						</UTooltip>
+
+						<UTooltip :text="songStore.showNote ? 'Ocultar notas' : 'Mostrar notas'">
+							<UButton
+								:color="songStore.showNote ? 'primary' : 'neutral'"
+								size="md"
+								class="h-9"
+								variant="outline"
+								icon="i-lucide-hash"
+								@click="songStore.showNote = !songStore.showNote"
+								:aria-label="songStore.showNote ? 'Ocultar notas' : 'Mostrar notas'"
+							/>
+						</UTooltip>
+						<UTooltip
+							v-if="!isMobileViewport"
+							:text="songStore.horizontalView ? 'Vista vertical' : 'Vista horizontal'"
+						>
+							<UButton
+								:color="songStore.horizontalView ? 'primary' : 'neutral'"
+								size="md"
+								class="h-9"
+								variant="outline"
+								icon="i-lucide-layout-grid"
+								@click="songStore.horizontalView = !songStore.horizontalView"
+								:aria-label="songStore.horizontalView ? 'Vista vertical' : 'Vista horizontal'"
+							/>
+						</UTooltip>
+
+						<div class="flex h-9 items-center rounded-md border border-default">
+							<UTooltip text="Guardar cancion">
+								<UButton
+									size="md"
+									class="h-9"
+									icon="i-lucide-save"
+									variant="ghost"
+									@click="saveSong(true)"
+									aria-label="Guardar cancion"
+								/>
+							</UTooltip>
+							<UTooltip text="Borrar notas">
+								<UButton
+									size="md"
+									class="h-9"
+									icon="i-lucide-eraser"
+									variant="ghost"
+									@click="clearNotes()"
+									aria-label="Borrar notas"
+								/>
+							</UTooltip>
+							<UTooltip text="Insertar cancion">
+								<UButton
+									size="md"
+									class="h-9"
+									icon="i-lucide-code"
+									variant="ghost"
+									@click="insert()"
+									aria-label="Insertar cancion"
+								/>
+							</UTooltip>
+							<UTooltip text="Imprimir composicion en PDF">
+								<UButton
+									size="md"
+									class="h-9"
+									icon="i-lucide-printer"
+									variant="ghost"
+									@click="printCompositionPdf"
+									aria-label="Imprimir composicion en PDF"
+								/>
+							</UTooltip>
 						</div>
+
 					</div>
-					<div v-show="!isMobileViewport || activeSidebarPanel === 'library'" class="mb-4">
-						<div class="mb-3 flex items-center justify-between gap-2">
-							<h3 class="text-sm font-semibold uppercase tracking-wide text-gray-600">Biblioteca de secciones</h3>
+
+					<div
+						class="flex items-center md:w-auto"
+						:class="isMobileLandscape ? 'w-auto shrink-0 gap-1' : 'w-full gap-2'"
+					>
+						<UInput
+							v-model="songStore.name"
+							size="md"
+							:ui="{ base: 'h-9' }"
+							:class="isMobileLandscape ? 'w-40' : 'min-w-0 flex-1 md:w-72 md:flex-none'"
+							placeholder="Partitura"
+						/>
+						<UInput
+							v-model="songStore.bpm"
+							size="md"
+							:ui="{ base: 'h-9 text-center' }"
+							:class="isMobileLandscape ? 'w-16' : 'w-24'"
+							placeholder="BPM"
+							type="number"
+						/>
+					</div>
+				</div>
+				<div
+					v-if="isMobileViewport && !isMobileLandscape"
+					class="border-t border-default bg-white px-2 py-2"
+				>
+					<div class="grid grid-cols-3 gap-2">
+						<UButton
+							:variant="mobileActivePanel === 'library' ? 'solid' : 'outline'"
+							:color="mobileActivePanel === 'library' ? 'primary' : 'neutral'"
+							size="sm"
+							@click="mobileActivePanel = 'library'"
+						>
+							<span class="inline-flex items-center gap-1">
+								<span>Biblioteca</span>
+								<UBadge
+									size="xs"
+									variant="soft"
+									color="neutral"
+								>{{ songStore.sectionLibrary.length }}</UBadge>
+							</span>
+						</UButton>
+						<UButton
+							:variant="mobileActivePanel === 'composition' ? 'solid' : 'outline'"
+							:color="mobileActivePanel === 'composition' ? 'primary' : 'neutral'"
+							size="sm"
+							@click="mobileActivePanel = 'composition'"
+						>
+							<span class="inline-flex items-center gap-1">
+								<span>Compositor</span>
+								<UBadge
+									size="xs"
+									variant="soft"
+									color="neutral"
+								>{{ songStore.arrangement.length }}</UBadge>
+							</span>
+						</UButton>
+						<UButton
+							:variant="mobileActivePanel === 'editor' ? 'solid' : 'outline'"
+							:color="mobileActivePanel === 'editor' ? 'primary' : 'neutral'"
+							size="sm"
+							@click="mobileActivePanel = 'editor'"
+						>
+							<span class="inline-flex items-center gap-1">
+								<span>Editor</span>
+								<UBadge
+									size="xs"
+									variant="soft"
+									color="neutral"
+								>{{ selectedSectionInstrumentsCount }}</UBadge>
+							</span>
+						</UButton>
+					</div>
+				</div>
+			</div>
+
+			<div
+				v-if="isMobileLandscape && mobileSidePanelOpen"
+				class="fixed inset-0 z-40 bg-black/30"
+				@click="mobileSidePanelOpen = false"
+			/>
+
+			<div
+				data-notes-scroll-root
+				:class="effectiveHorizontalView ? 'w-full md:overflow-x-auto' : 'w-full'"
+			>
+				<div class="mt-3 grid w-full gap-4 p-5 md:grid-cols-[320px_minmax(0,1fr)] md:p-8">
+					<aside
+						v-show="!isMobileViewport || isMobileLandscape || mobileActivePanel !== 'editor'"
+						class="rounded-lg border border-default bg-white p-4"
+						:class="isMobileLandscape
+							? [
+								'fixed inset-y-0 left-0 z-50 w-[20rem] overflow-y-auto rounded-none border-y-0 border-l-0 shadow-xl transition-transform duration-200',
+								mobileSidePanelOpen ? 'translate-x-0' : '-translate-x-full'
+							]
+							: ''"
+					>
+						<div
+							v-if="isMobileLandscape"
+							class="sticky top-0 z-10 -mx-4 mb-4 border-b border-default bg-white px-4 py-2"
+						>
 							<div class="flex items-center gap-2">
-								<UBadge color="neutral" variant="subtle">{{ songStore.sectionLibrary.length }}</UBadge>
-								<UTooltip text="Anadir seccion">
-									<UButton
-										size="xs"
-										variant="outline"
-										icon="i-lucide-folder-plus"
-										aria-label="Anadir seccion"
-										@click="addSection()"
-									/>
-								</UTooltip>
+								<UButton
+									:variant="mobileSidePanelTab === 'library' ? 'solid' : 'outline'"
+									:color="mobileSidePanelTab === 'library' ? 'primary' : 'neutral'"
+									size="sm"
+									class="flex-1"
+									@click="mobileSidePanelTab = 'library'"
+								>
+									<span class="inline-flex items-center gap-1">
+										<span>Biblioteca</span>
+										<UBadge
+											size="xs"
+											variant="soft"
+											color="neutral"
+										>{{ songStore.sectionLibrary.length }}</UBadge>
+									</span>
+								</UButton>
+								<UButton
+									:variant="mobileSidePanelTab === 'composition' ? 'solid' : 'outline'"
+									:color="mobileSidePanelTab === 'composition' ? 'primary' : 'neutral'"
+									size="sm"
+									class="flex-1"
+									@click="mobileSidePanelTab = 'composition'"
+								>
+									<span class="inline-flex items-center gap-1">
+										<span>Compositor</span>
+										<UBadge
+											size="xs"
+											variant="soft"
+											color="neutral"
+										>{{ songStore.arrangement.length }}</UBadge>
+									</span>
+								</UButton>
 							</div>
 						</div>
-
-						<div ref="sectionLibraryRef" class="grid gap-2">
-							<div
-								v-for="(section, index) in songStore.sectionLibrary"
-								:key="section.id"
-								class="rounded-md border p-2 transition-colors cursor-pointer"
-								:class="selectedSectionId === section.id ? 'border-primary bg-primary-50' : 'border-default bg-white hover:bg-slate-50'"
-								@click="selectSectionFromLibrary(section.id)"
-							>
-								<div class="mb-2 flex items-center gap-2">
-									<UTooltip text="Reordenar seccion">
-										<span
-											class="section-library-handle inline-flex h-8 w-8 cursor-grab items-center justify-center rounded-md border border-default text-gray-500"
-											aria-label="Reordenar seccion"
-											@click.stop
-										>
-											<UIcon name="i-lucide-grip-vertical" class="h-4 w-4" />
-										</span>
-									</UTooltip>
-									<div class="flex min-w-0 flex-1 items-center justify-between gap-2 text-left">
-										<p class="truncate text-sm font-medium">{{ section.name }}</p>
-										<UBadge color="neutral" variant="soft" size="xs">{{ getSectionUsageLabel(section.id) }}</UBadge>
-									</div>
-								</div>
-								<div class="flex items-center gap-1">
-									<UButton
-										size="xs"
-										variant="ghost"
-										icon="i-lucide-list-plus"
-										aria-label="Anadir bloque"
-										@click.stop="appendSectionToArrangementFromLibrary(section.id, 1)"
-									/>
-									<UButton
-										size="xs"
-										variant="ghost"
-										icon="i-lucide-copy"
-										aria-label="Duplicar seccion"
-										@click.stop="duplicateLibrarySection(index)"
-									/>
-									<UTooltip :text="canRemoveSection(section.id) ? 'Borrar seccion' : getRemoveBlockedMessage(section.id)">
+						<div
+							v-show="!isMobileViewport || activeSidebarPanel === 'library'"
+							class="mb-4"
+						>
+							<div class="mb-3 flex items-center justify-between gap-2">
+								<h3 class="text-sm font-semibold uppercase tracking-wide text-gray-600">Biblioteca de
+									secciones</h3>
+								<div class="flex items-center gap-2">
+									<UBadge
+										color="neutral"
+										variant="subtle"
+									>{{ songStore.sectionLibrary.length }}</UBadge>
+									<UTooltip text="Anadir seccion">
 										<UButton
 											size="xs"
-											variant="ghost"
-											color="error"
-											icon="i-lucide-trash-2"
-											aria-label="Borrar seccion"
-											:disabled="!canRemoveSection(section.id)"
-											@click.stop="removeLibrarySection(index)"
+											variant="outline"
+											icon="i-lucide-folder-plus"
+											aria-label="Anadir seccion"
+											@click="addSection()"
 										/>
 									</UTooltip>
 								</div>
 							</div>
-							<p v-if="songStore.sectionLibrary.length === 0" class="rounded-md border border-dashed border-default p-3 text-sm text-gray-500">
-								No hay secciones. Usa el boton de anadir para crear la primera.
-							</p>
-						</div>
-					</div>
 
-					<div v-if="!isMobileViewport" class="h-px bg-default" />
-
-					<div v-show="!isMobileViewport || activeSidebarPanel === 'composition'" :class="isMobileViewport ? '' : 'mt-4'">
-						<h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-600">Composicion</h3>
-						<div class="mb-3 grid gap-2">
-						<USelectMenu
-							v-model="composeSectionId"
-							:items="composeSectionOptions"
-							value-key="value"
-							label-key="label"
-							placeholder="Selecciona una seccion"
-							searchable
-							:disabled="songStore.sectionLibrary.length === 0"
-						/>
-						<div class="flex gap-2">
-							<UInput
-								v-model.number="composeRepeats"
-								type="number"
-								min="1"
-								class="w-30"
-								icon="i-lucide-repeat-2"
-								placeholder="Reps"
-								aria-label="Repeticiones del bloque"
-							/>
-							<UButton
-								color="primary"
-								class="flex-1"
-								:disabled="songStore.sectionLibrary.length === 0"
-								@click="appendSelectedSectionToArrangement"
+							<div
+								ref="sectionLibraryRef"
+								class="grid gap-2"
 							>
-								Anadir bloque
-							</UButton>
-						</div>
-						<p v-if="songStore.sectionLibrary.length === 0" class="text-xs text-gray-500">
-							Crea secciones en la biblioteca para poder componer.
-						</p>
-					</div>
-					<div ref="compositionRef" class="grid gap-2">
-						<div
-							v-for="(item, index) in songStore.arrangement"
-							:key="item.id"
-							class="flex flex-wrap items-center gap-2 rounded-md border px-3 py-2"
-							:class="item.id === activeArrangementItemId ? 'border-primary bg-primary-50' : item.id === selectedArrangementItemId ? 'border-slate-400 bg-slate-50' : 'border-default bg-white'"
-							:data-arrangement-id="item.id"
-							@click="selectArrangementItem(item.id)"
-						>
-							<UTooltip text="Mover bloque">
-								<span
-									class="arrangement-handle inline-flex h-8 w-8 cursor-grab items-center justify-center rounded-md border border-default text-gray-500"
-									aria-label="Mover bloque"
-									@click.stop
+								<div
+									v-for="(section, index) in songStore.sectionLibrary"
+									:key="section.id"
+									class="rounded-md border p-2 transition-colors cursor-pointer"
+									:class="selectedSectionId === section.id ? 'border-primary bg-primary-50' : 'border-default bg-white hover:bg-slate-50'"
+									@click="selectSectionFromLibrary(section.id)"
 								>
-									<UIcon name="i-lucide-grip-vertical" class="h-4 w-4" />
-								</span>
-							</UTooltip>
-							<USelectMenu
-								:model-value="item.sectionId"
-								:items="arrangementSectionOptions"
-								value-key="value"
-								label-key="label"
-								class="min-w-40"
-								searchable
-								@click.stop
-								@update:model-value="setArrangementSection(index, $event)"
-							/>
-							<UInput
-								v-model.number="item.repeats"
-								type="number"
-								min="1"
-								class="w-30"
-								icon="i-lucide-repeat-2"
-								placeholder="Reps"
-								aria-label="Repeticiones del bloque"
-								@click.stop
-								@update:model-value="normalizeRepeats(index)"
-							/>
-							<UButton icon="i-lucide-copy" variant="ghost" color="neutral" @click.stop="duplicateArrangementItem(index)" aria-label="Duplicar bloque" />
-							<UButton icon="i-lucide-trash-2" variant="ghost" color="error" @click.stop="removeArrangementItem(index)" aria-label="Borrar bloque" />
+									<div class="mb-2 flex items-center gap-2">
+										<UTooltip text="Reordenar seccion">
+											<span
+												class="section-library-handle inline-flex h-8 w-8 cursor-grab items-center justify-center rounded-md border border-default text-gray-500"
+												aria-label="Reordenar seccion"
+												@click.stop
+											>
+												<UIcon
+													name="i-lucide-grip-vertical"
+													class="h-4 w-4"
+												/>
+											</span>
+										</UTooltip>
+										<div class="flex min-w-0 flex-1 items-center justify-between gap-2 text-left">
+											<p class="truncate text-sm font-medium">{{ section.name }}</p>
+											<UBadge
+												color="neutral"
+												variant="soft"
+												size="xs"
+											>{{ getSectionUsageLabel(section.id) }}</UBadge>
+										</div>
+									</div>
+									<div class="flex items-center gap-1">
+										<UButton
+											size="xs"
+											variant="ghost"
+											icon="i-lucide-list-plus"
+											aria-label="Anadir bloque"
+											@click.stop="appendSectionToArrangementFromLibrary(section.id, 1)"
+										/>
+										<UButton
+											size="xs"
+											variant="ghost"
+											icon="i-lucide-copy"
+											aria-label="Duplicar seccion"
+											@click.stop="duplicateLibrarySection(index)"
+										/>
+										<UTooltip
+											:text="canRemoveSection(section.id) ? 'Borrar seccion' : getRemoveBlockedMessage(section.id)"
+										>
+											<UButton
+												size="xs"
+												variant="ghost"
+												color="error"
+												icon="i-lucide-trash-2"
+												aria-label="Borrar seccion"
+												:disabled="!canRemoveSection(section.id)"
+												@click.stop="removeLibrarySection(index)"
+											/>
+										</UTooltip>
+									</div>
+								</div>
+								<p
+									v-if="songStore.sectionLibrary.length === 0"
+									class="rounded-md border border-dashed border-default p-3 text-sm text-gray-500"
+								>
+									No hay secciones. Usa el boton de anadir para crear la primera.
+								</p>
+							</div>
 						</div>
-						<p v-if="songStore.arrangement.length === 0" class="rounded-md border border-dashed border-default p-3 text-sm text-gray-500">
-							No hay bloques en la composicion.
-						</p>
-					</div>
-					</div>
-				</aside>
 
-				<div v-show="!isMobileViewport || isMobileLandscape || mobileActivePanel === 'editor'" class="md:min-w-0">
-					<p v-if="!selectedSection" class="rounded-lg border border-dashed border-default bg-white p-4 text-sm text-gray-500">
-						Selecciona una seccion de la biblioteca para empezar a editar.
-					</p>
-					<SongSection
-						v-for="(section, index) in songStore.sectionLibrary"
-						:key="section.id"
-						v-show="selectedSectionId === section.id"
-						:ref="sectionsRefs.set"
-						:section="section"
-						:horizontal-view="effectiveHorizontalView"
-						:sync-notes-scroll="shouldSyncNotesScroll"
-						@update:section="updateLibrarySection(index, $event)"
-					/>
+						<div
+							v-if="!isMobileViewport"
+							class="h-px bg-default"
+						/>
+
+						<div
+							v-show="!isMobileViewport || activeSidebarPanel === 'composition'"
+							:class="isMobileViewport ? '' : 'mt-4'"
+						>
+							<h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-600">Composición</h3>
+							<div class="mb-3 grid gap-2">
+								<USelectMenu
+									v-model="composeSectionId"
+									:items="composeSectionOptions"
+									value-key="value"
+									label-key="label"
+									placeholder="Selecciona una seccion"
+									searchable
+									:disabled="songStore.sectionLibrary.length === 0"
+								/>
+								<div class="flex gap-2">
+									<UInput
+										v-model.number="composeRepeats"
+										type="number"
+										min="1"
+										class="w-30"
+										icon="i-lucide-repeat-2"
+										placeholder="Reps"
+										aria-label="Repeticiones del bloque"
+									/>
+									<UButton
+										color="primary"
+										class="flex-1"
+										:disabled="songStore.sectionLibrary.length === 0"
+										@click="appendSelectedSectionToArrangement"
+									>
+										Anadir bloque
+									</UButton>
+								</div>
+								<p
+									v-if="songStore.sectionLibrary.length === 0"
+									class="text-xs text-gray-500"
+								>
+									Crea secciones en la biblioteca para poder componer.
+								</p>
+							</div>
+							<div
+								ref="compositionRef"
+								class="grid gap-2"
+							>
+								<div
+									v-for="(item, index) in songStore.arrangement"
+									:key="item.id"
+									class="flex flex-wrap items-center gap-2 rounded-md border px-3 py-2"
+									:class="item.id === activeArrangementItemId ? 'border-primary bg-primary-50' : item.id === selectedArrangementItemId ? 'border-slate-400 bg-slate-50' : 'border-default bg-white'"
+									:data-arrangement-id="item.id"
+									@click="selectArrangementItem(item.id)"
+								>
+									<UTooltip text="Mover bloque">
+										<span
+											class="arrangement-handle inline-flex h-8 w-8 cursor-grab items-center justify-center rounded-md border border-default text-gray-500"
+											aria-label="Mover bloque"
+											@click.stop
+										>
+											<UIcon
+												name="i-lucide-grip-vertical"
+												class="h-4 w-4"
+											/>
+										</span>
+									</UTooltip>
+									<USelectMenu
+										:model-value="item.sectionId"
+										:items="arrangementSectionOptions"
+										value-key="value"
+										label-key="label"
+										class="min-w-40"
+										searchable
+										@click.stop
+										@update:model-value="setArrangementSection(index, $event)"
+									/>
+									<UInput
+										v-model.number="item.repeats"
+										type="number"
+										min="1"
+										class="w-30"
+										icon="i-lucide-repeat-2"
+										placeholder="Reps"
+										aria-label="Repeticiones del bloque"
+										@click.stop
+										@update:model-value="normalizeRepeats(index)"
+									/>
+									<UButton
+										icon="i-lucide-copy"
+										variant="ghost"
+										color="neutral"
+										@click.stop="duplicateArrangementItem(index)"
+										aria-label="Duplicar bloque"
+									/>
+									<UButton
+										icon="i-lucide-trash-2"
+										variant="ghost"
+										color="error"
+										:disabled="songStore.arrangement.length <= 1"
+										@click.stop="removeArrangementItem(index)"
+										aria-label="Borrar bloque"
+									/>
+								</div>
+								<p
+									v-if="songStore.arrangement.length === 0"
+									class="rounded-md border border-dashed border-default p-3 text-sm text-gray-500"
+								>
+									No hay bloques en la composicion.
+								</p>
+							</div>
+						</div>
+					</aside>
+
+					<div
+						v-show="!isMobileViewport || isMobileLandscape || mobileActivePanel === 'editor'"
+						class="md:min-w-0"
+					>
+						<p
+							v-if="!selectedSection"
+							class="rounded-lg border border-dashed border-default bg-white p-4 text-sm text-gray-500"
+						>
+							Selecciona una seccion de la biblioteca para empezar a editar.
+						</p>
+						<SongSection
+							v-for="(section, index) in songStore.sectionLibrary"
+							:key="section.id"
+							v-show="selectedSectionId === section.id"
+							:ref="sectionsRefs.set"
+							:section="section"
+							:horizontal-view="effectiveHorizontalView"
+							:sync-notes-scroll="shouldSyncNotesScroll"
+							@update:section="updateLibrarySection(index, $event)"
+						/>
+					</div>
 				</div>
 			</div>
-		</div>
 
-		<UModal
-			v-model:open="showConfirmModal"
-			:title="confirmDialogTitle"
-			:description="confirmDialogMessage"
-		>
-			<template #body>
-				<div class="grid gap-3">
-					<p>{{ confirmDialogMessage }}</p>
-					<div class="flex justify-end gap-2">
-						<UButton
-							color="neutral"
-							variant="ghost"
-							@click="resolveConfirm(false)"
-						>Cancelar</UButton>
-						<UButton
-							color="primary"
-							@click="resolveConfirm(true)"
-						>Confirmar</UButton>
+			<UModal
+				v-model:open="showConfirmModal"
+				:title="confirmDialogTitle"
+				:description="confirmDialogMessage"
+			>
+				<template #body>
+					<div class="grid gap-3">
+						<p>{{ confirmDialogMessage }}</p>
+						<div class="flex justify-end gap-2">
+							<UButton
+								color="neutral"
+								variant="ghost"
+								@click="resolveConfirm(false)"
+							>Cancelar</UButton>
+							<UButton
+								color="primary"
+								@click="resolveConfirm(true)"
+							>Confirmar</UButton>
+						</div>
 					</div>
-				</div>
-			</template>
-		</UModal>
+				</template>
+			</UModal>
 		</div>
 
 		<div class="print-only print-sheet">
@@ -489,7 +577,8 @@ type MobilePanel = 'library' | 'composition' | 'editor'
 type MobileSidebarPanel = 'library' | 'composition'
 
 definePageMeta({
-	name: "Canvas"
+	name: "Canvas",
+	alias: "/canvas"
 })
 
 let playingAll = ref(false);
@@ -664,6 +753,14 @@ function duplicateArrangementItem(index: number) {
 function removeArrangementItem(index: number) {
 	const removing = songStore.arrangement[index]
 	if (!removing) {
+		return
+	}
+
+	if (songStore.arrangement.length <= 1) {
+		toast.add({
+			title: 'La composicion debe tener al menos 1 bloque',
+			color: 'warning'
+		})
 		return
 	}
 
@@ -1222,7 +1319,7 @@ onMounted(async () => {
 		possibleShare = (new URL(window.location.href.replace("#/", "")).searchParams.get("share"))
 	}
 
-	if (typeof route.params.id === "string") {
+	if (typeof route.params.id === "string" && route.params.id) {
 		try {
 			atob(route.params.id)
 			possibleShare = route.params.id
@@ -1248,7 +1345,7 @@ onMounted(async () => {
 		songStore.name = newFormat.name
 
 
-	} else if (typeof route.query.id === 'string' || typeof route.params.id === "string") {
+	} else if (typeof route.query.id === 'string' || typeof route.params.id === "string" && route.params.id) {
 		let partiture = ""
 
 		if (typeof route.query.id === 'string') {
@@ -1263,6 +1360,9 @@ onMounted(async () => {
 	} else if (songStore.sectionLibrary.length === 0) {
 
 		addSection(1);
+		if (songStore.sectionLibrary[0]?.id) {
+			appendSectionToArrangement(songStore.sectionLibrary[0].id, 1)
+		}
 		currentPartitureId.value = undefined
 	} else {
 		currentPartitureId.value = undefined

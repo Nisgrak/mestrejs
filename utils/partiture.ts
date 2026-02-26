@@ -4,6 +4,14 @@ import { LAST_VERSION, type StateV5 } from './migrateVersions'
 
 export type Partiture = StateV5
 
+function getSongToPersist(songStore: ReturnType<typeof useSongStore>): Section[] {
+	if (songStore.arrangement.length > 0) {
+		return songStore.sections
+	}
+
+	return JSON.parse(JSON.stringify(songStore.sectionLibrary)) as Section[]
+}
+
 // export function savePartiture () {
 
 // }
@@ -16,9 +24,10 @@ export async function createPartiture() {
 		songStore.initializeCompositionFromLegacy()
 	}
 	songStore.syncLegacySectionsFromComposition()
+	const songToPersist = getSongToPersist(songStore)
 
 	const newPartiturePartial: Partial<Partiture> = {
-		'song': songStore.sections,
+		'song': songToPersist,
 		sectionLibrary: songStore.sectionLibrary,
 		arrangement: songStore.arrangement,
 		bpm: songStore.bpm,
@@ -51,9 +60,10 @@ export async function updatePartiture(partitureId: string) {
 		songStore.initializeCompositionFromLegacy()
 	}
 	songStore.syncLegacySectionsFromComposition()
+	const songToPersist = getSongToPersist(songStore)
 
 	const updatedPartiture: Partial<Partiture> = {
-		'song': songStore.sections,
+		'song': songToPersist,
 		sectionLibrary: songStore.sectionLibrary,
 		arrangement: songStore.arrangement,
 		bpm: songStore.bpm,
