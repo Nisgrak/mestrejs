@@ -1,6 +1,15 @@
 <template>
 	<div class="overflow-x-clip">
-		<div class="screen-only">
+		<div v-if="accessError" class="mx-auto w-full max-w-3xl px-4 py-10 md:px-8">
+			<UError :error="accessError" :clear="false">
+				<template #links>
+					<UButton color="primary" @click="goToCanvasHome">Ir al canvas</UButton>
+				</template>
+			</UError>
+		</div>
+
+		<template v-else>
+			<div class="screen-only">
 			<div class="sticky top-0 z-40 border-b border-default bg-white shadow-sm">
 				<div
 					class="flex w-full items-center bg-white px-2 py-2 md:justify-center md:gap-3 md:px-5"
@@ -85,6 +94,16 @@
 									variant="ghost"
 									@click="saveSong(true)"
 									aria-label="Guardar canción"
+								/>
+							</UTooltip>
+							<UTooltip v-if="canManageCurrentPartiture && currentPartitureId" text="Configurar visibilidad">
+								<UButton
+									size="md"
+									class="h-9"
+									icon="i-lucide-share-2"
+									variant="ghost"
+									@click="openPartitureShareModal"
+									aria-label="Configurar visibilidad"
 								/>
 							</UTooltip>
 							<UTooltip text="Borrar notas">
@@ -516,6 +535,69 @@
 					</div>
 				</template>
 			</UModal>
+
+			<UModal
+				v-model:open="showPartitureShareModal"
+				title="Visibilidad de la partitura"
+				description="Elige si esta partitura es privada, pública o con contraseña."
+			>
+				<template #body>
+					<div class="grid gap-3">
+						<UFormField label="Visibilidad">
+							<USelectMenu
+								v-model="partitureShareVisibility"
+								:items="partitureVisibilityOptions"
+								value-key="value"
+								label-key="label"
+							/>
+						</UFormField>
+
+						<UFormField v-if="partitureShareVisibility === 'password'" label="Contraseña" required>
+							<UInput
+								v-model="partitureSharePassword"
+								type="password"
+								placeholder="Define la contraseña"
+							/>
+						</UFormField>
+
+						<div class="flex justify-end gap-2">
+							<UButton color="neutral" variant="ghost" @click="closePartitureShareModal">Cancelar</UButton>
+							<UButton color="primary" :loading="isSavingPartitureShare" @click="savePartitureShare">Guardar</UButton>
+						</div>
+					</div>
+				</template>
+			</UModal>
+
+			<UModal
+				v-model:open="showPasswordModal"
+				title="Partitura protegida"
+				description="Introduce la contraseña para abrir esta partitura."
+			>
+				<template #body>
+					<form class="grid gap-3" @submit.prevent="submitPasswordModal">
+						<UFormField label="Contraseña" required>
+							<UInput
+								v-model="passwordModalValue"
+								type="password"
+								placeholder="Introduce la contraseña"
+								autofocus
+							/>
+						</UFormField>
+
+						<UAlert
+							v-if="passwordModalError"
+							color="error"
+							variant="soft"
+							:title="passwordModalError"
+						/>
+
+						<div class="flex justify-end gap-2">
+							<UButton color="neutral" variant="ghost" @click="cancelPasswordModal">Cancelar</UButton>
+							<UButton color="primary" type="submit">Abrir</UButton>
+						</div>
+					</form>
+				</template>
+			</UModal>
 		</div>
 
 		<div class="print-only print-sheet">
@@ -560,6 +642,7 @@
 				</article>
 			</section>
 		</div>
+		</template>
 
 	</div>
 </template>
@@ -585,10 +668,25 @@ let playingAll = ref(false);
 let playing = ref(false);
 let sectionsRefs = useTemplateRefsList<InstanceType<typeof SongSection>>()
 let instrumentsSoundsList = ref<ReturnType<typeof setTimeout>[]>([])
+type ShareVisibility = 'private' | 'public' | 'password'
 const showConfirmModal = ref(false)
 const confirmDialogTitle = ref('Confirmar acción')
 const confirmDialogMessage = ref('')
 let confirmResolver: ((value: boolean) => void) | null = null
+const showPartitureShareModal = ref(false)
+const isSavingPartitureShare = ref(false)
+const canManageCurrentPartiture = ref(false)
+const partitureShareVisibility = ref<ShareVisibility>('public')
+const partitureSharePassword = ref('')
+const partitureVisibilityOptions = [
+	{ label: 'Privada', value: 'private' },
+	{ label: 'Pública', value: 'public' },
+	{ label: 'Con contraseña', value: 'password' }
+]
+const showPasswordModal = ref(false)
+const passwordModalValue = ref('')
+const passwordModalError = ref('')
+let passwordModalResolver: ((value: string | null) => void) | null = null
 const composeSectionId = ref('')
 const composeRepeats = ref(1)
 const isMobileViewport = ref(false)
@@ -1233,6 +1331,134 @@ let insert = () => {
 
 let route = useRoute()
 const toast = useToast()
+const accessError = ref<{ statusCode: number, statusMessage: string, message: string } | null>(null)
+
+async function goToCanvasHome() {
+	accessError.value = null
+	await navigateTo({ name: 'Canvas' })
+}
+
+function visibilityLabel(visibility: ShareVisibility) {
+	switch (visibility) {
+		case 'private':
+			return 'Privada'
+		case 'password':
+			return 'Con contraseña'
+		default:
+			return 'Pública'
+	}
+}
+
+function openPartitureShareModal() {
+	partitureSharePassword.value = ''
+	showPartitureShareModal.value = true
+}
+
+function closePartitureShareModal() {
+	showPartitureShareModal.value = false
+	partitureSharePassword.value = ''
+}
+
+async function savePartitureShare() {
+	if (!currentPartitureId.value || isSavingPartitureShare.value) {
+		return
+	}
+
+	if (partitureShareVisibility.value === 'password' && !partitureSharePassword.value.trim()) {
+		toast.add({
+			title: 'Falta la contraseña',
+			description: 'Para esta visibilidad necesitas definir una contraseña.',
+			color: 'warning'
+		})
+		return
+	}
+
+	isSavingPartitureShare.value = true
+
+	try {
+		await $fetch(`/api/partitures/${currentPartitureId.value}/share`, {
+			method: 'POST',
+			body: {
+				visibility: partitureShareVisibility.value,
+				password: partitureSharePassword.value
+			}
+		})
+
+		toast.add({
+			title: 'Visibilidad actualizada',
+			description: `La partitura ahora está en modo ${visibilityLabel(partitureShareVisibility.value)}.`,
+			color: 'primary'
+		})
+		closePartitureShareModal()
+	} catch {
+		toast.add({
+			title: 'No se pudo actualizar la visibilidad',
+			color: 'error'
+		})
+	} finally {
+		isSavingPartitureShare.value = false
+	}
+}
+
+function requestPartiturePassword(errorMessage = ''): Promise<string | null> {
+	passwordModalValue.value = ''
+	passwordModalError.value = errorMessage
+	showPasswordModal.value = true
+
+	return new Promise((resolve) => {
+		passwordModalResolver = resolve
+	})
+}
+
+function cancelPasswordModal() {
+	showPasswordModal.value = false
+	if (passwordModalResolver) {
+		passwordModalResolver(null)
+		passwordModalResolver = null
+	}
+}
+
+function submitPasswordModal() {
+	const normalizedPassword = passwordModalValue.value.trim()
+	if (!normalizedPassword) {
+		passwordModalError.value = 'La contraseña es obligatoria.'
+		return
+	}
+
+	showPasswordModal.value = false
+	passwordModalError.value = ''
+
+	if (passwordModalResolver) {
+		passwordModalResolver(normalizedPassword)
+		passwordModalResolver = null
+	}
+}
+
+async function loadPartitureWithPasswordFlow(partitureId: string) {
+	let password = ''
+	let shouldShowRetryMessage = false
+
+	while (true) {
+		try {
+			return await loadPartiture(partitureId, password)
+		} catch (error: any) {
+			if (error?.statusCode !== 401) {
+				throw error
+			}
+
+			const enteredPassword = await requestPartiturePassword(
+				shouldShowRetryMessage ? 'Contraseña incorrecta. Inténtalo de nuevo.' : ''
+			)
+
+			if (!enteredPassword) {
+				throw createError({ statusCode: 401, statusMessage: 'Password required' })
+			}
+
+			password = enteredPassword
+			shouldShowRetryMessage = true
+		}
+	}
+}
 
 function isForbiddenError(error: unknown): boolean {
 	const code = (error as any)?.cause?.data?.errors?.[0]?.extensions?.code
@@ -1269,6 +1495,8 @@ let saveSong = async (notify = true, forceAskClone = false) => {
 
 		if (createdPartiture) {
 			currentPartitureId.value = createdPartiture
+			canManageCurrentPartiture.value = Boolean(songStore.user)
+			partitureShareVisibility.value = songStore.user ? 'private' : 'public'
 
 			await navigateTo({
 				name: 'Partiture',
@@ -1328,6 +1556,8 @@ onMounted(async () => {
 	}
 
 	if (typeof possibleShare === 'string') {
+		accessError.value = null
+		canManageCurrentPartiture.value = false
 		let oldFormat = JSON.parse(atob(possibleShare))
 
 		let version = typeof oldFormat.version === 'number' ? oldFormat.version : (oldFormat.beat ? 1 : 2)
@@ -1346,6 +1576,7 @@ onMounted(async () => {
 
 
 	} else if (typeof route.query.id === 'string' || typeof route.params.id === "string" && route.params.id) {
+		accessError.value = null
 		let partiture = ""
 
 		if (typeof route.query.id === 'string') {
@@ -1354,8 +1585,47 @@ onMounted(async () => {
 			partiture = route.params.id
 		}
 
-		await loadPartiture(partiture)
-		currentPartitureId.value = partiture
+		try {
+			const metadata = await loadPartitureWithPasswordFlow(partiture)
+			currentPartitureId.value = partiture
+			canManageCurrentPartiture.value = metadata.canManage
+			if (metadata.visibility === 'private' || metadata.visibility === 'password') {
+				partitureShareVisibility.value = metadata.visibility
+			} else {
+				partitureShareVisibility.value = 'public'
+			}
+		} catch (error: any) {
+			canManageCurrentPartiture.value = false
+			const statusCode = error?.statusCode
+			if (statusCode === 401) {
+				accessError.value = {
+					statusCode: 401,
+					statusMessage: 'Acceso cancelado',
+					message: 'No se pudo validar la contraseña para abrir esta partitura.'
+				}
+			} else
+			if (statusCode === 403) {
+				accessError.value = {
+					statusCode: 403,
+					statusMessage: 'Acceso denegado',
+					message: 'No tienes acceso a esta partitura.'
+				}
+			} else if (statusCode === 404) {
+				accessError.value = {
+					statusCode: 404,
+					statusMessage: 'Partitura no encontrada',
+					message: 'La partitura no existe o ya no está disponible.'
+				}
+			} else {
+				accessError.value = {
+					statusCode: 500,
+					statusMessage: 'Error al abrir la partitura',
+					message: 'No se pudo abrir la partitura. Inténtalo de nuevo.'
+				}
+			}
+
+			return
+		}
 
 	} else if (songStore.sectionLibrary.length === 0) {
 
@@ -1364,8 +1634,10 @@ onMounted(async () => {
 			appendSectionToArrangement(songStore.sectionLibrary[0].id, 1)
 		}
 		currentPartitureId.value = undefined
+		canManageCurrentPartiture.value = false
 	} else {
 		currentPartitureId.value = undefined
+		canManageCurrentPartiture.value = false
 		syncLegacySongSnapshot()
 	}
 

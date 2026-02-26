@@ -4,6 +4,20 @@ import { LAST_VERSION, type StateV5 } from './migrateVersions'
 
 export type Partiture = StateV5
 
+type Visibility = 'private' | 'public' | 'password' | null
+
+interface PartitureReadResponse extends Partiture {
+	visibility?: Visibility
+	user_created?: string | null
+	can_manage?: boolean
+}
+
+export interface LoadedPartitureMeta {
+	visibility: Visibility
+	userCreated: string | null
+	canManage: boolean
+}
+
 function getSongToPersist(songStore: ReturnType<typeof useSongStore>): Section[] {
 	if (songStore.arrangement.length > 0) {
 		return songStore.sections
@@ -26,12 +40,13 @@ export async function createPartiture() {
 	songStore.syncLegacySectionsFromComposition()
 	const songToPersist = getSongToPersist(songStore)
 
-	const newPartiturePartial: Partial<Partiture> = {
+	const newPartiturePartial: Partial<Partiture> & { visibility?: 'private' | 'public' } = {
 		'song': songToPersist,
 		sectionLibrary: songStore.sectionLibrary,
 		arrangement: songStore.arrangement,
 		bpm: songStore.bpm,
 		name: songStore.name,
+		visibility: songStore.user ? 'private' : 'public',
 		version: LAST_VERSION
 	}
 
@@ -81,11 +96,14 @@ export async function updatePartiture(partitureId: string) {
 	await updateItem({ collection: 'partiture', id: partitureId, item: updatedPartiture })
 }
 
-export async function loadPartiture(partitureId: string) {
+export async function loadPartiture(partitureId: string, password = ''): Promise<LoadedPartitureMeta> {
 	const songStore = useSongStore()
-	const { getItemById } = useDirectusItems();
-
-	const partiture = await getItemById<Partiture>({ collection: 'partiture', id: partitureId });
+	const partiture = await $fetch<PartitureReadResponse>(`/api/partitures/${partitureId}`, {
+		method: 'POST',
+		body: {
+			password
+		}
+	})
 
 	const migratedPartiture = migratePartiture(partiture)
 	let sectionLibrary: Section[]
@@ -110,5 +128,9 @@ export async function loadPartiture(partitureId: string) {
 	songStore.sections = legacySong;
 	songStore.name = migratedPartiture.name
 
-
+	return {
+		visibility: partiture.visibility ?? null,
+		userCreated: partiture.user_created ?? null,
+		canManage: Boolean(partiture.can_manage)
+	}
 }

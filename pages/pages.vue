@@ -31,6 +31,11 @@
 						</tr>
 					</thead>
 					<tbody>
+						<tr v-if="pages.length === 0">
+							<td colspan="3" class="py-8 text-center text-slate-500">
+								No tienes páginas públicas todavía.
+							</td>
+						</tr>
 						<tr v-for="row in pages" :key="row.id" class="border-b border-slate-100">
 							<td class="py-2">{{ row.name }}</td>
 							<td class="py-2">{{ row.partitures?.length ?? 0 }}</td>
@@ -132,11 +137,11 @@ interface PageRecord {
 	partitures?: PagePartitureRelation[]
 }
 
-const { getItems, createItems, updateItem } = useDirectusItems()
 const toast = useToast()
 
 definePageMeta({
-	name: 'ListPublicPages'
+	name: 'ListPublicPages',
+	middleware: 'auth'
 })
 
 const pages = ref<PageRecord[]>([])
@@ -213,25 +218,28 @@ async function savePage() {
 
 	try {
 		const pagePayload: Partial<PageRecord> = {
-			name: loadedPage.value.name.trim(),
-			partitures: selectedPartitureIds.value.map((id) => ({ partiture_id: id }))
+			name: loadedPage.value.name.trim()
 		}
 
 		const normalizedPassword = loadedPage.value.password.trim()
-		if (normalizedPassword) {
-			pagePayload.password = normalizedPassword
-		}
 
 		if (editingPageId.value) {
-			await updateItem({
-				collection: 'page',
-				id: editingPageId.value,
-				item: pagePayload
+			await $fetch(`/api/pages/${editingPageId.value}`, {
+				method: 'PATCH',
+				body: {
+					name: pagePayload.name,
+					password: normalizedPassword,
+					partitureIds: selectedPartitureIds.value
+				}
 			})
 		} else {
-			await createItems<PageRecord>({
-				collection: 'page',
-				items: [pagePayload]
+			await $fetch('/api/pages', {
+				method: 'POST',
+				body: {
+					name: pagePayload.name,
+					password: normalizedPassword,
+					partitureIds: selectedPartitureIds.value
+				}
 			})
 		}
 
@@ -259,13 +267,7 @@ async function loadPages() {
 	errorMessage.value = ''
 
 	try {
-		const temp = await getItems<PageRecord>({
-			collection: 'page',
-			params: {
-				fields: ['id', 'name', 'partitures.partiture_id', 'partitures.partiture_id.id'],
-				filter: { user_created: '$CURRENT_USER' }
-			}
-		})
+		const temp = await $fetch<PageRecord[]>('/api/pages')
 
 		pages.value = temp && temp.length !== 0 ? [...temp] : []
 	} catch {
@@ -275,13 +277,7 @@ async function loadPages() {
 }
 
 async function loadPartitures() {
-	const temp = await getItems<Partiture>({
-		collection: 'partiture',
-		params: {
-			fields: ['id', 'name'],
-			filter: { user_created: '$CURRENT_USER' }
-		}
-	})
+	const temp = await $fetch<Partiture[]>('/api/partitures')
 
 	partitures.value = temp && temp.length !== 0 ? [...temp] : []
 }
