@@ -109,6 +109,7 @@
 					v-for="(group, indexGroup) in noteLine"
 					:key="indexGroup"
 					class="stack flex shrink-0 justify-center"
+					:class="{ 'line-start-group': indexGroup === 0 }"
 					:style="{ width: `${beat.beatsPerBar * 49}px` }"
 				>
 					<Note
@@ -548,7 +549,11 @@ defineExpose({
 
 <style>
 .note:first-child {
-	--at-apply: rounded-l-lg bg-gray-300;
+	--at-apply: rounded-l-lg bg-gray-200;
+}
+
+.line-start-group .note:first-child {
+	--at-apply: bg-gray-400;
 }
 
 .instrument.beat-6\/8 .note.show-note:nth-child(4) {
