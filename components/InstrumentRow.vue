@@ -29,6 +29,7 @@
 			<div
 				class="flex h-8 items-center gap-1 rounded-md border border-slate-200 px-1 md:h-9"
 				:class="horizontalView ? 'relative z-10 w-auto shrink-0' : 'w-full md:w-auto'"
+				:style="controlsPinStyle"
 			>
 				<UTooltip text="Añadir fila">
 					<UButton
@@ -71,6 +72,7 @@
 			<div
 				class="flex items-center gap-1.5 md:min-w-0 md:gap-2"
 				:class="horizontalView ? 'relative z-10 w-28 shrink-0 md:w-auto' : 'w-full md:w-auto'"
+				:style="controlsPinStyle"
 			>
 				<UTooltip :text="instrument.vol !== 0 ? 'Silenciar instrumento' : 'Activar sonido'">
 					<UButton
@@ -239,6 +241,16 @@ const hasSafeAreaInsetLeft = computed(() => safeAreaInsetLeft.value > 0)
 
 const aliasPinStyle = computed<CSSProperties | undefined>(() => {
 	if (!props.horizontalView) {
+		return undefined
+	}
+
+	return {
+		transform: `translateX(${aliasViewportOffset.value}px)`
+	}
+})
+
+const controlsPinStyle = computed<CSSProperties | undefined>(() => {
+	if (!props.horizontalView || !props.syncNotesScroll) {
 		return undefined
 	}
 
