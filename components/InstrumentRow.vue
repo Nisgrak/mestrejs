@@ -1,7 +1,7 @@
 <template>
 	<div
 		class="instrument w-full"
-		:class="{ 'md:grid md:w-max md:grid-cols-[600px_max-content] md:items-start md:gap-x-3': horizontalView }"
+		:class="{ 'md:grid md:w-max md:grid-cols-[600px_max-content] md:items-start md:gap-x-3': horizontalView && !syncNotesScroll }"
 	>
 		<div
 			:class="[
@@ -230,8 +230,11 @@ const aliasBoxRef = ref<HTMLElement | null>(null)
 const emit = defineEmits(['update:instrument', 'remove', 'notes-scroll'])
 const syncingScroll = ref(false)
 const aliasViewportOffset = ref(0)
+const safeAreaInsetLeft = ref(0)
 let aliasScrollTarget: HTMLElement | null = null
 const ALIAS_LEFT_BLEED_PX = 12
+const aliasLeftBleedPx = computed(() => Math.max(ALIAS_LEFT_BLEED_PX, safeAreaInsetLeft.value))
+const hasSafeAreaInsetLeft = computed(() => safeAreaInsetLeft.value > 0)
 
 const aliasPinStyle = computed<CSSProperties | undefined>(() => {
 	if (!props.horizontalView) {
@@ -410,6 +413,11 @@ function resolveNotesScrollContainer(): HTMLElement | null {
 }
 
 function handleAliasScroll() {
+	if (aliasScrollTarget && !aliasScrollTarget.isConnected) {
+		bindAliasScroll()
+		return
+	}
+
 	updateAliasViewportOffset()
 }
 
@@ -451,7 +459,7 @@ function updateAliasViewportOffset() {
 	const aliasRect = aliasBoxRef.value.getBoundingClientRect()
 	const naturalAliasLeft = aliasRect.left - aliasViewportOffset.value
 	const naturalAliasRight = naturalAliasLeft + aliasRect.width
-	const shouldPinToViewportLeft = naturalAliasLeft <= ALIAS_LEFT_BLEED_PX
+	const shouldPinToViewportLeft = naturalAliasLeft <= aliasLeftBleedPx.value
 
 	const firstNoteElement = notesScrollContainerRef.value.querySelector('.note') as HTMLElement | null
 	const willCollideWithNotes = firstNoteElement
@@ -463,7 +471,35 @@ function updateAliasViewportOffset() {
 		return
 	}
 
+	if (hasSafeAreaInsetLeft.value) {
+		aliasViewportOffset.value = -(controlsRowRef.value.getBoundingClientRect().left - aliasLeftBleedPx.value)
+		return
+	}
+
 	aliasViewportOffset.value = -(controlsRowRef.value.getBoundingClientRect().left + ALIAS_LEFT_BLEED_PX)
+}
+
+function updateSafeAreaInsets() {
+	if (typeof document === 'undefined' || typeof window === 'undefined') {
+		safeAreaInsetLeft.value = 0
+		return
+	}
+
+	const probe = document.createElement('div')
+	probe.style.position = 'fixed'
+	probe.style.left = '0'
+	probe.style.top = '0'
+	probe.style.visibility = 'hidden'
+	probe.style.pointerEvents = 'none'
+	probe.style.paddingLeft = 'env(safe-area-inset-left)'
+	document.body.appendChild(probe)
+
+	const envInset = Number.parseFloat(window.getComputedStyle(probe).paddingLeft)
+	const visualViewportInset = window.visualViewport?.offsetLeft ?? 0
+	const normalizedEnvInset = Number.isFinite(envInset) ? envInset : 0
+	safeAreaInsetLeft.value = Math.max(normalizedEnvInset, visualViewportInset)
+
+	probe.remove()
 }
 
 function getLeftOcclusionWidth() {
@@ -475,7 +511,8 @@ function getLeftOcclusionWidth() {
 }
 
 function handleWindowResize() {
-	updateAliasViewportOffset()
+	updateSafeAreaInsets()
+	bindAliasScroll()
 }
 
 watch(() => [props.horizontalView, props.syncNotesScroll], bindAliasScroll, { immediate: true })
@@ -488,6 +525,8 @@ onMounted(() => {
 	window.addEventListener('resize', handleWindowResize)
 	window.addEventListener('orientationchange', handleWindowResize)
 	nextTick(() => {
+		updateSafeAreaInsets()
+		bindAliasScroll()
 		updateAliasViewportOffset()
 	})
 })

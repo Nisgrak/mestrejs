@@ -6,10 +6,12 @@
 	>
 		<div class="flex flex-wrap">
 			<div
-				class="mb-5 flex w-full flex-wrap items-center gap-2 md:gap-3"
+				ref="sectionControlsRef"
+				class="mb-5 flex flex-wrap items-center gap-2 md:gap-3"
+				:style="sectionControlsStyle"
 				:class="{
-					'flex-nowrap overflow-hidden bg-white py-2 md:sticky md:left-0 md:z-30 md:w-[600px] md:flex-nowrap md:overflow-x-auto': horizontalView,
-					'flex-wrap': !horizontalView
+					'w-[320px] flex-nowrap overflow-x-auto bg-white py-2 lg:w-[600px]': horizontalView,
+					'w-full flex-wrap': !horizontalView
 				}"
 			>
 				<UInput
@@ -131,7 +133,7 @@
 <script lang="ts" setup>
 import { type Beat, type Section } from '../stores/songStore';
 import InstrumentRow from './InstrumentRow.vue';
-import { type PropType, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, type PropType, ref, watch } from 'vue';
 import { useTemplateRefsList } from '@vueuse/core'
 import NoteBoxVue from './NoteBox.vue';
 import { Howl } from 'howler';
@@ -146,6 +148,23 @@ const toast = useToast()
 const showConfirmBeatModal = ref(false)
 const showSelectInstrumentModal = ref(false)
 const pendingBeat = ref<Beat | null>(null)
+const sectionControlsOffset = ref(0)
+const SECTION_LEFT_BLEED_PX = 12
+const sectionControlsBaseScrollLeft = ref(0)
+const sectionControlsPinThreshold = ref(0)
+const sectionControlsStyle = computed(() => {
+	if (!props.horizontalView) {
+		return undefined
+	}
+
+	return {
+		transform: `translateX(${sectionControlsOffset.value}px)`,
+		willChange: 'transform'
+	}
+})
+let sectionControlsScrollTarget: HTMLElement | null = null
+let sectionControlsRafId = 0
+const sectionControlsRef = ref<HTMLElement | null>(null)
 const beatMenuItems = computed(() =>
 	songStore.beats.map((beat) => ({
 		label: beat.name,
@@ -341,6 +360,10 @@ function confirmBeatChange() {
 }
 
 function syncInstrumentNotesScroll(sourceIndex: number, scrollLeft: number) {
+	if (props.syncNotesScroll) {
+		sectionControlsOffset.value = Math.max(0, scrollLeft)
+	}
+
 	if (!props.syncNotesScroll) {
 		return
 	}
@@ -351,6 +374,78 @@ function syncInstrumentNotesScroll(sourceIndex: number, scrollLeft: number) {
 		}
 
 		rowRef.setNotesScrollLeft(scrollLeft)
+	})
+}
+
+function handleSectionControlsScroll() {
+	if (!sectionControlsScrollTarget) {
+		return
+	}
+
+	if (!sectionControlsScrollTarget.isConnected) {
+		bindSectionControlsScroll()
+		return
+	}
+
+	if (sectionControlsRafId) {
+		return
+	}
+
+	sectionControlsRafId = requestAnimationFrame(() => {
+		updateSectionControlsOffset()
+		sectionControlsRafId = 0
+	})
+}
+
+function updateSectionControlsOffset() {
+	if (!props.horizontalView || !sectionControlsRef.value) {
+		sectionControlsOffset.value = 0
+		return
+	}
+
+	if (props.syncNotesScroll) {
+		if (sectionControlsScrollTarget) {
+			sectionControlsOffset.value = Math.max(0, sectionControlsScrollTarget.scrollLeft)
+		}
+		return
+	}
+	if (!sectionControlsScrollTarget) {
+		sectionControlsOffset.value = 0
+		return
+	}
+
+	const deltaScroll = sectionControlsScrollTarget.scrollLeft - sectionControlsBaseScrollLeft.value
+	sectionControlsOffset.value = Math.max(0, deltaScroll - sectionControlsPinThreshold.value)
+}
+
+function unbindSectionControlsScroll() {
+	if (!sectionControlsScrollTarget) {
+		return
+	}
+
+	sectionControlsScrollTarget.removeEventListener('scroll', handleSectionControlsScroll)
+	sectionControlsScrollTarget = null
+}
+
+function bindSectionControlsScroll() {
+	unbindSectionControlsScroll()
+	sectionControlsOffset.value = 0
+
+	if (!props.horizontalView) {
+		return
+	}
+
+	nextTick(() => {
+		const target = parentRef.value?.closest('[data-notes-scroll-root]') as HTMLElement | null
+		if (!target) {
+			return
+		}
+
+		sectionControlsScrollTarget = target
+		sectionControlsBaseScrollLeft.value = target.scrollLeft
+		sectionControlsPinThreshold.value = Math.max(0, sectionControlsRef.value?.getBoundingClientRect().left ?? 0) - SECTION_LEFT_BLEED_PX
+		updateSectionControlsOffset()
+		target.addEventListener('scroll', handleSectionControlsScroll, { passive: true })
 	})
 }
 
@@ -398,6 +493,32 @@ let instruments = computed({
 let emit = defineEmits(['update:section'])
 
 let parentRef = ref<HTMLElement | undefined>(undefined)
+
+watch(() => [props.horizontalView, props.syncNotesScroll], bindSectionControlsScroll, { immediate: true })
+
+onBeforeUnmount(() => {
+	unbindSectionControlsScroll()
+	if (sectionControlsRafId) {
+		cancelAnimationFrame(sectionControlsRafId)
+		sectionControlsRafId = 0
+	}
+	if (typeof window !== 'undefined') {
+		window.removeEventListener('resize', bindSectionControlsScroll)
+		window.removeEventListener('orientationchange', bindSectionControlsScroll)
+	}
+})
+
+onMounted(() => {
+	if (typeof window === 'undefined') {
+		return
+	}
+
+	window.addEventListener('resize', bindSectionControlsScroll)
+	window.addEventListener('orientationchange', bindSectionControlsScroll)
+	nextTick(() => {
+		bindSectionControlsScroll()
+	})
+})
 
 // dragAndDrop({
 // 	parent: parentRef,
