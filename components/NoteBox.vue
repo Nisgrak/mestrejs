@@ -221,11 +221,13 @@ defineExpose({
 .defaultSubnotes-2 .note0,
 .defaultSubnotes-3 .note0,
 .defaultSubnotes-4 .note0 {
-	--at-apply: border-r-1;
+	border-right-width: 1px;
+	border-right-color: rgb(163 163 163);
 }
 
 .defaultSubnotes-4 .note0 {
-	--at-apply: border-b-1;
+	border-bottom-width: 1px;
+	border-bottom-color: rgb(163 163 163);
 }
 
 .note1 {
@@ -234,7 +236,8 @@ defineExpose({
 
 .defaultSubnotes-3 .note1,
 .defaultSubnotes-4 .note1 {
-	--at-apply: border-b-1;
+	border-bottom-width: 1px;
+	border-bottom-color: rgb(163 163 163);
 }
 
 .note2 {
@@ -242,7 +245,21 @@ defineExpose({
 }
 
 .defaultSubnotes-4 .note2 {
-	--at-apply: border-r-1;
+	border-right-width: 1px;
+	border-right-color: rgb(163 163 163);
+}
+
+.line-start-group .note:first-child.defaultSubnotes-2 .note0,
+.line-start-group .note:first-child.defaultSubnotes-3 .note0,
+.line-start-group .note:first-child.defaultSubnotes-4 .note0,
+.line-start-group .note:first-child.defaultSubnotes-4 .note2 {
+	border-right-color: rgb(255 255 255 / 0.75);
+}
+
+.line-start-group .note:first-child.defaultSubnotes-4 .note0,
+.line-start-group .note:first-child.defaultSubnotes-3 .note1,
+.line-start-group .note:first-child.defaultSubnotes-4 .note1 {
+	border-bottom-color: rgb(255 255 255 / 0.75);
 }
 
 .note3 {
