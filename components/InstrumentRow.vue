@@ -58,6 +58,15 @@
 						aria-label="Configurar notas"
 					/>
 				</UTooltip>
+				<UTooltip text="Duplicar instrumento">
+					<UButton
+						class="h-8 px-1.5 md:h-9 md:px-2"
+						icon="i-lucide-copy"
+						variant="ghost"
+						@click="emit('duplicate')"
+						aria-label="Duplicar instrumento"
+					/>
+				</UTooltip>
 				<UTooltip text="Borrar instrumento">
 					<UButton
 						class="h-8 px-1.5 md:h-9 md:px-2"
@@ -230,7 +239,7 @@ const notesRefs = useTemplateRefsList<InstanceType<typeof Note>>()
 const notesScrollContainerRef = ref<HTMLElement | null>(null)
 const controlsRowRef = ref<HTMLElement | null>(null)
 const aliasBoxRef = ref<HTMLElement | null>(null)
-const emit = defineEmits(['update:instrument', 'remove', 'notes-scroll'])
+	const emit = defineEmits(['update:instrument', 'remove', 'duplicate', 'notes-scroll'])
 const syncingScroll = ref(false)
 const aliasViewportOffset = ref(0)
 const safeAreaInsetLeft = ref(0)

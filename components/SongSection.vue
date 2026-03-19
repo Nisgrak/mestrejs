@@ -71,6 +71,7 @@
 				:class="[`beat-${section.beat.name}`, 'mb-2 last:mb-0']"
 				@notes-scroll="syncInstrumentNotesScroll(indexInstrument, $event)"
 				@update:instrument="emit('update:section', Object.assign(section, { instruments: section.instruments.map((instrument, index) => index === indexInstrument ? $event : instrument) }))"
+				@duplicate="duplicateInstrument(indexInstrument)"
 				@remove="emit('update:section', Object.assign(section, { instruments: section.instruments.filter((_, index) => index !== indexInstrument) }))"
 			/>
 		</div>
@@ -375,6 +376,27 @@ function syncInstrumentNotesScroll(sourceIndex: number, scrollLeft: number) {
 
 		rowRef.setNotesScrollLeft(scrollLeft)
 	})
+}
+
+function duplicateInstrument(indexInstrument: number) {
+	const instrument = props.section.instruments[indexInstrument]
+	if (!instrument) {
+		return
+	}
+
+	const duplicate = {
+		...instrument,
+		id: createId(),
+		noteLines: JSON.parse(JSON.stringify(instrument.noteLines))
+	}
+
+	emit('update:section', Object.assign(props.section, {
+		instruments: [
+			...props.section.instruments.slice(0, indexInstrument + 1),
+			duplicate,
+			...props.section.instruments.slice(indexInstrument + 1)
+		]
+	}))
 }
 
 function handleSectionControlsScroll() {
