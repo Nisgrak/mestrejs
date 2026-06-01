@@ -2,8 +2,89 @@
 	<div class="mx-auto w-full max-w-5xl px-4 py-8">
 		<div class="rounded-lg border border-slate-200 bg-white/80 p-5">
 			<h2 class="mb-4 text-xl font-semibold">Partituras</h2>
-			<div class="overflow-x-auto">
-				<table class="w-full border-collapse text-left">
+			<div class="grid gap-3 md:hidden">
+				<div
+					v-if="partitures.length === 0"
+					class="rounded-md border border-dashed border-slate-200 px-4 py-8 text-center text-slate-500"
+				>
+					No tienes partituras todavía.
+				</div>
+				<article
+					v-for="partiture in partitures"
+					:key="partiture.id"
+					class="cursor-pointer rounded-md border border-slate-200 bg-white p-3 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+					role="link"
+					tabindex="0"
+					:aria-label="`Abrir partitura ${partiture.name}`"
+					@click="openPartiture(partiture.id)"
+					@keydown.enter.prevent="openPartiture(partiture.id)"
+					@keydown.space.prevent="openPartiture(partiture.id)"
+				>
+					<div class="flex items-start justify-between gap-3">
+						<div class="min-w-0">
+							<h3 class="break-words text-base font-semibold leading-snug">{{ partiture.name }}</h3>
+							<p class="mt-1 text-sm text-slate-500">
+								{{ partiture.song?.[0]?.beat?.name || '-' }} · {{ partiture.bpm }} BPM
+							</p>
+						</div>
+						<span class="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+							{{ visibilityLabel(partiture.visibility) }}
+						</span>
+					</div>
+
+					<div class="mt-3 flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
+						<span class="text-sm text-slate-500">
+							{{ partiture.page_count ?? 0 }} {{ (partiture.page_count ?? 0) === 1 ? 'página' : 'páginas' }}
+						</span>
+						<div class="flex gap-1" @click.stop>
+							<UTooltip text="Ver partitura">
+								<UButton
+									color="neutral"
+									variant="ghost"
+									square
+									size="lg"
+									icon="i-lucide-eye"
+									aria-label="Ver partitura"
+									:to="{ name: 'Canvas', query: { id: partiture.id } }"
+								/>
+							</UTooltip>
+							<UTooltip text="Configurar compartición">
+								<UButton
+									color="neutral"
+									variant="ghost"
+									square
+									size="lg"
+									icon="i-lucide-share-2"
+									aria-label="Configurar compartición"
+									@click="openShareModal(partiture)"
+								/>
+							</UTooltip>
+							<UTooltip text="Eliminar partitura">
+								<UButton
+									color="error"
+									variant="ghost"
+									square
+									size="lg"
+									icon="i-lucide-trash-2"
+									aria-label="Eliminar partitura"
+									@click="deletePartiture(partiture.id)"
+								/>
+							</UTooltip>
+						</div>
+					</div>
+				</article>
+			</div>
+
+			<div class="hidden overflow-x-auto md:block">
+				<table class="w-full table-fixed border-collapse text-left">
+					<colgroup>
+						<col>
+						<col class="w-28">
+						<col class="w-20">
+						<col class="w-24">
+						<col class="w-32">
+						<col class="w-36">
+					</colgroup>
 					<thead>
 						<tr class="border-b border-slate-200">
 							<th class="py-2">Nombre</th>
@@ -11,7 +92,7 @@
 							<th class="py-2">BPM</th>
 							<th class="py-2">Páginas</th>
 							<th class="py-2">Visibilidad</th>
-							<th class="py-2">Acciones</th>
+							<th class="py-2 text-right">Acciones</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -23,15 +104,20 @@
 						<tr
 							v-for="partiture in partitures"
 							:key="partiture.id"
-							class="border-b border-slate-100"
+							class="cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50 focus-within:bg-slate-50"
+							tabindex="0"
+							:aria-label="`Abrir partitura ${partiture.name}`"
+							@click="openPartiture(partiture.id)"
+							@keydown.enter.prevent="openPartiture(partiture.id)"
+							@keydown.space.prevent="openPartiture(partiture.id)"
 						>
-							<td class="py-2">{{ partiture.name }}</td>
+							<td class="truncate py-2 pr-4">{{ partiture.name }}</td>
 							<td class="py-2">{{ partiture.song?.[0]?.beat?.name || '-' }}</td>
 							<td class="py-2">{{ partiture.bpm }}</td>
 							<td class="py-2">{{ partiture.page_count ?? 0 }}</td>
 							<td class="py-2">{{ visibilityLabel(partiture.visibility) }}</td>
 							<td class="py-2">
-								<div class="flex gap-2">
+								<div class="flex justify-end gap-2" @click.stop>
 									<UTooltip text="Ver partitura">
 										<UButton
 											color="neutral"
@@ -165,6 +251,10 @@ const selectedSharePartitureId = ref<string | null>(null)
 const shareVisibility = ref<'private' | 'public' | 'password'>('private')
 const sharePassword = ref('')
 const isSavingShare = ref(false)
+
+async function openPartiture(id: string) {
+	await navigateTo({ name: 'Canvas', query: { id } })
+}
 
 async function deletePartiture(id: string) {
 	selectedPartitureId.value = id

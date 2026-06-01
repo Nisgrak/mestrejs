@@ -21,13 +21,92 @@
 				:description="errorMessage"
 			/>
 
-			<div class="overflow-x-auto">
-				<table class="w-full border-collapse text-left">
+			<div class="grid gap-3 md:hidden">
+				<div
+					v-if="pages.length === 0"
+					class="rounded-md border border-dashed border-slate-200 px-4 py-8 text-center text-slate-500"
+				>
+					No tienes páginas públicas todavía.
+				</div>
+				<article
+					v-for="row in pages"
+					:key="row.id"
+					class="grid cursor-pointer gap-2 rounded-md border border-slate-200 bg-white p-3 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary min-[480px]:flex min-[480px]:items-center min-[480px]:justify-between min-[480px]:gap-3"
+					role="link"
+					tabindex="0"
+					:aria-label="`Abrir página pública ${row.name}`"
+					@click="openPublicPage(row.id)"
+					@keydown.enter.prevent="openPublicPage(row.id)"
+					@keydown.space.prevent="openPublicPage(row.id)"
+				>
+					<div class="min-w-0">
+						<h3 class="break-words text-base font-semibold leading-snug">{{ row.name }}</h3>
+						<p class="mt-1 text-sm text-slate-500">
+							{{ row.partitures?.length ?? 0 }} {{ (row.partitures?.length ?? 0) === 1 ? 'partitura' : 'partituras' }}
+						</p>
+					</div>
+
+					<div class="flex flex-wrap justify-end gap-1 min-[480px]:shrink-0" @click.stop @keydown.stop>
+						<UTooltip text="Editar página">
+							<UButton
+								color="neutral"
+								variant="ghost"
+								square
+								size="lg"
+								icon="i-lucide-pencil"
+								aria-label="Editar página"
+								@click="openEditDialog(row)"
+							/>
+						</UTooltip>
+						<UTooltip text="Abrir página pública">
+							<UButton
+								color="neutral"
+								variant="ghost"
+								square
+								size="lg"
+								icon="i-lucide-eye"
+								aria-label="Abrir página pública"
+								:to="getPublicPath(row.id)"
+							/>
+						</UTooltip>
+						<UTooltip text="Copiar enlace público">
+							<UButton
+								color="neutral"
+								variant="ghost"
+								square
+								size="lg"
+								icon="i-lucide-link"
+								aria-label="Copiar enlace público"
+								@click="copyPublicLink(row.id)"
+							/>
+						</UTooltip>
+						<UTooltip text="Eliminar página">
+							<UButton
+								color="error"
+								variant="ghost"
+								square
+								size="lg"
+								icon="i-lucide-trash-2"
+								aria-label="Eliminar página"
+								@click="openDeleteDialog(row)"
+							/>
+						</UTooltip>
+					</div>
+				</article>
+			</div>
+
+			<div class="hidden overflow-x-auto md:block">
+				<table class="w-full table-fixed border-collapse text-left">
+					<colgroup>
+						<col>
+						<col class="w-40">
+						<col class="w-48">
+					</colgroup>
 					<thead>
 						<tr class="border-b border-slate-200">
 							<th class="py-2">Nombre</th>
 							<th class="py-2">Partituras</th>
-							<th class="py-2">Acciones</th>
+							<th class="py-2 text-right">Acciones</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -36,11 +115,20 @@
 								No tienes páginas públicas todavía.
 							</td>
 						</tr>
-						<tr v-for="row in pages" :key="row.id" class="border-b border-slate-100">
+						<tr
+							v-for="row in pages"
+							:key="row.id"
+							class="cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50 focus-within:bg-slate-50"
+							tabindex="0"
+							:aria-label="`Abrir página pública ${row.name}`"
+							@click="openPublicPage(row.id)"
+							@keydown.enter.prevent="openPublicPage(row.id)"
+							@keydown.space.prevent="openPublicPage(row.id)"
+						>
 							<td class="py-2">{{ row.name }}</td>
 							<td class="py-2">{{ row.partitures?.length ?? 0 }}</td>
 							<td class="py-2">
-								<div class="flex flex-wrap gap-2">
+								<div class="flex flex-wrap justify-end gap-2" @click.stop @keydown.stop>
 									<UTooltip text="Editar página">
 										<UButton
 											color="neutral"
@@ -238,6 +326,10 @@ const selectedPartitureTriggerLabel = computed(() => {
 
 function getPublicPath(pageId: string) {
 	return `/public/${pageId}`
+}
+
+async function openPublicPage(pageId: string) {
+	await navigateTo(getPublicPath(pageId))
 }
 
 async function copyPublicLink(pageId: string) {
