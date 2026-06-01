@@ -21,12 +21,12 @@
 			<div class="screen-only">
 				<div class="sticky top-0 z-40 border-b border-default bg-white shadow-sm">
 					<div
-						class="flex w-full items-center bg-white px-2 py-2 md:justify-center md:gap-3 md:px-5"
-						:class="isMobileLandscape ? 'flex-nowrap gap-1 overflow-x-auto' : 'flex-wrap gap-2'"
+						class="flex w-full items-center bg-white px-2 py-1.5 md:justify-center md:gap-3 md:px-5 md:py-2"
+						:class="isMobileLandscape ? 'flex-nowrap gap-1 overflow-x-auto' : 'flex-wrap gap-1.5 md:gap-2'"
 					>
 						<div
 							class="flex items-center md:w-auto md:flex-nowrap"
-							:class="isMobileLandscape ? 'w-auto shrink-0 flex-nowrap gap-1' : 'w-full flex-wrap gap-2'"
+							:class="isMobileLandscape ? 'w-auto shrink-0 flex-nowrap gap-1' : 'w-full flex-wrap gap-1.5 md:gap-2'"
 						>
 							<UTooltip
 								v-if="isMobileLandscape"
@@ -34,8 +34,8 @@
 							>
 								<UButton
 									:color="mobileSidePanelOpen ? 'primary' : 'neutral'"
-									size="md"
-									class="h-9"
+									size="sm"
+									class="h-8 md:h-9"
 									:variant="mobileSidePanelOpen ? 'solid' : 'outline'"
 									icon="i-lucide-panel-left"
 									@click="toggleMobileSidePanel"
@@ -47,8 +47,8 @@
 							<UTooltip :text="playing ? 'Pausar reproducción' : 'Reproducir canción'">
 								<UButton
 									color="primary"
-									size="md"
-									class="h-9"
+									size="sm"
+									class="h-8 md:h-9"
 									:disabled="displaySections.length === 0"
 									:icon="playing ? 'i-lucide-square' : 'i-lucide-play'"
 									@click="playing ? pause() : play()"
@@ -59,8 +59,8 @@
 							<UTooltip :text="songStore.repeat ? 'Desactivar repeticion' : 'Activar repeticion'">
 								<UButton
 									:color="songStore.repeat ? 'primary' : 'neutral'"
-									size="md"
-									class="h-9"
+									size="sm"
+									class="h-8 md:h-9"
 									variant="outline"
 									icon="i-lucide-repeat"
 									@click="songStore.repeat = !songStore.repeat"
@@ -71,8 +71,8 @@
 							<UTooltip :text="songStore.showNote ? 'Ocultar notas' : 'Mostrar notas'">
 								<UButton
 									:color="songStore.showNote ? 'primary' : 'neutral'"
-									size="md"
-									class="h-9"
+									size="sm"
+									class="h-8 md:h-9"
 									variant="outline"
 									icon="i-lucide-hash"
 									@click="songStore.showNote = !songStore.showNote"
@@ -85,8 +85,8 @@
 							>
 								<UButton
 									:color="songStore.horizontalView ? 'primary' : 'neutral'"
-									size="md"
-									class="h-9"
+									size="sm"
+									class="h-8 md:h-9"
 									variant="outline"
 									icon="i-lucide-layout-grid"
 									@click="songStore.horizontalView = !songStore.horizontalView"
@@ -94,11 +94,11 @@
 								/>
 							</UTooltip>
 
-							<div class="flex h-9 items-center rounded-md border border-default">
+							<div class="flex h-8 items-center rounded-md border border-default md:h-9">
 								<UTooltip text="Guardar canción">
 									<UButton
-										size="md"
-										class="h-9"
+										size="sm"
+										class="h-8 md:h-9"
 										icon="i-lucide-save"
 										variant="ghost"
 										@click="saveSong(true)"
@@ -110,8 +110,8 @@
 									text="Configurar visibilidad"
 								>
 									<UButton
-										size="md"
-										class="h-9"
+										size="sm"
+										class="h-8 md:h-9"
 										icon="i-lucide-share-2"
 										variant="ghost"
 										@click="openPartitureShareModal"
@@ -120,8 +120,8 @@
 								</UTooltip>
 								<UTooltip text="Borrar notas">
 									<UButton
-										size="md"
-										class="h-9"
+										size="sm"
+										class="h-8 md:h-9"
 										icon="i-lucide-eraser"
 										variant="ghost"
 										@click="clearNotes()"
@@ -130,8 +130,8 @@
 								</UTooltip>
 								<UTooltip text="Insertar canción">
 									<UButton
-										size="md"
-										class="h-9"
+										size="sm"
+										class="h-8 md:h-9"
 										icon="i-lucide-code"
 										variant="ghost"
 										@click="insert()"
@@ -140,8 +140,8 @@
 								</UTooltip>
 								<UTooltip text="Imprimir composición en PDF">
 									<UButton
-										size="md"
-										class="h-9"
+										size="sm"
+										class="h-8 md:h-9"
 										icon="i-lucide-printer"
 										variant="ghost"
 										@click="printCompositionPdf"
@@ -154,20 +154,20 @@
 
 						<div
 							class="flex items-center md:w-auto"
-							:class="isMobileLandscape ? 'w-auto shrink-0 gap-1' : 'w-full gap-2'"
+							:class="isMobileLandscape ? 'w-auto shrink-0 gap-1' : 'w-full gap-1.5 md:gap-2'"
 						>
 							<UInput
 								v-model="songStore.name"
-								size="md"
-								:ui="{ base: 'h-9' }"
+								size="sm"
+								:ui="{ base: 'h-8 md:h-9' }"
 								:class="isMobileLandscape ? 'w-40' : 'min-w-0 flex-1 md:w-72 md:flex-none'"
 								placeholder="Partitura"
 							/>
 							<UInput
 								v-model="songStore.bpm"
-								size="md"
-								:ui="{ base: 'h-9 text-center' }"
-								:class="isMobileLandscape ? 'w-16' : 'w-24'"
+								size="sm"
+								:ui="{ base: 'h-8 text-center md:h-9' }"
+								:class="isMobileLandscape ? 'w-16' : 'w-20 md:w-24'"
 								placeholder="BPM"
 								type="number"
 							/>
@@ -175,9 +175,9 @@
 					</div>
 					<div
 						v-if="isMobileViewport && !isMobileLandscape"
-						class="border-t border-default bg-white px-2 py-2"
+						class="border-t border-default bg-white px-2 py-1.5 md:py-2"
 					>
-						<div class="grid grid-cols-3 gap-2">
+						<div class="grid grid-cols-3 gap-1.5 md:gap-2">
 							<UButton
 								:variant="mobileActivePanel === 'library' ? 'solid' : 'outline'"
 								:color="mobileActivePanel === 'library' ? 'primary' : 'neutral'"
@@ -237,7 +237,7 @@
 					data-notes-scroll-root
 					:class="effectiveHorizontalView ? 'w-full overflow-x-auto' : 'w-full'"
 				>
-					<div class="mt-3 grid w-full gap-4 p-5 md:grid-cols-[320px_minmax(0,1fr)] md:p-8">
+					<div class="mt-2 grid w-full gap-3 p-3 md:mt-3 md:grid-cols-[320px_minmax(0,1fr)] md:gap-4 md:p-8">
 						<aside
 							v-show="!isMobileViewport || isMobileLandscape || mobileActivePanel !== 'editor'"
 							class="rounded-lg border border-default bg-white p-4"
